@@ -7,7 +7,9 @@ const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
   try {
     const NEWS_API_KEY = import.meta.env.VITE_NEWS_API_KEY;
     
-    if (!NEWS_API_KEY || NEWS_API_KEY === 'your-news-api-key-here') {
+    console.log('NewsAPI Key check:', NEWS_API_KEY ? 'Found' : 'Missing');
+    
+    if (!NEWS_API_KEY || NEWS_API_KEY === 'your-news-api-key-here' || NEWS_API_KEY.length < 10) {
       console.log('No NewsAPI key found, using fallback content');
       return getFallbackNewsResults(query);
     }
