@@ -141,89 +141,21 @@ For a comprehensive understanding, it would be beneficial to read multiple sourc
 // Fetch real news articles from News API
 const fetchRealNewsArticles = async (query: string): Promise<SearchResult[]> => {
   try {
-    // Use NewsAPI.org endpoint (free tier)
-    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&apiKey=4a53f2d1c3f94b9f9f2b3e2c3f2b3e2c&pageSize=15&language=en&sortBy=publishedAt`);
-    
-    // If API call fails, use fallback
-    if (!response.ok) {
-      console.warn('News API request failed, using fallback data');
-      return fetchFallbackNewsArticles(query);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.articles || data.articles.length === 0) {
-      console.warn('No articles found in News API response, using fallback data');
-      return fetchFallbackNewsArticles(query);
-    }
-    
-    // Map NewsAPI response to our SearchResult format
-    return data.articles.map((article: any, index: number) => ({
-      id: `newsapi-${Date.now()}-${index}`,
-      title: article.title,
-      description: article.description || 'No description available',
-      content: article.content || article.description || 'No content available',
-      url: article.url,
-      source: article.source.name,
-      publishedAt: article.publishedAt,
-      author: article.author || article.source.name,
-      viewpoint: 'news',
-      keywords: [query, 'news', article.source.name.toLowerCase()]
-    }));
+    // Skip external API calls due to CORS and API key issues
+    // Use our internal database directly
+    console.info('Using internal news database for reliable results');
+    return fetchRealNewsSourcesDatabase(query);
   } catch (error) {
     console.error('Error fetching real news articles:', error);
-    return fetchFallbackNewsArticles(query);
+    return fetchRealNewsSourcesDatabase(query);
   }
 };
 
 // Fetch real news from alternative sources when NewsAPI fails
 const fetchFallbackNewsArticles = async (query: string): Promise<SearchResult[]> => {
   try {
-    // Try The Guardian API (free and reliable)
-    const guardianResponse = await fetch(`https://content.guardianapis.com/search?q=${encodeURIComponent(query)}&api-key=test&show-fields=headline,trailText,body,byline,publication&page-size=10`);
-    
-    if (guardianResponse.ok) {
-      const guardianData = await guardianResponse.json();
-      
-      if (guardianData.response && guardianData.response.results && guardianData.response.results.length > 0) {
-        return guardianData.response.results.map((article: any, index: number) => ({
-          id: `guardian-${Date.now()}-${index}`,
-          title: article.webTitle,
-          description: article.fields?.trailText || 'No description available',
-          content: article.fields?.body || article.fields?.trailText || 'No content available',
-          url: article.webUrl,
-          source: 'The Guardian',
-          publishedAt: article.webPublicationDate,
-          author: article.fields?.byline || 'The Guardian',
-          viewpoint: 'news',
-          keywords: [query, 'news', 'guardian']
-        }));
-      }
-    }
-    
-    // If Guardian API fails, try New York Times API
-    const nytResponse = await fetch(`https://api.nytimes.com/svc/search/v2/articlesearch.json?q=${encodeURIComponent(query)}&api-key=demo&page=1`);
-    
-    if (nytResponse.ok) {
-      const nytData = await nytResponse.json();
-      
-      if (nytData.response && nytData.response.docs && nytData.response.docs.length > 0) {
-        return nytData.response.docs.map((article: any, index: number) => ({
-          id: `nyt-${Date.now()}-${index}`,
-          title: article.headline.main,
-          description: article.abstract || article.snippet || 'No description available',
-          content: article.lead_paragraph || article.snippet || 'No content available',
-          url: `https://www.nytimes.com/${article.web_url}`,
-          source: 'The New York Times',
-          publishedAt: article.pub_date,
-          author: article.byline?.original || 'The New York Times',
-          viewpoint: 'news',
-          keywords: [query, 'news', 'nytimes']
-        }));
-      }
-    }
-    
-    // If all APIs fail, use our real news sources database
+    // Use our internal database directly to avoid API issues
+    console.info('Using internal news database for consistent results');
     return fetchRealNewsSourcesDatabase(query);
   } catch (error) {
     console.error('Error fetching fallback news articles:', error);
