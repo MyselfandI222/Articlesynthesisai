@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SynthesizedArticle, ChatMessage, AIImage } from '../types';
 import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, RefreshCw } from 'lucide-react';
-import { ManusAIMetrics } from './ManusAIMetrics';
+import { ChatGPTMetrics } from './ChatGPTMetrics';
 import { ImageGenerator } from './ImageGenerator';
 import { editAIImage, ImageGenerationOptions } from '../utils/imageGeneration';
 import { sendMessageToChatGPT, processArticleEdit } from '../utils/chatGptService';
@@ -487,9 +487,9 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, onEdit,
         )}
       </div>
       
-      {/* Manus AI Metrics */}
+      {/* ChatGPT Metrics */}
       {article.processingMetrics && (
-        <ManusAIMetrics 
+        <ChatGPTMetrics 
           metrics={article.processingMetrics}
           factCheckResults={article.factCheckResults}
           seoMetadata={article.seoMetadata}

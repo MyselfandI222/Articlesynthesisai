@@ -1,22 +1,22 @@
 // Article Synthesis Service
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
-import { synthesizeWithManusAI, editWithManusAI } from './manusAIService';
+import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
 import { processArticleEdit } from './chatGptService';
 import { synthesizeWithOpenAI } from './openAISynthesis';
 
 // Get user's AI service preference
-export const getAIServicePreference = (): 'default' | 'manus' => {
+export const getAIServicePreference = (): 'default' | 'chatgpt' => {
   try {
     const preference = localStorage.getItem('aiServicePreference');
-    return preference === 'manus' ? 'manus' : 'default';
+    return preference === 'chatgpt' ? 'chatgpt' : 'default';
   } catch (error) {
     return 'default';
   }
 };
 
 // Save user's AI service preference
-export const saveAIServicePreference = (preference: 'default' | 'manus'): void => {
+export const saveAIServicePreference = (preference: 'default' | 'chatgpt'): void => {
   try {
     localStorage.setItem('aiServicePreference', preference);
   } catch (error) {
@@ -24,15 +24,15 @@ export const saveAIServicePreference = (preference: 'default' | 'manus'): void =
   }
 };
 
-// Get Manus AI settings
-export const getManusAISettings = () => {
+// Get ChatGPT settings
+export const getChatGPTSettings = () => {
   try {
-    const settings = localStorage.getItem('manusAISettings');
+    const settings = localStorage.getItem('chatgptSettings');
     if (settings) {
       return JSON.parse(settings);
     }
   } catch (error) {
-    console.warn('Failed to load Manus AI settings:', error);
+    console.warn('Failed to load ChatGPT settings:', error);
   }
   
   // Default settings
@@ -45,12 +45,12 @@ export const getManusAISettings = () => {
   };
 };
 
-// Save Manus AI settings
-export const saveManusAISettings = (settings: any): void => {
+// Save ChatGPT settings
+export const saveChatGPTSettings = (settings: any): void => {
   try {
-    localStorage.setItem('manusAISettings', JSON.stringify(settings));
+    localStorage.setItem('chatgptSettings', JSON.stringify(settings));
   } catch (error) {
-    console.warn('Failed to save Manus AI settings:', error);
+    console.warn('Failed to save ChatGPT settings:', error);
   }
 };
 
@@ -65,9 +65,9 @@ export const synthesizeArticles = async (
   // Check which AI service to use
   const aiService = getAIServicePreference();
   
-  if (aiService === 'manus') {
-    // Use Manus AI for synthesis (note: this is a demo service)
-    return synthesizeWithManusAI(sources, topic, style, tone, length);
+  if (aiService === 'chatgpt') {
+    // Use ChatGPT for synthesis
+    return synthesizeWithChatGPT(sources, topic, style, tone, length);
   } else {
     // Use OpenAI for default synthesis
     return synthesizeWithOpenAI(sources, topic, style, tone, length);
@@ -82,9 +82,9 @@ export const editArticle = async (
   // Check which AI service to use
   const aiService = getAIServicePreference();
   
-  if (aiService === 'manus') {
-    // Use Manus AI for editing
-    return editWithManusAI(article, instructions);
+  if (aiService === 'chatgpt') {
+    // Use ChatGPT for editing
+    return editWithChatGPT(article, instructions);
   } else if (instructions.toLowerCase().includes('chatgpt') || instructions.toLowerCase().includes('ai')) {
     // Use ChatGPT for editing if explicitly requested
     try {

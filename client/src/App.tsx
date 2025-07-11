@@ -3,11 +3,11 @@ import { Header } from './components/Header';
 import { SourceInput } from './components/SourceInput';
 import { StyleSelector } from './components/StyleSelector';
 import { TitleRecommendations } from './components/TitleRecommendations';
-import { ManusAISettings } from './components/ManusAISettings';
+import { ChatGPTSettings } from './components/ChatGPTSettings';
 import { ArticlePreview } from './components/ArticlePreview';
 import { PublishModal } from './components/PublishModal';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
-import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getManusAISettings, saveManusAISettings } from './utils/articleSynthesis';
+import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
 import { Sparkles, Loader, AlertCircle } from 'lucide-react';
 
@@ -23,9 +23,9 @@ function App() {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [dailyNewsNotification, setDailyNewsNotification] = useState<string | null>(null);
 
-  // Manus AI integration
-  const [isManusEnabled, setIsManusEnabled] = useState(() => getAIServicePreference() === 'manus');
-  const [manusSettings, setManusSettings] = useState(() => getManusAISettings());
+  // ChatGPT integration
+  const [isChatGPTEnabled, setIsChatGPTEnabled] = useState(() => getAIServicePreference() === 'chatgpt');
+  const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
 
   useEffect(() => {
     // Check for today's breaking news and show notification
@@ -91,16 +91,16 @@ function App() {
     alert('Article published successfully! (This is a demo)');
   };
 
-  // Handle Manus AI toggle
-  const handleToggleManusAI = (enabled: boolean) => {
-    setIsManusEnabled(enabled);
-    saveAIServicePreference(enabled ? 'manus' : 'default');
+  // Handle ChatGPT toggle
+  const handleToggleChatGPT = (enabled: boolean) => {
+    setIsChatGPTEnabled(enabled);
+    saveAIServicePreference(enabled ? 'chatgpt' : 'default');
   };
 
-  // Handle Manus AI settings change
-  const handleManusSettingsChange = (settings: any) => {
-    setManusSettings(settings);
-    saveManusAISettings(settings);
+  // Handle ChatGPT settings change
+  const handleChatGPTSettingsChange = (settings: any) => {
+    setChatGPTSettings(settings);
+    saveChatGPTSettings(settings);
   };
 
   return (
@@ -171,12 +171,12 @@ function App() {
                   onTitleSelect={setTopic}
                 />
                 
-                {/* Manus AI Settings */}
-                <ManusAISettings
-                  isEnabled={isManusEnabled}
-                  onToggleEnabled={handleToggleManusAI}
-                  settings={manusSettings}
-                  onSettingsChange={handleManusSettingsChange}
+                {/* ChatGPT Settings */}
+                <ChatGPTSettings
+                  isEnabled={isChatGPTEnabled}
+                  onToggleEnabled={handleToggleChatGPT}
+                  settings={chatGPTSettings}
+                  onSettingsChange={handleChatGPTSettingsChange}
                 />
               </div>
 
