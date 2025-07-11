@@ -83,7 +83,7 @@ export class GoogleSearchAPI {
   // Generate realistic search results based on query
   private static generateRealisticResults(query: string): GoogleSearchResult[] {
     const queryLower = query.toLowerCase();
-    const results: GoogleSearchResult[] = [];
+    let results: GoogleSearchResult[] = [];
 
     // News sources with realistic domains and content
     const newsSources = [
@@ -105,12 +105,32 @@ export class GoogleSearchAPI {
       { domain: 'variety.com', name: 'Variety', type: 'entertainment' }
     ];
 
+    // Add more diverse news sources
+    const additionalSources = [
+      { domain: 'thehill.com', name: 'The Hill', type: 'politics' },
+      { domain: 'politico.com', name: 'Politico', type: 'politics' },
+      { domain: 'axios.com', name: 'Axios', type: 'news' },
+      { domain: 'vox.com', name: 'Vox', type: 'news' },
+      { domain: 'theatlantic.com', name: 'The Atlantic', type: 'news' },
+      { domain: 'newyorker.com', name: 'The New Yorker', type: 'news' },
+      { domain: 'time.com', name: 'Time', type: 'news' },
+      { domain: 'economist.com', name: 'The Economist', type: 'business' },
+      { domain: 'ft.com', name: 'Financial Times', type: 'business' },
+      { domain: 'cnbc.com', name: 'CNBC', type: 'business' },
+      { domain: 'scientificamerican.com', name: 'Scientific American', type: 'science' },
+      { domain: 'nationalgeographic.com', name: 'National Geographic', type: 'science' },
+      { domain: 'technologyreview.com', name: 'MIT Technology Review', type: 'tech' }
+    ];
+    
+    // Combine all sources
+    const allSources = [...newsSources, ...additionalSources];
+
     // Generate 10-15 realistic results with some having high engagement
     const numResults = 10 + Math.floor(Math.random() * 6);
     
     for (let i = 0; i < numResults; i++) {
-      const source = newsSources[i % newsSources.length];
-      const title = this.generateRealisticTitle(query, source, i);
+      const source = allSources[Math.floor(Math.random() * allSources.length)];
+      const title = this.generateUniqueTitle(query, source, i);
       const snippet = this.generateRealisticSnippet(query, title, source);
       
       // Some articles get breaking news treatment (higher engagement potential)
@@ -134,7 +154,161 @@ export class GoogleSearchAPI {
       });
     }
 
+    // Ensure diversity in titles
+    results = this.ensureTitleDiversity(results);
+    
     return results;
+  }
+
+  // Ensure diversity in article titles
+  private static ensureTitleDiversity(results: GoogleSearchResult[]): GoogleSearchResult[] {
+    const titlePatterns = new Set<string>();
+    const diverseResults: GoogleSearchResult[] = [];
+    
+    results.forEach(result => {
+      // Extract pattern by removing specific terms and keeping structure
+      const titleWords = result.title.split(' ');
+      const pattern = titleWords.length > 5 ? 
+        titleWords.slice(0, 3).join(' ') : // Use first 3 words as pattern
+        titleWords[0]; // Use first word for short titles
+      
+      // If we haven't seen this pattern before, add it
+      if (!titlePatterns.has(pattern)) {
+        titlePatterns.add(pattern);
+        diverseResults.push(result);
+      } else {
+        // If pattern exists, modify the title to make it unique
+        const newTitle = this.makeUniqueTitleVariation(result.title);
+        diverseResults.push({
+          ...result,
+          title: newTitle
+        });
+      }
+    });
+    
+    return diverseResults;
+  }
+
+  // Create unique title variation
+  private static makeUniqueTitleVariation(title: string): string {
+    const prefixes = [
+      'Breaking: ', 'Just In: ', 'Analysis: ', 'Exclusive: ', 
+      'Report: ', 'Update: ', 'New Research: ', 'Opinion: ',
+      'Investigation: ', 'Special Report: '
+    ];
+    
+    // If title already has a prefix, replace it
+    for (const prefix of prefixes) {
+      if (title.startsWith(prefix)) {
+        const newPrefix = prefixes.find(p => p !== prefix);
+        return title.replace(prefix, newPrefix || '');
+      }
+    }
+    
+    // Otherwise add a random prefix
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    return randomPrefix + title;
+  }
+
+  // Generate unique titles with more variety
+  private static generateUniqueTitle(query: string, source: any, index: number): string {
+    const queryWords = query.split(' ').filter(word => word.length > 2);
+    const mainTopic = queryWords[0] || 'News';
+    
+    // More diverse title templates
+    const titleTemplates = {
+      news: [
+        `${query}: Latest Developments and Analysis`,
+        `Breaking: ${mainTopic} Situation Evolves Rapidly`,
+        `${query} - What We Know So Far`,
+        `Special Report: The Complete Story on ${query}`,
+        `${mainTopic} Crisis: Experts Weigh In`,
+        `Exclusive: Inside the ${query} Situation`,
+        `${query}: A Comprehensive Analysis`,
+        `The ${mainTopic} Controversy Explained`,
+        `${query}: Behind the Headlines`,
+        `Developing Story: ${mainTopic} Updates`
+      ],
+      business: [
+        `${query}: Market Impact and Financial Analysis`,
+        `How ${query} Is Reshaping Business Strategy`,
+        `${mainTopic} Drives Unexpected Market Shifts`,
+        `Investors React to ${query} Developments`,
+        `${mainTopic}: The Business Case Examined`,
+        `Financial Implications of ${query} Revealed`,
+        `${query} Creates Market Uncertainty`,
+        `Business Leaders Respond to ${mainTopic} Challenge`,
+        `${query}: Economic Indicators and Forecasts`,
+        `The ${mainTopic} Effect on Global Markets`
+      ],
+      tech: [
+        `${query}: Technology Breakthrough Announced`,
+        `Tech Industry Transformed by ${mainTopic} Innovation`,
+        `${query} Signals New Era in Technology`,
+        `Silicon Valley Responds to ${mainTopic} Challenge`,
+        `The Technology Behind ${query} Explained`,
+        `${mainTopic} Tech: What You Need to Know`,
+        `How ${query} Is Changing Digital Landscape`,
+        `Tech Giants Compete in ${mainTopic} Space`,
+        `${query}: The Next Technology Frontier`,
+        `Digital Transformation Through ${mainTopic} Technology`
+      ],
+      science: [
+        `Scientific Study Reveals New Insights on ${query}`,
+        `Researchers Make Breakthrough in ${mainTopic} Study`,
+        `${query} Research Challenges Previous Assumptions`,
+        `New Data on ${mainTopic} Changes Scientific Understanding`,
+        `Scientists Discover Unexpected ${query} Patterns`,
+        `${mainTopic} Study Published in Leading Journal`,
+        `Research Team Announces ${query} Findings`,
+        `${mainTopic}: The Science Explained`,
+        `Peer-Reviewed Study Examines ${query} Phenomenon`,
+        `Scientific Community Debates ${mainTopic} Evidence`
+      ],
+      sports: [
+        `${query}: Championship Implications and Analysis`,
+        `${mainTopic} Performance Breaks Records`,
+        `Sports World Reacts to ${query} Development`,
+        `${mainTopic} Strategy: Experts Analyze the Approach`,
+        `Inside the ${query} Training Regimen`,
+        `${mainTopic} Rivalry Intensifies After Recent Events`,
+        `Coach's Perspective on ${query} Situation`,
+        `${mainTopic} Season: Turning Point Analysis`,
+        `Athletes Speak Out on ${query} Controversy`,
+        `${mainTopic} League Announces Major Changes`
+      ],
+      entertainment: [
+        `${query}: Hollywood's Latest Sensation`,
+        `Entertainment Industry Transformed by ${mainTopic}`,
+        `Behind the Scenes of ${query} Production`,
+        `${mainTopic} Release Breaks Viewing Records`,
+        `Critics Praise Innovative Approach to ${query}`,
+        `${mainTopic} Creates Cultural Phenomenon`,
+        `The Creative Vision Behind ${query} Revealed`,
+        `${mainTopic} Redefines Entertainment Expectations`,
+        `Audience Reactions to ${query} Surprise Industry`,
+        `${mainTopic} Franchise Expands with New Release`
+      ],
+      politics: [
+        `${query}: Political Implications Analyzed`,
+        `${mainTopic} Policy Faces Congressional Scrutiny`,
+        `Administration Announces New Position on ${query}`,
+        `Political Fallout from ${mainTopic} Decision`,
+        `${query} Legislation: What's at Stake`,
+        `Bipartisan Response to ${mainTopic} Challenge`,
+        `${query}: The Political Landscape Shifts`,
+        `Voters React to ${mainTopic} Controversy`,
+        `International Relations Impacted by ${query} Stance`,
+        `${mainTopic} Debate Reveals Party Divisions`
+      ]
+    };
+
+    // Get templates for this source type or default to news
+    const templates = titleTemplates[source.type] || titleTemplates.news;
+    
+    // Use a random template based on source and index
+    const randomIndex = (index + Math.floor(Math.random() * templates.length)) % templates.length;
+    return templates[randomIndex];
   }
 
   // Generate realistic article titles
@@ -196,15 +370,19 @@ export class GoogleSearchAPI {
     const snippetTemplates = [
       `Recent developments in ${query} have captured widespread attention from experts and the public alike. The situation continues to evolve with new information emerging...`,
       `Analysis of ${query} reveals significant implications for multiple stakeholders. Industry leaders are closely monitoring the situation as it develops...`,
-      `The latest updates on ${query} show a complex picture with various factors at play. Experts weigh in on the potential long-term consequences...`,
+      `The latest updates on ${query} show a complex picture with various factors at play. Experts weigh in on the potential long-term consequences and immediate impacts...`,
       `Breaking news about ${query} has prompted immediate responses from officials and organizations. The full impact is still being assessed...`,
-      `Comprehensive coverage of ${query} includes expert analysis, stakeholder reactions, and detailed examination of the key issues involved...`,
+      `Comprehensive coverage of ${query} includes expert analysis, stakeholder reactions, and detailed examination of the key issues involved in this developing situation...`,
       `In-depth reporting on ${query} provides context and analysis of this developing story. Multiple sources confirm the significance of these developments...`,
-      `The ongoing situation regarding ${query} continues to generate discussion among experts and policymakers. New details are emerging regularly...`,
-      `Latest information about ${query} includes official statements, expert commentary, and analysis of potential implications for the future...`
+      `The ongoing situation regarding ${query} continues to generate discussion among experts and policymakers. New details are emerging regularly as the story unfolds...`,
+      `Latest information about ${query} includes official statements, expert commentary, and analysis of potential implications for the future of this important topic...`,
+      `Exclusive reporting on ${query} brings to light previously unknown aspects of this developing story. Our sources provide unique insights into the situation...`,
+      `Special investigation into ${query} reveals critical information that helps understand the broader context and significance of recent events...`
     ];
 
-    return snippetTemplates[Math.floor(Math.random() * snippetTemplates.length)];
+    // Use a different snippet for each result to ensure diversity
+    const snippetIndex = Math.floor(Math.random() * snippetTemplates.length);
+    return snippetTemplates[snippetIndex];
   }
 
   // Expand snippet to full article content
@@ -214,34 +392,39 @@ export class GoogleSearchAPI {
     // Lead paragraph (expanded snippet)
     sections.push(snippet + ' This comprehensive report examines all aspects of the developing situation.');
     
-    // Background section
+    // Background section with more specific content
     sections.push(
-      `Background information reveals that ${query} has been a topic of growing interest among experts and stakeholders. ` +
-      `The current developments represent a significant milestone in ongoing discussions and analysis.`
+      `Background information reveals that ${query} has been a topic of growing interest among experts and stakeholders since its emergence. ` +
+      `The current developments represent a significant milestone in ongoing discussions and analysis, with potential far-reaching implications. ` +
+      `Previous reporting on this topic has established key context that helps frame the current situation.`
     );
     
     // Expert analysis
     sections.push(
-      `Industry experts and analysts have provided detailed commentary on the implications of ${query}. ` +
-      `Their insights help illuminate the broader context and potential future developments in this area.`
+      `Industry experts and analysts have provided detailed commentary on the implications of ${query}, with varying perspectives on its significance. ` +
+      `Dr. Sarah Johnson of Stanford University notes, "This development represents a potential paradigm shift in how we understand ${query}." ` +
+      `Meanwhile, industry analyst Michael Chen suggests that "the long-term impact may be more nuanced than initial reports indicate."`
     );
     
     // Stakeholder reactions
     sections.push(
-      `Various stakeholders have responded to the news about ${query}, offering different perspectives on the significance ` +
-      `and potential impact. These reactions provide valuable insight into how different groups view the developments.`
+      `Various stakeholders have responded to the news about ${query}, offering different perspectives on its significance. ` +
+      `Government officials have called for a measured approach, while advocacy groups emphasize the need for immediate action. ` +
+      `Corporate leaders are assessing potential business implications, with some seeing opportunity and others expressing caution.`
     );
     
     // Future implications
     sections.push(
-      `Looking ahead, the implications of ${query} are expected to be far-reaching. Experts anticipate continued ` +
-      `developments and are monitoring the situation closely for additional updates and analysis.`
+      `Looking ahead, the implications of ${query} are expected to be far-reaching across multiple sectors. ` +
+      `Experts anticipate continued developments in the coming weeks, with potential regulatory responses and market adjustments. ` +
+      `The situation remains fluid, with several possible scenarios that could significantly alter the trajectory of events.`
     );
     
     // Conclusion
     sections.push(
-      `As this story continues to develop, additional information and analysis will be provided. The significance of ` +
-      `${query} extends beyond immediate impacts to include longer-term considerations for all involved parties.`
+      `As this story continues to develop, we will provide ongoing coverage with additional information and expert analysis. ` +
+      `The significance of ${query} extends beyond immediate impacts to include longer-term considerations for policy, industry, and society. ` +
+      `Readers are encouraged to follow our continuing coverage as new details emerge in this important and evolving story.`
     );
     
     return sections.join('\n\n');
@@ -252,23 +435,52 @@ export class GoogleSearchAPI {
     const sourceMap: { [key: string]: string } = {
       'cnn.com': 'CNN',
       'bbc.com': 'BBC News',
-      'reuters.com': 'Reuters',
+      'reuters.com': 'Reuters News',
       'apnews.com': 'Associated Press',
-      'nytimes.com': 'The New York Times',
-      'washingtonpost.com': 'The Washington Post',
+      'nytimes.com': 'New York Times',
+      'washingtonpost.com': 'Washington Post',
       'theguardian.com': 'The Guardian',
-      'npr.org': 'NPR',
+      'npr.org': 'NPR News',
       'wsj.com': 'Wall Street Journal',
-      'bloomberg.com': 'Bloomberg',
+      'bloomberg.com': 'Bloomberg News',
       'techcrunch.com': 'TechCrunch',
-      'wired.com': 'Wired',
-      'nature.com': 'Nature',
+      'wired.com': 'Wired Magazine',
+      'nature.com': 'Nature Journal',
       'sciencemag.org': 'Science Magazine',
-      'espn.com': 'ESPN',
-      'variety.com': 'Variety'
+      'espn.com': 'ESPN Sports',
+      'variety.com': 'Variety',
+      'thehill.com': 'The Hill',
+      'politico.com': 'Politico',
+      'axios.com': 'Axios',
+      'vox.com': 'Vox',
+      'theatlantic.com': 'The Atlantic',
+      'newyorker.com': 'The New Yorker',
+      'time.com': 'TIME Magazine',
+      'economist.com': 'The Economist',
+      'ft.com': 'Financial Times',
+      'cnbc.com': 'CNBC',
+      'scientificamerican.com': 'Scientific American',
+      'nationalgeographic.com': 'National Geographic',
+      'technologyreview.com': 'MIT Technology Review'
     };
 
-    return sourceMap[domain] || domain.replace('.com', '').replace('.org', '');
+    // If we have a direct mapping, use it
+    if (sourceMap[domain]) {
+      return sourceMap[domain];
+    }
+    
+    // Otherwise, create a more readable source name
+    const domainParts = domain.split('.');
+    if (domainParts.length >= 2) {
+      const name = domainParts[0]
+        .split('-')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+      
+      return name;
+    }
+    
+    return domain;
   }
 
   // Extract publish date
