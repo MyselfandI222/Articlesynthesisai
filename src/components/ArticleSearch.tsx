@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Loader, TrendingUp, X, Globe, AlertCircle, ExternalLink, Plus, Check } from 'lucide-react';
 import { Article, SearchResult, Category } from '../types';
 import { searchArticles, getAllCategories, getTrendingTopics } from '../utils/articleSearch';
-import { APIFilterButton } from './APIFilterButton';
 import { classifyBreakingNews, getBreakingNewsBadge, formatEngagementNumber } from '../utils/breakingNewsDetector';
 
 interface ArticleSearchProps {
@@ -20,6 +19,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Load trending topics and categories on mount
   useEffect(() => {
@@ -51,7 +51,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
     // Set new timeout for search
     if (query.trim()) {
       searchTimeoutRef.current = setTimeout(() => {
-        handleSearch(query, 'user_typed');
+        setIsSearching(true);
+        handleSearch(query, 'user_typed')
+          .finally(() => setIsSearching(false));
       }, 500);
     } else {
       setSearchResults([]);
@@ -67,7 +69,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
         clearTimeout(searchTimeoutRef.current);
         searchTimeoutRef.current = null;
       }
-      
+
+      setIsSearching(true);
+      setIsLoading(true);
       handleSearch(searchQuery, 'user_typed');
     }
   };
@@ -75,6 +79,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   // Handle trending topic click
   const handleTrendingTopicClick = (topic: string) => {
     setSearchQuery(topic);
+    setIsSearching(true);
     handleSearch(topic, 'trending_click');
   };
 
@@ -82,6 +87,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   const handleCategoryClick = (category: string, subcategory?: string) => {
     setSelectedCategory(category);
     setSelectedSubcategory(subcategory || null);
+    setIsSearching(true);
     
     const searchTerm = subcategory || category;
     setSearchQuery(searchTerm);
@@ -89,7 +95,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   };
 
   // Main search function
-  const handleSearch = async (query: string, searchContext: 'user_typed' | 'trending_click' | 'category_click') => {
+  const handleSearch = async (query: string, searchContext: 'user_typed' | 'trending_click' | 'category_click'): Promise<void> => {
     setIsLoading(true);
     setError(null);
     
@@ -109,6 +115,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       console.error('Search error:', err);
       setError('Failed to search articles. Please try again.');
     } finally {
+      setIsSearching(false);
       setIsLoading(false);
     }
   };
@@ -116,7 +123,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   // Handle API filters changed
   const handleFiltersChanged = () => {
     if (searchQuery.trim()) {
-      handleSearch(searchQuery, 'user_typed');
+      handleSearch(searchQuery, 'user_typed').catch(console.error);
     }
   };
 
@@ -150,7 +157,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       <form onSubmit={handleSearchSubmit} className="relative">
         <div className="flex items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isSearching ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
             <input
               type="text"
               value={searchQuery}
@@ -167,9 +174,6 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <X className="h-5 w-5" />
               </button>
             )}
-          </div>
-          <div className="ml-2">
-            <APIFilterButton onFiltersChanged={handleFiltersChanged} />
           </div>
         </div>
       </form>
@@ -247,7 +251,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-700">Trending Topics</h3>
           <div className="flex flex-wrap gap-3">
-            {trendingTopics.slice(0, 12).map((topic, index) => (
+            {trendingTopics.slice(0, 16).map((topic, index) => (
               <button
                 key={index}
                 onClick={() => handleTrendingTopicClick(topic)}
@@ -262,7 +266,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center justify-center py-12">
           <Loader className="h-8 w-8 text-blue-600 animate-spin" />
           <span className="ml-3 text-gray-600">Searching for articles...</span>
         </div>
@@ -291,7 +295,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             </button>
           </div>
           <div className="space-y-3">
-            {searchResults.map((result) => {
+            {searchResults.filter(result => result.title && result.description).map((result) => {
               const isAdded = isArticleAdded(result.id);
               const breakingNews = classifyBreakingNews(result);
               const breakingBadge = getBreakingNewsBadge(breakingNews);
@@ -307,7 +311,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                         <span className="text-xs text-gray-500">{result.source}</span>
                         {result.publishedAt && (
                           <span className="text-xs text-gray-400">
-                            {new Date(result.publishedAt).toLocaleDateString()}
+                            {new Date(result.publishedAt).toLocaleDateString()} {new Date(result.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                           </span>
                         )}
                         {breakingBadge.show && (

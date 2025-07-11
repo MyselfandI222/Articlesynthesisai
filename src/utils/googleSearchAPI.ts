@@ -1,7 +1,7 @@
 // Google Search Integration for Real Articles
 import { SearchResult } from '../types';
 
-interface GoogleSearchResult {
+export interface GoogleSearchResult {
   title: string;
   link: string;
   snippet: string;
@@ -83,7 +83,7 @@ export class GoogleSearchAPI {
   // Generate realistic search results based on query
   private static generateRealisticResults(query: string): GoogleSearchResult[] {
     const queryLower = query.toLowerCase();
-    let results: GoogleSearchResult[] = [];
+    const results: GoogleSearchResult[] = [];
 
     // News sources with realistic domains and content
     const newsSources = [
@@ -127,10 +127,16 @@ export class GoogleSearchAPI {
 
     // Generate 10-15 realistic results with some having high engagement
     const numResults = 10 + Math.floor(Math.random() * 6);
+    const usedTitles = new Set<string>();
     
     for (let i = 0; i < numResults; i++) {
       const source = allSources[Math.floor(Math.random() * allSources.length)];
       const title = this.generateUniqueTitle(query, source, i);
+      
+      // Skip duplicate titles
+      if (usedTitles.has(title)) continue;
+      usedTitles.add(title);
+      
       const snippet = this.generateRealisticSnippet(query, title, source);
       
       // Some articles get breaking news treatment (higher engagement potential)
@@ -155,9 +161,9 @@ export class GoogleSearchAPI {
     }
 
     // Ensure diversity in titles
-    results = this.ensureTitleDiversity(results);
+    const diverseResults = this.ensureTitleDiversity(results);
     
-    return results;
+    return diverseResults;
   }
 
   // Ensure diversity in article titles
@@ -388,34 +394,39 @@ export class GoogleSearchAPI {
   // Expand snippet to full article content
   private static expandSnippetToFullContent(snippet: string, title: string, query: string): string {
     const sections = [];
+    const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 2);
     
     // Lead paragraph (expanded snippet)
     sections.push(snippet + ' This comprehensive report examines all aspects of the developing situation.');
     
     // Background section with more specific content
+    const queryContext = queryWords.length > 0 
+      ? queryWords.slice(0, 3).join(', ') 
+      : query;
+      
     sections.push(
-      `Background information reveals that ${query} has been a topic of growing interest among experts and stakeholders since its emergence. ` +
+      `Background information reveals that ${queryContext} has been a topic of growing interest among experts and stakeholders since its emergence. ` +
       `The current developments represent a significant milestone in ongoing discussions and analysis, with potential far-reaching implications. ` +
       `Previous reporting on this topic has established key context that helps frame the current situation.`
     );
     
     // Expert analysis
     sections.push(
-      `Industry experts and analysts have provided detailed commentary on the implications of ${query}, with varying perspectives on its significance. ` +
-      `Dr. Sarah Johnson of Stanford University notes, "This development represents a potential paradigm shift in how we understand ${query}." ` +
+      `Industry experts and analysts have provided detailed commentary on the implications of ${queryContext}, with varying perspectives on its significance. ` +
+      `Dr. Sarah Johnson of Stanford University notes, "This development represents a potential paradigm shift in how we understand ${queryContext}." ` +
       `Meanwhile, industry analyst Michael Chen suggests that "the long-term impact may be more nuanced than initial reports indicate."`
     );
     
     // Stakeholder reactions
     sections.push(
-      `Various stakeholders have responded to the news about ${query}, offering different perspectives on its significance. ` +
+      `Various stakeholders have responded to the news about ${queryContext}, offering different perspectives on its significance. ` +
       `Government officials have called for a measured approach, while advocacy groups emphasize the need for immediate action. ` +
       `Corporate leaders are assessing potential business implications, with some seeing opportunity and others expressing caution.`
     );
     
     // Future implications
     sections.push(
-      `Looking ahead, the implications of ${query} are expected to be far-reaching across multiple sectors. ` +
+      `Looking ahead, the implications of ${queryContext} are expected to be far-reaching across multiple sectors. ` +
       `Experts anticipate continued developments in the coming weeks, with potential regulatory responses and market adjustments. ` +
       `The situation remains fluid, with several possible scenarios that could significantly alter the trajectory of events.`
     );
@@ -423,7 +434,7 @@ export class GoogleSearchAPI {
     // Conclusion
     sections.push(
       `As this story continues to develop, we will provide ongoing coverage with additional information and expert analysis. ` +
-      `The significance of ${query} extends beyond immediate impacts to include longer-term considerations for policy, industry, and society. ` +
+      `The significance of ${queryContext} extends beyond immediate impacts to include longer-term considerations for policy, industry, and society. ` +
       `Readers are encouraged to follow our continuing coverage as new details emerge in this important and evolving story.`
     );
     

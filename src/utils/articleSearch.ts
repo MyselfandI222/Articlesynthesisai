@@ -2,17 +2,12 @@ import { newsAPIs } from './newsAPIs';
 import { searchSportsAPIs } from './sportsAPIs';
 import { categoryAPIs } from './categoryAPIs';
 import { searchAdditionalAPIs } from './additionalAPIs';
-import { searchEnhancedAPIs } from './enhancedAPIs';
-import { searchMegaAPIs } from './megaAPIs';
-import { searchMajorNewsAPIs } from './majorNewsAPIs';
-import { searchAllLocalNews } from './localNewsAPIs';
-import { generateBreakingNews } from './breakingNewsGenerator';
-import { getTodaysBreakingNews, getTodaysTrendingTopics } from './dailyNewsUpdater';
+import { enhanceSearchWithChatGPT } from './chatGptSearchService';
 import { filterSearchResultsByEnabledAPIs, getEnabledAPISources } from './apiFilters';
 import { searchGoogleForArticles, shouldUseGoogleSearch } from './googleSearchAPI';
 import { getSavedLocation } from './locationService';
 import type { Article, Category, SearchFilters } from '../types';
-import { enhanceSearchWithChatGPT } from './chatGptSearchService';
+import { getTodaysTrendingTopics } from './dailyNewsUpdater';
 
 // Main categories available for search
 export const getAllCategories = (): Category[] => {
@@ -152,50 +147,33 @@ export const searchArticles = async (
   searchContext: 'user_typed' | 'trending_click' | 'category_click' = 'user_typed'
 ): Promise<Article[]> => {
   const results: Article[] = [];
-  const enabledAPIs = getEnabledAPISources();
   
   try {
     // Try to enhance search with ChatGPT first
     try {
       if (query.trim().length > 0) {
-        const enhancedSearch = await enhanceSearchWithChatGPT(query, shouldUseGoogleSearch(query, searchContext));
+        // Always use ChatGPT enhanced search with Google integration
+        const enhancedSearch = await enhanceSearchWithChatGPT(query, true);
         if (enhancedSearch.isEnhanced && enhancedSearch.results.length > 0) {
           return enhancedSearch.results;
         }
       }
     } catch (error) {
       console.warn('ChatGPT enhancement failed, continuing with regular search:', error);
-      // Continue with regular search if ChatGPT enhancement fails
     }
 
-    // For user-typed searches, try Google first
-    if (searchContext === 'user_typed' && shouldUseGoogleSearch(query, searchContext) && enabledAPIs.includes('google-search')) {
+    // Try Google search for all queries
+    if (query.trim().length > 0) {
       try {
-        if (query.trim().length > 0) {
-          const googleResults = await searchGoogleForArticles(query, false);
-          if (googleResults.length > 0) {
-            return googleResults; // Return Google results if successful
-          }
+        const googleResults = await searchGoogleForArticles(query, false);
+        if (googleResults.length > 0) {
+          return googleResults; // Return Google results if successful
         }
       } catch (error) {
         console.warn('Google search failed, falling back to internal sources:', error);
-        // Continue with internal search as fallback
       }
     }
 
-    // Normalize query for better matching
-    const normalizedQuery = query.toLowerCase().trim();
-    const queryWords = normalizedQuery.split(/\s+/).filter(word => word.length > 2);
-    
-    // Check for breaking news queries first
-    if (normalizedQuery.includes('breaking') || normalizedQuery.includes('urgent') || 
-        normalizedQuery.includes('latest news') || normalizedQuery.includes('developing')) {
-      // Get today's auto-updated breaking news
-      const todaysBreakingNews = await getTodaysBreakingNews();
-      const breakingNewsResults = todaysBreakingNews.length > 0 ? todaysBreakingNews : generateBreakingNews(query);
-      results.push(...breakingNewsResults);
-    }
-    
     // Search through news APIs
     const newsResults = await Promise.allSettled([
       newsAPIs.searchNews(query, filters),
@@ -209,6 +187,9 @@ export const searchArticles = async (
       }
     });
 
+    const normalizedQuery = query.toLowerCase().trim();
+    const queryWords = normalizedQuery.split(/\s+/).filter(word => word.length > 2);
+    
     // Search sports if category is sports-related
     if (filters.category === 'sports' || 
         queryWords.some(word => ['sport', 'sports', 'football', 'basketball', 'baseball', 'soccer', 'tennis', 'golf', 'hockey', 'nfl', 'nba', 'mlb'].includes(word))) {
@@ -232,56 +213,14 @@ export const searchArticles = async (
       console.warn('Additional API search failed:', error);
     }
 
-    // Search enhanced APIs for comprehensive coverage
-    try {
-      const enhancedResults = await searchEnhancedAPIs(query);
-      if (enhancedResults) {
-        results.push(...enhancedResults);
-      }
-    } catch (error) {
-      console.warn('Enhanced API search failed:', error);
-    }
-
-    // Search mega APIs for comprehensive coverage
-    try {
-      const megaResults = await searchMegaAPIs(query);
-      if (megaResults) {
-        results.push(...megaResults);
-      }
-    } catch (error) {
-      console.warn('Mega API search failed:', error);
-    }
-
-    // Search major news outlets for comprehensive political coverage
-    try {
-      const majorNewsResults = await searchMajorNewsAPIs(query);
-      if (majorNewsResults) {
-        results.push(...majorNewsResults);
-      }
-    } catch (error) {
-      console.warn('Major news API search failed:', error);
-    }
-
-    // Search local news if user has location enabled
-    try {
-      const userLocation = getSavedLocation();
-      if (userLocation) {
-        const localResults = await searchAllLocalNews(query, userLocation);
-        if (localResults) {
-          results.push(...localResults);
-        }
-      }
-    } catch (error) {
-      console.warn('Local news search failed:', error);
-    }
-
     // Always add some fallback results to ensure content is available
     if (results.length < 5) {
       const fallbackResults = generateFallbackResults(query, filters);
       results.push(...fallbackResults);
     }
 
-    // Filter by enabled APIs, remove duplicates, and sort by relevance/date
+    // Get enabled APIs, remove duplicates, and sort by relevance/date
+    const enabledAPIs = getEnabledAPISources();
     const filteredResults = filterSearchResultsByEnabledAPIs(results, enabledAPIs);
     const uniqueResults = removeDuplicateArticles(filteredResults);
     return sortArticlesByRelevance(uniqueResults, query);
