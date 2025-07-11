@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Globe, TrendingUp } from 'lucide-react';
+import { FileText, Sparkles, Globe, TrendingUp, Bot } from 'lucide-react';
 import { getTodaysBreakingNews } from '../utils/dailyNewsUpdater';
 import { classifyBreakingNews, formatEngagementNumber } from '../utils/breakingNewsDetector';
 
@@ -64,6 +64,10 @@ export const Header: React.FC = () => {
               <span className="text-xs font-medium text-purple-800">
                 📊 150K+ Engagement = Breaking News
               </span>
+            </div>
+            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-full px-3 py-1.5 shadow-sm">
+              <Bot className="h-4 w-4 text-purple-600" />
+              <span className="text-xs font-medium text-purple-800">ChatGPT Enhanced</span>
             </div>
             <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-full px-3 py-1.5 shadow-sm">
               <Globe className="h-4 w-4 text-blue-600" />

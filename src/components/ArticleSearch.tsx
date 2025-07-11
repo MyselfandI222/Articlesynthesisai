@@ -3,6 +3,7 @@ import { Search, Plus, ExternalLink, Clock, User, Loader, Lightbulb, Eye, Trendi
 import { Article } from '../types';
 import { searchArticles, getRelatedViewpoints, getTrendingTopics, getSuggestedQueries, getSportsSubcategories, getAllCategories } from '../utils/articleSearch';
 import { searchGoogleForArticles, shouldUseGoogleSearch } from '../utils/googleSearchAPI';
+import { enhanceSearchWithChatGPT } from '../utils/chatGptSearchService';
 import { classifyBreakingNews, getBreakingNewsBadge, formatEngagementNumber, getTrendingStatus } from '../utils/breakingNewsDetector';
 import { filterSearchResultsByEnabledAPIs, getEnabledAPISources } from '../utils/apiFilters';
 import { APIFilterButton } from './APIFilterButton';
@@ -42,6 +43,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   const [showLocalNews, setShowLocalNews] = useState(false);
   const [searchContext, setSearchContext] = useState<'user_typed' | 'trending_click' | 'category_click'>('user_typed');
   const [isGoogleSearch, setIsGoogleSearch] = useState(false);
+  const [chatGptAnalysis, setChatGptAnalysis] = useState<string>('');
+  const [isSearchEnhanced, setIsSearchEnhanced] = useState(false);
+  const [isChatGptLoading, setIsChatGptLoading] = useState(false);
   const [enabledAPIs, setEnabledAPIs] = useState<string[]>([]);
 
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
@@ -87,30 +91,18 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
     setSearchError(null);
     
     try {
-      let results: SearchResult[] = [];
+      // Set ChatGPT loading state
+      setIsChatGptLoading(true);
+      setChatGptAnalysis('');
+      setIsSearchEnhanced(false);
+
+      // Use ChatGPT enhanced search
+      const { results, chatGptAnalysis, isEnhanced } = await enhanceSearchWithChatGPT(query, useGoogle);
       
-      if (useGoogle) {
-        // Use Google search for user-typed queries
-        const isGoogleEnabled = enabledAPIs.includes('google-search');
-        
-        if (!isGoogleEnabled) {
-          // Fall back to internal search if Google is disabled
-          results = await searchArticles(searchQuery);
-          setIsGoogleSearch(false);
-        } else {
-          try {
-            results = await searchGoogleForArticles(searchQuery, false);
-          } catch (googleError) {
-            console.warn('Google search failed, falling back to internal search:', googleError);
-            // Fallback to internal search if Google fails
-            results = await searchArticles(searchQuery);
-            setIsGoogleSearch(false);
-          }
-        }
-      } else {
-        // Use internal search for trending/category clicks
-        results = await searchArticles(searchQuery);
-      }
+      // Update states with results
+      setIsChatGptLoading(false);
+      setChatGptAnalysis(chatGptAnalysis);
+      setIsSearchEnhanced(isEnhanced);
       
       // Filter results based on enabled APIs
       const filteredResults = filterSearchResultsByEnabledAPIs(results, enabledAPIs);
@@ -471,6 +463,42 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             </div>
           )}
 
+          {/* ChatGPT Analysis */}
+          {isChatGptLoading && (
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 mb-6 shadow-sm">
+              <div className="flex items-center space-x-3">
+                <div className="bg-purple-100 p-2 rounded-xl">
+                  <Loader className="h-5 w-5 text-purple-600 animate-spin" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-purple-900">AI Analysis in Progress</h4>
+                  <p className="text-sm text-purple-800">
+                    ChatGPT is analyzing search results to provide insights...
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isChatGptLoading && chatGptAnalysis && (
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 mb-6 shadow-sm">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="bg-purple-100 p-2 rounded-xl">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-purple-900">AI-Enhanced Search Analysis</h4>
+                  <p className="text-sm text-purple-800">
+                    ChatGPT has analyzed the search results to provide key insights
+                  </p>
+                </div>
+              </div>
+              <div className="prose prose-sm max-w-none text-purple-800">
+                <p className="whitespace-pre-wrap">{chatGptAnalysis}</p>
+              </div>
+            </div>
+          )}
+
           {/* Search Results List */}
           {searchResults.length > 0 && (
             <>
@@ -601,6 +629,11 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <Eye className="h-5 w-5 text-purple-600" />
                 <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">Related Perspectives</h4>
                 {isLoadingSuggestions && (
+                    {isSearchEnhanced && (
+                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                        AI-Enhanced
+                      </span>
+                    )}
                   <Loader className="h-4 w-4 animate-spin text-purple-600" />
                 )}
               </div>
@@ -756,9 +789,12 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <div className="flex items-center space-x-2 mb-2">
                   <Sparkles className="h-4 w-4 text-purple-600" />
                   <span className="font-medium text-gray-900">Smart Fallback</span>
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                    ChatGPT Powered
+                  </span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Trending topics and categories use our curated content for instant results
+                  ChatGPT analyzes search results from Google and our curated content
                 </p>
               </div>
             </div>
@@ -995,6 +1031,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <div className="text-sm text-gray-600">News Sources</div>
               </div>
               <div className="text-center">
+                <div className="text-2xl font-bold text-indigo-600">AI</div>
+                <div className="text-sm text-gray-600">Enhanced Search</div>
+              </div>
+              <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">15+</div>
                 <div className="text-sm text-gray-600">Academic Sources</div>
               </div>
@@ -1006,7 +1046,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-700">
                 <strong>Comprehensive Coverage:</strong> Our AI searches across news, academic, social, business, 
-                government, and specialized sources to provide balanced, multi-perspective article synthesis.
+                government, and specialized sources with ChatGPT analysis for balanced, multi-perspective article synthesis.
               </p>
             </div>
           </div>
@@ -1042,6 +1082,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <div className="bg-purple-100 p-2 rounded-lg">
                   <Search className="h-4 w-4 text-purple-600" />
                 </div>
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                    AI-Enhanced
+                  </span>
                 <span className="font-medium text-gray-900">Hybrid Search System</span>
               </div>
               <p className="text-sm text-gray-600">
