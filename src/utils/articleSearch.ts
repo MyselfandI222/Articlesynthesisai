@@ -157,9 +157,11 @@ export const searchArticles = async (
   try {
     // Try to enhance search with ChatGPT first
     try {
-      const enhancedSearch = await enhanceSearchWithChatGPT(query, shouldUseGoogleSearch(query, searchContext));
-      if (enhancedSearch.isEnhanced) {
-        return enhancedSearch.results;
+      if (query.trim().length > 0) {
+        const enhancedSearch = await enhanceSearchWithChatGPT(query, shouldUseGoogleSearch(query, searchContext));
+        if (enhancedSearch.isEnhanced && enhancedSearch.results.length > 0) {
+          return enhancedSearch.results;
+        }
       }
     } catch (error) {
       console.warn('ChatGPT enhancement failed, continuing with regular search:', error);
@@ -169,9 +171,11 @@ export const searchArticles = async (
     // For user-typed searches, try Google first
     if (searchContext === 'user_typed' && shouldUseGoogleSearch(query, searchContext) && enabledAPIs.includes('google-search')) {
       try {
-        const googleResults = await searchGoogleForArticles(query, false);
-        if (googleResults.length > 0) {
-          return googleResults; // Return Google results if successful
+        if (query.trim().length > 0) {
+          const googleResults = await searchGoogleForArticles(query, false);
+          if (googleResults.length > 0) {
+            return googleResults; // Return Google results if successful
+          }
         }
       } catch (error) {
         console.warn('Google search failed, falling back to internal sources:', error);
@@ -558,38 +562,38 @@ const calculateRelevance = (article: Article, query: string): number => {
   
   // Exact phrase matches (highest score)
   if (titleLower.includes(queryLower)) {
-    score += 20;
+    score += 50;
   }
   
   if (contentLower.includes(queryLower)) {
-    score += 15;
+    score += 30;
   }
   
   // Individual word matches
   queryWords.forEach(word => {
     if (titleLower.includes(word)) {
-      score += 8;
+      score += 15;
     }
     if (contentLower.includes(word)) {
-      score += 4;
+      score += 10;
     }
     if (sourceLower.includes(word)) {
-      score += 1;
+      score += 2;
     }
   });
   
   // Boost score for high-quality sources
   const qualitySources = ['reuters', 'associated press', 'bbc', 'npr', 'guardian', 'new york times', 'washington post'];
   if (qualitySources.some(source => sourceLower.includes(source))) {
-    score += 3;
+    score += 5;
   }
   
   // Boost score for recent articles
   if (article.publishedAt) {
     const publishedDate = new Date(article.publishedAt);
     const daysSincePublished = (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSincePublished < 1) score += 2;
-    else if (daysSincePublished < 7) score += 1;
+    if (daysSincePublished < 1) score += 5;
+    else if (daysSincePublished < 7) score += 3;
   }
   
   return score;

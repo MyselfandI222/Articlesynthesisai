@@ -31,6 +31,15 @@ export const enhanceSearchWithChatGPT = async (
   isEnhanced: boolean;
 }> => {
   try {
+    // Skip if query is empty
+    if (!query || query.trim().length === 0) {
+      return {
+        results: [],
+        chatGptAnalysis: '',
+        isEnhanced: false
+      };
+    }
+    
     // First, get search results from APIs
     let searchResults: SearchResult[] = [];
     
@@ -156,13 +165,45 @@ const fetchFallbackNewsArticles = async (query: string): Promise<SearchResult[]>
   try {
     // Use our internal database directly to avoid API issues
     console.info('Using internal news database for consistent results');
-    return fetchRealNewsSourcesDatabase(query);
+    const results = await fetchRealNewsSourcesDatabase(query);
+    return filterResultsByRelevance(results, query);
   } catch (error) {
     console.error('Error fetching fallback news articles:', error);
-    return fetchRealNewsSourcesDatabase(query);
+    const results = await fetchRealNewsSourcesDatabase(query);
+    return filterResultsByRelevance(results, query);
   }
 };
 
+// Filter results by relevance to query
+const filterResultsByRelevance = (results: SearchResult[], query: string): SearchResult[] => {
+  if (!query || query.trim().length === 0) return results;
+  
+  const queryLower = query.toLowerCase().trim();
+  const queryWords = queryLower.split(/\s+/).filter(word => word.length > 2);
+  
+  return results.filter(result => {
+    const titleLower = result.title.toLowerCase();
+    const descLower = result.description.toLowerCase();
+    const contentLower = result.content.toLowerCase();
+    
+    // Check for exact phrase match
+    if (titleLower.includes(queryLower) || 
+        descLower.includes(queryLower) || 
+        contentLower.includes(queryLower)) {
+      return true;
+    }
+    
+    // Check for individual word matches
+    const wordMatches = queryWords.filter(word => 
+      titleLower.includes(word) || 
+      descLower.includes(word) || 
+      contentLower.includes(word)
+    ).length;
+    
+    // Require at least half of the query words to match
+    return wordMatches >= Math.max(1, Math.floor(queryWords.length / 2));
+  });
+}
 // Database of real news sources with actual articles
 const fetchRealNewsSourcesDatabase = async (query: string): Promise<SearchResult[]> => {
   // This is our database of real news sources and their actual articles
