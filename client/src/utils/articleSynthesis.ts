@@ -3,6 +3,7 @@ import { Article, SynthesizedArticle, WritingStyle } from '../types';
 import { synthesizeWithManusAI, editWithManusAI } from './manusAIService';
 import { processAdvancedEditing } from './advancedEditing';
 import { processArticleEdit } from './chatGptService';
+import { synthesizeWithOpenAI } from './openAISynthesis';
 
 // Get user's AI service preference
 export const getAIServicePreference = (): 'default' | 'manus' => {
@@ -65,11 +66,11 @@ export const synthesizeArticles = async (
   const aiService = getAIServicePreference();
   
   if (aiService === 'manus') {
-    // Use Manus AI for synthesis
+    // Use Manus AI for synthesis (note: this is a demo service)
     return synthesizeWithManusAI(sources, topic, style, tone, length);
   } else {
-    // Use default synthesis (simulated for demo)
-    return simulateDefaultSynthesis(sources, topic, style, tone, length);
+    // Use OpenAI for default synthesis
+    return synthesizeWithOpenAI(sources, topic, style, tone, length);
   }
 };
 

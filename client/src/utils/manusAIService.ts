@@ -1,9 +1,12 @@
 // Manus AI Service Integration
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
 
-// Manus AI API configuration
-const MANUS_API_BASE_URL = 'https://api.manus.ai/v1';
-const MANUS_API_KEY = import.meta.env.VITE_MANUS_API_KEY || 'demo-key'; // Replace with actual key in production
+// Manus AI API configuration - This is a demo service, not a real API
+const MANUS_API_BASE_URL = 'https://api.manus.ai/v1'; // This is a placeholder
+const MANUS_API_KEY = import.meta.env.VITE_MANUS_API_KEY || 'demo-key'; 
+
+// Note: Manus AI appears to be a custom/demo service. 
+// For real implementations, users should use OpenAI integration instead.
 
 export interface ManusAIRequest {
   sources: {
@@ -141,7 +144,7 @@ export const synthesizeWithManusAI = async (
       processingMetrics: data.processingMetrics
     };
   } catch (error) {
-    console.error('Manus AI synthesis failed:', error);
+    console.warn('Manus AI synthesis failed (this is expected - it\'s a demo service):', error);
     
     // For demo/development, simulate a successful response
     return simulateManusAIResponse(sources, topic, style, tone, length);
