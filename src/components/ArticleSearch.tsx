@@ -177,25 +177,19 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Categories */}
       {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-gray-600" />
-            <h3 className="text-sm font-medium text-gray-700">Categories</h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Browse by Category</h3>
+          <div className="flex flex-wrap gap-3">
             {categories.slice(0, 8).map((category) => (
               <button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
-                className={`p-3 rounded-lg border text-left hover:shadow-sm transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedCategory === category.id
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                <div className="font-medium">{category.name}</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {category.subcategories.length} subcategories
-                </div>
+                {category.name}
               </button>
             ))}
           </div>
@@ -205,32 +199,29 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Subcategories */}
       {selectedCategory && !isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-600" />
-              <h3 className="text-sm font-medium text-gray-700">Subcategories</h3>
-            </div>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-sm font-medium text-gray-700">Subcategories</h3>
             <button
               onClick={() => {
                 setSelectedCategory(null);
                 setSelectedSubcategory(null);
               }}
-              className="text-xs text-blue-600 hover:text-blue-800"
+              className="text-xs text-blue-600 hover:underline"
             >
               Clear Selection
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {categories
               .find((c) => c.id === selectedCategory)
               ?.subcategories.map((subcategory) => (
                 <button
                   key={subcategory.name}
                   onClick={() => handleCategoryClick(selectedCategory, subcategory.name)}
-                  className={`px-3 py-2 rounded-lg border text-sm transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
                     selectedSubcategory === subcategory.name
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {subcategory.name}
@@ -243,16 +234,13 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Trending Topics */}
       {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-4 w-4 text-gray-600" />
-            <h3 className="text-sm font-medium text-gray-700">Trending Topics</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Trending Topics</h3>
+          <div className="flex flex-wrap gap-3">
             {trendingTopics.slice(0, 8).map((topic, index) => (
               <button
                 key={index}
                 onClick={() => handleTrendingTopicClick(topic)}
-                className="px-3 py-2 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg text-sm hover:from-gray-100 hover:to-gray-200 transition-all text-gray-700 hover:shadow-sm"
+                className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 {topic}
               </button>
