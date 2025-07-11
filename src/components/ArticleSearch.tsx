@@ -247,7 +247,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-700">Trending Topics</h3>
           <div className="flex flex-wrap gap-3">
-            {trendingTopics.slice(0, 8).map((topic, index) => (
+            {trendingTopics.slice(0, 12).map((topic, index) => (
               <button
                 key={index}
                 onClick={() => handleTrendingTopicClick(topic)}

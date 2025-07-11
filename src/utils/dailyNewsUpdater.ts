@@ -535,7 +535,26 @@ class DailyNewsUpdater {
       'International News',
       'Sports Highlights',
       'Entertainment News',
-      'Science Discoveries'
+      'Science Discoveries',
+      'Artificial Intelligence',
+      'Renewable Energy',
+      'Cybersecurity Alerts',
+      'Space Exploration',
+      'Cryptocurrency Markets',
+      'Global Economy',
+      'Healthcare Innovation',
+      'Social Media Trends',
+      'Electric Vehicles',
+      'Quantum Computing',
+      'Remote Work',
+      'Sustainable Living',
+      'Mental Health',
+      'Digital Privacy',
+      'Blockchain Technology',
+      'Streaming Media',
+      'Virtual Reality',
+      'Smart Cities',
+      'Genetic Research'
     ];
 
     // Rotate topics based on day of year
