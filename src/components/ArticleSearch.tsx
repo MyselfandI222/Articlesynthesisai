@@ -529,95 +529,130 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               )}
               
             <div className="space-y-6">
-              {searchResults.map((result) => {
-                // Classify breaking news based on engagement
-                const breakingClassification = classifyBreakingNews(result);
-                const breakingBadge = getBreakingNewsBadge(breakingClassification);
-                const trendingStatus = getTrendingStatus(breakingClassification.engagementMetrics);
-                
-                return (
-                  <div
-                    key={result.id}
-                    className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all transform hover:-translate-y-1"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {searchResults.map((result) => {
+                  // Classify breaking news based on engagement
+                  const breakingClassification = classifyBreakingNews(result);
+                  const breakingBadge = getBreakingNewsBadge(breakingClassification);
+                  const trendingStatus = getTrendingStatus(breakingClassification.engagementMetrics);
+                  
+                  return (
+                    <div
+                      key={result.id}
+                      className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 flex flex-col h-full"
+                    >
+                      {/* Article Header */}
+                      <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm text-gray-700">{result.source}</span>
                           {isGoogleSearch && (
-                            <span className="inline-flex items-center space-x-1 mr-2">
+                            <span className="inline-flex items-center space-x-1">
                               <Globe className="h-3 w-3 text-blue-500" />
+                              <span className="text-xs text-blue-600">Google</span>
                             </span>
                           )}
+                        </div>
+                        
+                        <h4 className="font-semibold text-gray-900 line-clamp-2 h-12">
                           {result.title}
                         </h4>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                          <span className="font-medium">{result.source}</span>
+                        
+                        {/* Badges Row */}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {getViewpointBadge(result.viewpoint)}
+                          
+                          {breakingBadge.show && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${breakingBadge.className} flex items-center space-x-1`}>
+                              <span>{breakingBadge.icon}</span>
+                              <span>{breakingBadge.text}</span>
+                            </span>
+                          )}
+                          
+                          {trendingStatus.isTrending && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center space-x-1 ${
+                              trendingStatus.trendingLevel === 'hot' 
+                                ? 'bg-red-100 text-red-800' 
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              <span>📈</span>
+                              <span>{trendingStatus.trendingLevel.toUpperCase()}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Article Content */}
+                      <div className="p-4 flex-grow">
+                        <div className="flex items-center space-x-3 text-xs text-gray-500 mb-3">
                           {result.author && (
                             <div className="flex items-center space-x-1">
                               <User className="h-3 w-3" />
-                              <span>{result.author}</span>
+                              <span className="truncate max-w-[100px]">{result.author}</span>
                             </div>
                           )}
                           <div className="flex items-center space-x-1">
                             <Clock className="h-3 w-3" />
                             <span>{new Date(result.publishedAt).toLocaleDateString()}</span>
                           </div>
-                          {getViewpointBadge(result.viewpoint)}
-                          
-                          {/* Engagement Metrics Display */}
-                          <div className="flex items-center space-x-3 text-xs text-gray-500 mt-2">
-                            <div className="flex items-center space-x-1">
-                              <Eye className="h-3 w-3" />
-                              <span>{formatEngagementNumber(breakingClassification.engagementMetrics.views)} views</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <span>💬</span>
-                              <span>{formatEngagementNumber(breakingClassification.engagementMetrics.comments)}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <span>🔄</span>
-                              <span>{formatEngagementNumber(breakingClassification.engagementMetrics.shares)}</span>
-                            </div>
-                            <div className="text-blue-600 font-medium">
-                              {formatEngagementNumber(breakingClassification.engagementMetrics.totalEngagement)} total engagement
-                            </div>
-                          </div>
                         </div>
-                        <p className="text-gray-700 text-sm mb-3 line-clamp-3">
+                        
+                        <p className="text-gray-700 text-sm mb-4 line-clamp-4 h-24">
                           {result.description || result.content.substring(0, 200) + '...'}
                         </p>
+                        
+                        {/* Engagement Metrics */}
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                          <div className="flex items-center space-x-1">
+                            <Eye className="h-3 w-3" />
+                            <span>{formatEngagementNumber(breakingClassification.engagementMetrics.views)}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span>💬</span>
+                            <span>{formatEngagementNumber(breakingClassification.engagementMetrics.comments)}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span>🔄</span>
+                            <span>{formatEngagementNumber(breakingClassification.engagementMetrics.shares)}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-blue-600 font-medium mb-4">
+                          {formatEngagementNumber(breakingClassification.engagementMetrics.totalEngagement)} total engagement
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleAddArticle(result)}
-                          className={`px-4 py-2 rounded-xl transition-all flex items-center space-x-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${
-                            isArticleAdded(result.id)
-                              ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700'
-                              : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800'
-                          }`}
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span>{isArticleAdded(result.id) ? 'Unadd' : 'Add to Sources'}</span>
-                        </button>
-                        {result.url && result.url !== '#' && (
-                          <a
-                            href={result.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 transition-colors flex items-center space-x-1 px-3 py-2 hover:bg-blue-50 rounded-lg"
+                      
+                      {/* Article Actions */}
+                      <div className="p-4 border-t border-gray-100 mt-auto">
+                        <div className="flex flex-col space-y-2">
+                          <button
+                            onClick={() => handleAddArticle(result)}
+                            className={`px-4 py-2 rounded-lg transition-all flex items-center justify-center space-x-2 ${
+                              isArticleAdded(result.id)
+                                ? 'bg-gray-600 text-white hover:bg-gray-700'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}
                           >
-                            <ExternalLink className="h-4 w-4" />
-                            <span>View Original</span>
-                          </a>
-                        )}
+                            <Plus className="h-4 w-4" />
+                            <span>{isArticleAdded(result.id) ? 'Remove from Sources' : 'Add to Sources'}</span>
+                          </button>
+                          
+                          {result.url && result.url !== '#' && (
+                            <a
+                              href={result.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 transition-colors flex items-center justify-center space-x-2 px-4 py-2 border border-blue-200 rounded-lg hover:bg-blue-50"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              <span>View Original Article</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
             </>
           )}
@@ -625,7 +660,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
           {/* Related Viewpoints */}
           {selectedArticleId && (
             <div className="space-y-6">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mb-4">
                 <Eye className="h-5 w-5 text-purple-600" />
                 <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">Related Perspectives</h4>
                 {isLoadingSuggestions && (
@@ -641,31 +676,54 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               </div>
               
               {suggestedViewpoints.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {suggestedViewpoints.map((viewpoint) => (
                     <div
                       key={viewpoint.id}
-                      className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-all"
+                      className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-all flex flex-col h-full"
                     >
-                      <h5 className="font-medium text-purple-900 mb-2 line-clamp-2">
-                        {viewpoint.title}
-                      </h5>
-                      <p className="text-purple-800 text-sm mb-3 line-clamp-2">
-                        {viewpoint.description}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-purple-600">{viewpoint.source}</span>
-                        <button
-                          onClick={() => handleAddArticle(viewpoint)}
-                          className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center space-x-1 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${
-                            isArticleAdded(viewpoint.id)
-                              ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700'
-                              : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'
-                          }`}
-                        >
-                          <Plus className="h-3 w-3" />
-                          <span>{isArticleAdded(viewpoint.id) ? 'Unadd' : 'Add'}</span>
-                        </button>
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-purple-600 font-medium">{viewpoint.source}</span>
+                          {getViewpointBadge(viewpoint.viewpoint)}
+                        </div>
+                        <h5 className="font-medium text-purple-900 mb-2 line-clamp-2">
+                          {viewpoint.title}
+                        </h5>
+                      </div>
+                      
+                      <div className="flex-grow">
+                        <p className="text-purple-800 text-sm mb-3 line-clamp-3">
+                          {viewpoint.description}
+                        </p>
+                      </div>
+                      
+                      <div className="mt-auto pt-3 border-t border-purple-200">
+                        <div className="flex flex-col space-y-2">
+                          <button
+                            onClick={() => handleAddArticle(viewpoint)}
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center justify-center space-x-1 ${
+                              isArticleAdded(viewpoint.id)
+                                ? 'bg-gray-600 text-white hover:bg-gray-700'
+                                : 'bg-purple-600 text-white hover:bg-purple-700'
+                            }`}
+                          >
+                            <Plus className="h-3 w-3" />
+                            <span>{isArticleAdded(viewpoint.id) ? 'Remove from Sources' : 'Add to Sources'}</span>
+                          </button>
+                          
+                          {viewpoint.url && viewpoint.url !== '#' && (
+                            <a
+                              href={viewpoint.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-purple-600 hover:text-purple-800 transition-colors flex items-center justify-center space-x-2 px-3 py-1.5 border border-purple-200 rounded-lg hover:bg-purple-50"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              <span>View Original Article</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -677,13 +735,13 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
           {/* Local News Results */}
           {localNews.length > 0 && showLocalNews && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mb-4">
                 <MapPin className="h-5 w-5 text-blue-600" />
                 <h4 className="font-semibold text-gray-900">Local News Results</h4>
                 <span className="text-sm text-gray-600">({localNews.length} articles)</span>
               </div>
               
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {localNews.map((localResult) => {
                   // Classify breaking news based on engagement
                   const breakingClassification = classifyBreakingNews(localResult);
@@ -693,12 +751,24 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                   return (
                     <div
                       key={localResult.id}
-                      className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                      className="bg-blue-50 border border-blue-200 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col h-full"
                     >
-                      <h5 className="font-medium text-blue-900 mb-2">
-                        {localResult.title}
-                        {/* Breaking News and Trending Badges */}
-                        <div className="flex items-center space-x-2 mb-2">
+                      {/* Article Header */}
+                      <div className="p-4 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm text-blue-700">{localResult.source}</span>
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3 text-blue-600" />
+                            <span className="text-xs text-blue-600">Local</span>
+                          </div>
+                        </div>
+                        
+                        <h5 className="font-medium text-blue-900 line-clamp-2 h-12">
+                          {localResult.title}
+                        </h5>
+                        
+                        {/* Badges Row */}
+                        <div className="flex flex-wrap gap-2 mt-2">
                           {breakingBadge.show && (
                             <span className={`px-2 py-1 rounded-full text-xs font-bold ${breakingBadge.className} flex items-center space-x-1`}>
                               <span>{breakingBadge.icon}</span>
@@ -716,11 +786,14 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                             </span>
                           )}
                         </div>
-                      </h5>
-                      <p className="text-blue-800 text-sm mb-3">
-                        {localResult.description}
-                      </p>
-                      <div className="flex justify-between items-center">
+                      </div>
+                      
+                      {/* Article Content */}
+                      <div className="p-4 flex-grow">
+                        <p className="text-blue-800 text-sm mb-4 line-clamp-4 h-24">
+                          {localResult.description}
+                        </p>
+                        
                         {/* Breaking News Details */}
                         {breakingClassification.isBreaking && (
                           <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
@@ -732,18 +805,35 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                             )}
                           </div>
                         )}
-                        <span className="text-xs text-blue-600">{localResult.source}</span>
-                        <button
-                          onClick={() => handleAddArticle(localResult)}
-                          className={`px-3 py-1 rounded text-sm transition-colors flex items-center space-x-1 ${
-                            isArticleAdded(localResult.id)
-                              ? 'bg-gray-500 text-white hover:bg-gray-600'
-                              : 'bg-blue-600 text-white hover:bg-blue-700'
-                          }`}
-                        >
-                          <Plus className="h-3 w-3" />
-                          <span>{isArticleAdded(localResult.id) ? 'Unadd' : 'Add'}</span>
-                        </button>
+                      </div>
+                      
+                      {/* Article Actions */}
+                      <div className="p-4 border-t border-blue-100 mt-auto">
+                        <div className="flex flex-col space-y-2">
+                          <button
+                            onClick={() => handleAddArticle(localResult)}
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center justify-center space-x-1 ${
+                              isArticleAdded(localResult.id)
+                                ? 'bg-gray-600 text-white hover:bg-gray-700'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                            }`}
+                          >
+                            <Plus className="h-3 w-3" />
+                            <span>{isArticleAdded(localResult.id) ? 'Remove from Sources' : 'Add to Sources'}</span>
+                          </button>
+                          
+                          {localResult.url && localResult.url !== '#' && (
+                            <a
+                              href={localResult.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 transition-colors flex items-center justify-center space-x-2 px-3 py-1.5 border border-blue-200 rounded-lg hover:bg-blue-100"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              <span>View Original Article</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
