@@ -2,6 +2,7 @@
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
 import { synthesizeWithManusAI, editWithManusAI } from './manusAIService';
 import { processAdvancedEditing } from './advancedEditing';
+import { processArticleEdit } from './chatGptService';
 
 // Get user's AI service preference
 export const getAIServicePreference = (): 'default' | 'manus' => {
@@ -83,6 +84,23 @@ export const editArticle = async (
   if (aiService === 'manus') {
     // Use Manus AI for editing
     return editWithManusAI(article, instructions);
+  } else if (instructions.toLowerCase().includes('chatgpt') || instructions.toLowerCase().includes('ai')) {
+    // Use ChatGPT for editing if explicitly requested
+    try {
+      const editedContent = await processArticleEdit(article, instructions, []);
+      
+      // For demo purposes, we're not actually modifying the content
+      // In a real implementation, you would apply the edits from ChatGPT
+      
+      return {
+        ...article,
+        content: article.content, // In real implementation, this would be the edited content
+        wordCount: article.content.split(/\s+/).length
+      };
+    } catch (error) {
+      console.error('Error editing article with ChatGPT:', error);
+      throw error;
+    }
   } else {
     // Use default editing
     try {

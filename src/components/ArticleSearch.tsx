@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, ExternalLink, Clock, User, Loader, Lightbulb, Eye, TrendingUp, Sparkles, ChevronDown, ChevronRight, MapPin, Globe } from 'lucide-react';
+import { Search, Plus, ExternalLink, Clock, User, Loader, Lightbulb, Eye, TrendingUp, Sparkles, ChevronDown, ChevronRight, MapPin, Globe, Bot } from 'lucide-react';
 import { Article } from '../types';
 import { searchArticles, getRelatedViewpoints, getTrendingTopics, getSuggestedQueries, getSportsSubcategories, getAllCategories } from '../utils/articleSearch';
 import { searchGoogleForArticles, shouldUseGoogleSearch } from '../utils/googleSearchAPI';
