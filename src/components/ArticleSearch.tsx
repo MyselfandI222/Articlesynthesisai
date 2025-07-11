@@ -97,7 +97,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       setIsSearchEnhanced(false);
 
       // Use ChatGPT enhanced search
-      const { results, chatGptAnalysis, isEnhanced } = await enhanceSearchWithChatGPT(query, useGoogle);
+      const { results, chatGptAnalysis, isEnhanced } = await enhanceSearchWithChatGPT(searchQuery, useGoogle);
       
       // Update states with results
       setIsChatGptLoading(false);
