@@ -177,7 +177,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Categories */}
       {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-700">Browse by Category</h3>
+          <h3 className="text-sm font-medium text-gray-700 flex items-center">
+            <Filter className="h-4 w-4 mr-2 text-gray-600" />
+            Browse by Category
+          </h3>
           <div className="flex flex-wrap gap-3">
             {categories.slice(0, 8).map((category) => (
               <button
@@ -185,8 +188,8 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 onClick={() => handleCategoryClick(category.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                    ? category.color ? `${category.color} border-2 border-gray-300 shadow-sm` : 'bg-blue-600 text-white'
+                    : category.color ? category.color : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }`}
               >
                 {category.name}
@@ -214,14 +217,14 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
           <div className="flex flex-wrap gap-3">
             {categories
               .find((c) => c.id === selectedCategory)
-              ?.subcategories.map((subcategory) => (
+              ?.subcategories.map((subcategory, index) => (
                 <button
                   key={subcategory.name}
                   onClick={() => handleCategoryClick(selectedCategory, subcategory.name)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     selectedSubcategory === subcategory.name
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : `bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-100 text-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-800 hover:bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-200`
                   }`}
                 >
                   {subcategory.name}
