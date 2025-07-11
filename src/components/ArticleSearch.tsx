@@ -339,7 +339,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
           
           {/* Old non-grouped results - now hidden */}
           {false && <div className="space-y-3">
-            {searchResults.filter(result => result.title && result.description).map((result) => (
+            {searchResults.filter(result => result.title && result.description).map((result) => {
               const isAdded = isArticleAdded(result.id);
               const breakingNews = classifyBreakingNews(result);
               const breakingBadge = getBreakingNewsBadge(breakingNews);
@@ -419,7 +419,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                   </div>
                 </div>
               );
-            ))}
+            })}
           </div>}
         </div>
       )}
