@@ -4,6 +4,7 @@ import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, Refresh
 import { ManusAIMetrics } from './ManusAIMetrics';
 import { ImageGenerator } from './ImageGenerator';
 import { editAIImage, ImageGenerationOptions } from '../utils/imageGeneration';
+import { sendMessageToChatGPT, processArticleEdit } from '../utils/chatGptService';
 
 interface ArticlePreviewProps {
   article: SynthesizedArticle;
@@ -25,15 +26,12 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, onEdit,
   const handleSendMessage = () => {
     if (!currentMessage.trim()) return;
 
-    // Analyze the message to determine edit type
-    const editType = determineEditType(currentMessage);
-    
+    // Create user message
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: currentMessage,
       timestamp: new Date(),
-      editType,
     };
 
     setChatMessages([...chatMessages, newMessage]);
@@ -49,83 +47,39 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, onEdit,
     )) {
       handleImageEdit(currentMessage);
     } else {
+      // Show loading state
+      setIsEditing(true);
+      
+      // Process the edit with ChatGPT
       onEdit(currentMessage);
     }
     
     setCurrentMessage('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responseContent = generateAIResponse(currentMessage, editType);
-      
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseContent,
-        timestamp: new Date(),
-        editType: 'general',
-      };
-      setChatMessages(prev => [...prev, aiResponse]);
-    }, 1000);
-  };
-
-  // Determine the type of edit based on user message
-  const determineEditType = (message: string): 'general' | 'phrase-edit' | 'phrase-removal' | 'content-addition' => {
-    const messageLower = message.toLowerCase();
-    
-    if (messageLower.includes('remove') || messageLower.includes('delete') || messageLower.includes('take out')) {
-      return 'phrase-removal';
-    } else if (messageLower.includes('change') || messageLower.includes('replace') || messageLower.includes('instead of')) {
-      return 'phrase-edit';
-    } else if (messageLower.includes('add') || messageLower.includes('include') || messageLower.includes('mention')) {
-      return 'content-addition';
-    } else {
-      return 'general';
-    }
-  };
-
-  // Generate appropriate AI response based on edit type
-  const generateAIResponse = (message: string, editType: string): string => {
-    const messageLower = message.toLowerCase();
-    
-    switch (editType) {
-      case 'phrase-removal':
-        if (messageLower.includes('"')) {
-          const match = message.match(/"([^"]+)"/);
-          const phrase = match ? match[1] : 'the specified text';
-          return `I've removed "${phrase}" from the article. The content has been adjusted to maintain flow and readability.`;
-        }
-        return "I've removed the specified content from the article and adjusted the surrounding text for better flow.";
-        
-      case 'phrase-edit':
-        const changeMatch = message.match(/change "([^"]+)" to "([^"]+)"/i) || 
-                           message.match(/replace "([^"]+)" with "([^"]+)"/i);
-        if (changeMatch) {
-          return `I've changed "${changeMatch[1]}" to "${changeMatch[2]}" in the article.`;
-        }
-        return "I've made the requested phrase changes while maintaining the article's coherence and style.";
-        
-      case 'content-addition':
-        const addMatch = message.match(/add "([^"]+)"/i) || message.match(/include "([^"]+)"/i);
-        if (addMatch) {
-          return `I've added "${addMatch[1]}" to the article in an appropriate location.`;
-        }
-        return "I've added the requested content to the article, integrating it seamlessly with the existing text.";
-        
-      default:
-        if (messageLower.includes('formal')) {
-          return "I've adjusted the tone to be more formal, using professional language and removing contractions.";
-        } else if (messageLower.includes('casual')) {
-          return "I've made the tone more casual and conversational, making it more accessible to readers.";
-        } else if (messageLower.includes('shorter')) {
-          return "I've condensed the article while preserving the key points and main arguments.";
-        } else if (messageLower.includes('longer')) {
-          return "I've expanded the article with additional details and explanations to provide more comprehensive coverage.";
-        } else if (messageLower.includes('simpler')) {
-          return "I've simplified the language and replaced complex terms with more accessible alternatives.";
-        }
-        return "I've updated the article based on your feedback. The changes have been applied while maintaining the original synthesis approach.";
-    }
+    // Process the edit with ChatGPT and get response
+    processArticleEdit(article, currentMessage, chatMessages)
+      .then(responseContent => {
+        const aiResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: responseContent,
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+      })
+      .catch(error => {
+        console.error('Error getting AI response:', error);
+        const errorResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: "I'm sorry, I encountered an error processing your request. Please try again with different instructions.",
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, errorResponse]);
+      })
+      .finally(() => {
+        setIsEditing(false);
+      });
   };
 
   const handleImageGenerated = (image: AIImage) => {
@@ -487,10 +441,10 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, onEdit,
                 disabled={!currentMessage.trim() || isEditingImage}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
-                {isEditingImage ? (
+                {isEditingImage || isEditing ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Editing Image...</span>
+                    <span>{isEditingImage ? 'Editing Image...' : 'Processing...'}</span>
                   </>
                 ) : (
                   <>
