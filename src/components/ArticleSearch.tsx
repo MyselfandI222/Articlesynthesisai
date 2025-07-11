@@ -177,7 +177,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Categories */}
       {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Browse by Category</h3>
+          <h3 className="text-sm font-medium text-gray-700">Browse by Category</h3>
           <div className="flex flex-wrap gap-3">
             {categories.slice(0, 8).map((category) => (
               <button
@@ -185,8 +185,8 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 onClick={() => handleCategoryClick(category.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedCategory === category.id
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                 }`}
               >
                 {category.name}
@@ -199,7 +199,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Subcategories */}
       {selectedCategory && !isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center">
             <h3 className="text-sm font-medium text-gray-700">Subcategories</h3>
             <button
               onClick={() => {
@@ -218,10 +218,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <button
                   key={subcategory.name}
                   onClick={() => handleCategoryClick(selectedCategory, subcategory.name)}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     selectedSubcategory === subcategory.name
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {subcategory.name}
@@ -234,13 +234,13 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Trending Topics */}
       {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Trending Topics</h3>
+          <h3 className="text-sm font-medium text-gray-700">Trending Topics</h3>
           <div className="flex flex-wrap gap-3">
             {trendingTopics.slice(0, 8).map((topic, index) => (
               <button
                 key={index}
                 onClick={() => handleTrendingTopicClick(topic)}
-                className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
               >
                 {topic}
               </button>
