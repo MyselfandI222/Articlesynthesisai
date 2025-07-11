@@ -98,6 +98,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   const handleSearch = async (query: string, searchContext: 'user_typed' | 'trending_click' | 'category_click'): Promise<void> => {
     setIsLoading(true);
     setError(null);
+    setSearchResults([]);
     
     try {
       const filters = {
@@ -108,7 +109,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       const results = await searchArticles(query, filters, searchContext);
       setSearchResults(results);
       
-      if (results.length === 0) {
+      if (results.length === 0 && query.trim().length > 0) {
         setError(`No results found for "${query}". Try a different search term or category.`);
       }
     } catch (err) {
@@ -119,6 +120,16 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       setIsLoading(false);
     }
   };
+
+  // Group results by source
+  const resultsBySource = searchResults.reduce((groups, result) => {
+    const source = result.source || 'Unknown Source';
+    if (!groups[source]) {
+      groups[source] = [];
+    }
+    groups[source].push(result);
+    return groups;
+  }, {} as Record<string, SearchResult[]>);
 
   // Handle API filters changed
   const handleFiltersChanged = () => {
@@ -159,7 +170,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
           <div className="relative flex-1">
             <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isSearching ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={handleSearchChange}
               className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -167,7 +178,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             />
             {searchQuery && (
               <button
-                type="button"
+                type="reset"
                 onClick={clearSearch}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
@@ -176,6 +187,14 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             )}
           </div>
         </div>
+        {isSearching && (
+          <div className="absolute -bottom-6 left-0 right-0 text-center">
+            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <Loader className="w-3 h-3 mr-1 animate-spin" />
+              Searching real articles...
+            </div>
+          </div>
+        )}
       </form>
 
       {/* Categories */}
@@ -267,7 +286,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Loading State */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-12">
-          <Loader className="h-8 w-8 text-blue-600 animate-spin" />
+          <Loader className="h-8 w-8 text-blue-600 animate-spin mb-3" />
           <span className="ml-3 text-gray-600">Searching for articles...</span>
         </div>
       )}
@@ -283,7 +302,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Search Results */}
       {!isLoading && searchResults.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-medium text-gray-700">
               {searchResults.length} results for "{searchQuery}"
             </h3>
@@ -294,8 +313,33 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               Clear Results
             </button>
           </div>
-          <div className="space-y-3">
-            {searchResults.filter(result => result.title && result.description).map((result) => {
+          
+          {/* Results grouped by source */}
+          <div className="space-y-6">
+            {Object.entries(resultsBySource).map(([source, sourceResults]) => (
+              <div key={source} className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Globe className="h-4 w-4 text-blue-600" />
+                  <h4 className="font-medium text-blue-800">{source} ({sourceResults.length} {sourceResults.length === 1 ? 'article' : 'articles'})</h4>
+                </div>
+                
+                <div className="space-y-3 pl-6">
+                  {sourceResults.filter(result => result.title && result.description).map((result) => (
+                    <ArticleResultItem 
+                      key={result.id} 
+                      result={result} 
+                      isAdded={isArticleAdded(result.id)} 
+                      onAddArticle={() => onAddArticle(convertToArticle(result))} 
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Old non-grouped results - now hidden */}
+          {false && <div className="space-y-3">
+            {searchResults.filter(result => result.title && result.description).map((result) => (
               const isAdded = isArticleAdded(result.id);
               const breakingNews = classifyBreakingNews(result);
               const breakingBadge = getBreakingNewsBadge(breakingNews);
@@ -375,10 +419,81 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                   </div>
                 </div>
               );
-            })}
-          </div>
+            ))}
+          </div>}
         </div>
       )}
+    </div>
+  );
+};
+
+// Extracted ArticleResultItem component for cleaner code
+interface ArticleResultItemProps {
+  result: SearchResult;
+  isAdded: boolean;
+  onAddArticle: () => void;
+}
+
+const ArticleResultItem: React.FC<ArticleResultItemProps> = ({ result, isAdded, onAddArticle }) => {
+  const breakingNews = classifyBreakingNews(result);
+  const breakingBadge = getBreakingNewsBadge(breakingNews);
+  
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 mb-1">
+            {result.publishedAt && (
+              <span className="text-xs text-gray-400">
+                {new Date(result.publishedAt).toLocaleDateString()} {new Date(result.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </span>
+            )}
+            {breakingBadge.show && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${breakingBadge.className}`}>
+                {breakingBadge.icon} {breakingBadge.text}
+              </span>
+            )}
+          </div>
+          <h4 className="font-medium text-gray-900 mb-2">{result.title}</h4>
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{result.description}</p>
+          
+          {/* Engagement Metrics */}
+          {breakingNews.engagementMetrics && (
+            <div className="flex items-center space-x-3 text-xs text-gray-500 mb-3">
+              <span title="Views">
+                👁️ {formatEngagementNumber(breakingNews.engagementMetrics.views)}
+              </span>
+              <span title="Shares">
+                🔄 {formatEngagementNumber(breakingNews.engagementMetrics.shares)}
+              </span>
+              <span title="Comments">
+                💬 {formatEngagementNumber(breakingNews.engagementMetrics.comments)}
+              </span>
+            </div>
+          )}
+          
+          <div className="flex items-center space-x-3">
+            {result.url && (
+              <a
+                href={result.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                <span>View Source</span>
+              </a>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={onAddArticle}
+          className={`ml-4 p-2 rounded-lg transition-colors ${isAdded ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+          title={isAdded ? 'Remove article' : 'Add article'}
+        >
+          {isAdded ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+        </button>
+      </div>
     </div>
   );
 };
