@@ -451,7 +451,7 @@ const fetchRealNewsSourcesDatabase = async (query: string): Promise<SearchResult
   // Filter articles based on query relevance
   const relevantArticles: SearchResult[] = [];
   const queryLower = query.toLowerCase().trim();
-  const queryWords = queryLower.split(/\s+/).filter(word => word.length > 2);
+  const dbQueryWords = queryLower.split(/\s+/).filter(word => word.length > 2);
   
   realNewsSources.forEach(source => {
     const sourceArticles: SearchResult[] = [];
@@ -469,14 +469,14 @@ const fetchRealNewsSourcesDatabase = async (query: string): Promise<SearchResult
       
       // Check for individual word matches
       if (!isRelevant && queryWords.length > 0) {
-        const matchCount = queryWords.filter(word => 
+        const matchCount = dbQueryWords.filter(word => 
           article.title.toLowerCase().includes(word) ||
           article.content.toLowerCase().includes(word) ||
           article.description.toLowerCase().includes(word)
         ).length;
         
         // Consider relevant if at least 50% of query words match
-        if (matchCount >= Math.max(1, Math.floor(queryWords.length * 0.5))) {
+        if (matchCount >= Math.max(1, Math.floor(dbQueryWords.length * 0.5))) {
           isRelevant = true;
         }
       }
