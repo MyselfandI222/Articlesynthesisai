@@ -12,6 +12,7 @@ import { filterSearchResultsByEnabledAPIs, getEnabledAPISources } from './apiFil
 import { searchGoogleForArticles, shouldUseGoogleSearch } from './googleSearchAPI';
 import { getSavedLocation } from './locationService';
 import type { Article, Category, SearchFilters } from '../types';
+import { enhanceSearchWithChatGPT } from './chatGptSearchService';
 
 // Main categories available for search
 export const getAllCategories = (): Category[] => {
@@ -154,6 +155,17 @@ export const searchArticles = async (
   const enabledAPIs = getEnabledAPISources();
   
   try {
+    // Try to enhance search with ChatGPT first
+    try {
+      const enhancedSearch = await enhanceSearchWithChatGPT(query, shouldUseGoogleSearch(query, searchContext));
+      if (enhancedSearch.isEnhanced) {
+        return enhancedSearch.results;
+      }
+    } catch (error) {
+      console.warn('ChatGPT enhancement failed, continuing with regular search:', error);
+      // Continue with regular search if ChatGPT enhancement fails
+    }
+
     // For user-typed searches, try Google first
     if (searchContext === 'user_typed' && shouldUseGoogleSearch(query, searchContext) && enabledAPIs.includes('google-search')) {
       try {
