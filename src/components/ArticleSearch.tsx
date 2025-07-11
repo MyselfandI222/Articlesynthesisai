@@ -177,7 +177,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Categories */}
       {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-700 flex items-center">
+          <h3 className="text-sm font-medium text-gray-700 flex items-center mb-3">
             <Filter className="h-4 w-4 mr-2 text-gray-600" />
             Browse by Category
           </h3>
@@ -200,37 +200,45 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       )}
 
       {/* Subcategories */}
-      {selectedCategory && !isLoading && searchResults.length === 0 && (
+      {!isLoading && searchResults.length === 0 && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm font-medium text-gray-700">Subcategories</h3>
-            <button
-              onClick={() => {
-                setSelectedCategory(null);
-                setSelectedSubcategory(null);
-              }}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              Clear Selection
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {categories
-              .find((c) => c.id === selectedCategory)
-              ?.subcategories.map((subcategory, index) => (
-                <button
-                  key={subcategory.name}
-                  onClick={() => handleCategoryClick(selectedCategory, subcategory.name)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    selectedSubcategory === subcategory.name
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : `bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-100 text-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-800 hover:bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-200`
-                  }`}
-                >
-                  {subcategory.name}
-                </button>
-              ))}
-          </div>
+          {categories.map((category) => (
+            <div key={category.id} className="mb-6">
+              <div 
+                className={`flex items-center space-x-2 mb-2 ${
+                  selectedCategory === category.id ? 'text-blue-700 font-medium' : 'text-gray-700'
+                }`}
+              >
+                <h3 className="text-sm">{category.name}</h3>
+                {selectedCategory === category.id && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setSelectedSubcategory(null);
+                    }}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {category.subcategories.slice(0, 8).map((subcategory, index) => (
+                  <button
+                    key={subcategory.name}
+                    onClick={() => handleCategoryClick(category.id, subcategory.name)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      selectedCategory === category.id && selectedSubcategory === subcategory.name
+                        ? 'bg-blue-500 text-white shadow-sm'
+                        : `bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-100 text-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-800 hover:bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-200`
+                    }`}
+                  >
+                    {subcategory.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
