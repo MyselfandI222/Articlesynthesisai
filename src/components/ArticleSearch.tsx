@@ -664,14 +664,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 <Eye className="h-5 w-5 text-purple-600" />
                 <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">Related Perspectives</h4>
                 {isLoadingSuggestions && (
-                  <>
-                    {isSearchEnhanced && (
-                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
-                        AI-Enhanced
-                      </span>
-                    )}
-                    <Loader className="h-4 w-4 animate-spin text-purple-600" />
-                  </>
+                  <Loader className="h-4 w-4 animate-spin text-purple-600" />
                 )}
               </div>
               
