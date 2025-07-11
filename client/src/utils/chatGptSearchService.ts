@@ -44,8 +44,9 @@ export const enhanceSearchWithChatGPT = async (
     let searchResults: SearchResult[] = [];
     
     try {
-      // Always try to get real articles first
-      searchResults = await fetchRealNewsArticles(query, true);
+      // Use our properly implemented news APIs
+      const { newsAPIs } = await import('./newsAPIs');
+      searchResults = await newsAPIs.searchNews(query);
       
       // If no results, try Google search as fallback
       if (searchResults.length === 0 && useGoogleSearch) {
@@ -57,8 +58,8 @@ export const enhanceSearchWithChatGPT = async (
       }
     } catch (error) {
       console.error('Error fetching articles:', error);
-      // Fallback to database
-      searchResults = await fetchRealNewsSourcesDatabase(query);
+      // Fallback to regular article search
+      searchResults = await searchArticles(query);
     }
     
     // If no API key or results are empty, return without enhancement

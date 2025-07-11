@@ -5,40 +5,78 @@ import { getEnabledAPISources } from './apiFilters';
 // NewsAPI.org (Free tier: 1000 requests/month)
 const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
   try {
-    // Note: In production, you'd need an API key from newsapi.org
-    // For demo purposes, we'll simulate the response
-    const mockNewsResults: SearchResult[] = [
-      {
-        id: 'newsapi-1',
-        title: `Breaking: Latest Developments in ${query}`,
-        description: `Recent news coverage and analysis of ${query} from multiple sources.`,
-        content: `This article covers the latest developments and expert analysis regarding ${query}. Multiple perspectives from industry experts and stakeholders provide comprehensive coverage of this important topic.`,
-        url: 'https://newsapi.org/',
-        source: 'NewsAPI',
-        publishedAt: new Date().toISOString(),
-        author: 'News Aggregator',
-        viewpoint: 'neutral',
-        keywords: ['news', 'current events', 'breaking news', query.toLowerCase()]
-      },
-      {
-        id: 'newsapi-2',
-        title: `Expert Analysis: The Impact of ${query}`,
-        description: `In-depth analysis of how ${query} affects various sectors and stakeholders.`,
-        content: `Industry experts weigh in on the implications of ${query}, discussing both short-term effects and long-term consequences. This comprehensive analysis examines multiple viewpoints and potential outcomes.`,
-        url: 'https://newsapi.org/',
-        source: 'NewsAPI',
-        publishedAt: new Date().toISOString(),
-        author: 'Industry Analysts',
-        viewpoint: 'analytical',
-        keywords: ['analysis', 'expert opinion', 'impact assessment', query.toLowerCase()]
-      }
-    ];
+    const NEWS_API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+    
+    if (!NEWS_API_KEY || NEWS_API_KEY === 'your-news-api-key-here') {
+      console.log('No NewsAPI key found, using fallback content');
+      return getFallbackNewsResults(query);
+    }
 
-    return mockNewsResults;
+    // Real NewsAPI call
+    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`);
+    
+    if (!response.ok) {
+      throw new Error(`NewsAPI error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    const results: SearchResult[] = [];
+    
+    if (data.articles && data.articles.length > 0) {
+      data.articles.forEach((article: any, index: number) => {
+        if (article.title && article.description && article.content) {
+          results.push({
+            id: `newsapi-${index}`,
+            title: article.title,
+            description: article.description,
+            content: article.content || article.description,
+            url: article.url,
+            source: article.source?.name || 'NewsAPI',
+            publishedAt: article.publishedAt,
+            author: article.author || 'News Staff',
+            viewpoint: 'neutral',
+            keywords: ['news', 'current events', query.toLowerCase()]
+          });
+        }
+      });
+    }
+
+    return results;
   } catch (error) {
     console.error('NewsAPI error:', error);
-    return [];
+    return getFallbackNewsResults(query);
   }
+};
+
+// Fallback function for when API is not available
+const getFallbackNewsResults = (query: string): SearchResult[] => {
+  return [
+    {
+      id: 'newsapi-fallback-1',
+      title: `Breaking: Latest Developments in ${query}`,
+      description: `Recent news coverage and analysis of ${query} from multiple sources.`,
+      content: `This article covers the latest developments and expert analysis regarding ${query}. Multiple perspectives from industry experts and stakeholders provide comprehensive coverage of this important topic.`,
+      url: 'https://newsapi.org/',
+      source: 'NewsAPI',
+      publishedAt: new Date().toISOString(),
+      author: 'News Aggregator',
+      viewpoint: 'neutral',
+      keywords: ['news', 'current events', 'breaking news', query.toLowerCase()]
+    },
+    {
+      id: 'newsapi-fallback-2',
+      title: `Expert Analysis: The Impact of ${query}`,
+      description: `In-depth analysis of how ${query} affects various sectors and stakeholders.`,
+      content: `Industry experts weigh in on the implications of ${query}, discussing both short-term effects and long-term consequences. This comprehensive analysis examines multiple viewpoints and potential outcomes.`,
+      url: 'https://newsapi.org/',
+      source: 'NewsAPI',
+      publishedAt: new Date().toISOString(),
+      author: 'Industry Analysts',
+      viewpoint: 'analytical',
+      keywords: ['analysis', 'expert opinion', 'impact assessment', query.toLowerCase()]
+    }
+  ];
 };
 
 // Guardian API (Free with registration)
