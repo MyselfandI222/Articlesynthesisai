@@ -192,10 +192,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               <button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all transform hover:scale-105 shadow-sm ${
                   selectedCategory === category.id
-                    ? category.color ? `${category.color} border-2 border-gray-300 shadow-sm` : 'bg-blue-600 text-white'
-                    : category.color ? category.color : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                    ? category.color ? `${category.color} border-2 border-gray-300 shadow-md` : 'bg-blue-600 text-white shadow-lg'
+                    : category.color ? category.color : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-gray-200'
                 }`}
               >
                 {category.name}
@@ -233,9 +233,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                   <button
                     key={subcategory.name}
                     onClick={() => handleCategoryClick(category.id, subcategory.name)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all transform hover:scale-105 shadow-sm ${
                       selectedCategory === category.id && selectedSubcategory === subcategory.name
-                        ? 'bg-blue-500 text-white shadow-sm'
+                        ? 'bg-blue-500 text-white shadow-md'
                         : `bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-100 text-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-800 hover:bg-${['blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'red', 'orange'][index % 8]}-200`
                     }`}
                   >
@@ -257,7 +257,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               <button
                 key={index}
                 onClick={() => handleTrendingTopicClick(topic)}
-                className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full text-xs text-gray-700 hover:from-blue-100 hover:to-blue-200 hover:text-blue-800 transition-all transform hover:scale-105 shadow-sm font-medium"
               >
                 {topic}
               </button>
@@ -305,18 +305,24 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               return (
                 <div
                   key={article.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all"
+                  className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-300 group"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs text-blue-600 font-medium">{article.source || 'Unknown Source'}</span>
-                        <span className="text-xs text-gray-400">
-                          {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                          {article.source || 'Unknown Source'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date().toLocaleDateString()} • {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
-                      <h4 className="font-medium text-gray-900 mb-2 leading-tight">{article.title}</h4>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-3">{article.content.substring(0, 200)}...</p>
+                      <h4 className="font-semibold text-gray-900 mb-3 leading-tight text-lg group-hover:text-blue-700 transition-colors">
+                        {article.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                        {article.content.substring(0, 200)}...
+                      </p>
                       
                       <div className="flex items-center space-x-3">
                         {article.url && (
@@ -337,10 +343,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                     </div>
                     <button
                       onClick={() => onAddArticle(article)}
-                      className={`ml-4 p-2 rounded-lg transition-colors ${
+                      className={`ml-4 p-3 rounded-full transition-all shadow-sm hover:shadow-md transform hover:scale-105 ${
                         isAdded
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                       title={isAdded ? 'Remove article' : 'Add article'}
                     >
