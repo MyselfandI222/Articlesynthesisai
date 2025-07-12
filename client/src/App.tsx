@@ -198,7 +198,17 @@ function App() {
               </div>
             )}
 
-            <div className="text-center">
+            {/* Synthesize Button - Made more prominent */}
+            <div className="text-center bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to Synthesize?</h3>
+                <p className="text-sm text-gray-600">
+                  {sources.length > 0 && topic.trim() 
+                    ? `Synthesize ${sources.length} sources into your article about "${topic}"`
+                    : 'Add sources and specify a topic to begin synthesis'
+                  }
+                </p>
+              </div>
               <button
                 onClick={handleSynthesize}
                 disabled={isLoading || sources.length === 0 || !topic.trim()}
