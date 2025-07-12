@@ -10,8 +10,8 @@ const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
     console.log('NewsAPI Key check:', NEWS_API_KEY ? 'Found' : 'Missing');
     
     if (!NEWS_API_KEY || NEWS_API_KEY === 'your-news-api-key-here' || NEWS_API_KEY.length < 10) {
-      console.log('No NewsAPI key found, using fallback content');
-      return getFallbackNewsResults(query);
+      console.log('No NewsAPI key found, trying free sources');
+      return searchFreeNewsSources(query);
     }
 
     // Real NewsAPI call
@@ -47,7 +47,6 @@ const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
     return results;
   } catch (error) {
     console.error('NewsAPI error:', error);
-    // Try free sources instead of fallback
     return searchFreeNewsSources(query);
   }
 };
@@ -347,10 +346,27 @@ const searchGuardianNews = async (query: string): Promise<SearchResult[]> => {
 
 
 
-// Fallback function for when API is not available
-const getFallbackNewsResults = (query: string): SearchResult[] => {
-  console.log('No API keys available, please add VITE_NEWS_API_KEY to access real news sources');
-  return [];
+// Function to get real news from various sources
+const getRealNewsFromSources = async (query: string): Promise<SearchResult[]> => {
+  console.log('Fetching real news from available sources...');
+  
+  const realResults: SearchResult[] = [];
+  
+  // Try searching free news sources
+  try {
+    const freeResults = await searchFreeNewsSources(query);
+    realResults.push(...freeResults);
+  } catch (error) {
+    console.error('Error fetching free news sources:', error);
+  }
+  
+  // If no real results found, return empty array (no fallback content)
+  if (realResults.length === 0) {
+    console.log('No real news articles found. Please check your API keys or internet connection.');
+    return [];
+  }
+  
+  return realResults;
 };
 
 // Guardian API (Free with registration)

@@ -140,7 +140,7 @@ export const getSportsSubcategories = (): Category[] => {
   ];
 };
 
-// Search articles across all available sources - RESTORED ORIGINAL FUNCTIONALITY
+// Search articles across all available sources - REAL NEWS ONLY
 export const searchArticles = async (
   query: string,
   filters: SearchFilters = {},
@@ -152,11 +152,23 @@ export const searchArticles = async (
   }
   
   try {
-    // Directly fetch real news articles from reliable sources
-    const realArticles = await fetchRealNewsArticles(query, true);
+    console.log('Searching for real news articles:', query);
+    
+    // Import and use the news APIs
+    const { newsAPIs } = await import('./newsAPIs');
+    const realArticles = await newsAPIs.searchNews(query);
+    
+    // Convert SearchResult to Article format
+    const articles: Article[] = realArticles.map(result => ({
+      id: result.id,
+      title: result.title,
+      content: result.content,
+      source: result.source,
+      url: result.url
+    }));
     
     // Sort by relevance and date
-    return sortArticlesByRelevance(realArticles, query);
+    return sortArticlesByRelevance(articles, query);
 
   } catch (error) {
     console.error('Error searching articles:', error);

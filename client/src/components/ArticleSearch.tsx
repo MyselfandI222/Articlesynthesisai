@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Loader, TrendingUp, X, Globe, AlertCircle, ExternalLink, Plus, Check } from 'lucide-react';
-import { Article, SearchResult, Category } from '../types';
+import { Article, Category } from '../types';
 import { searchArticles, getAllCategories, getTrendingTopics } from '../utils/articleSearch';
 import { classifyBreakingNews, getBreakingNewsBadge, formatEngagementNumber } from '../utils/breakingNewsDetector';
 
@@ -11,7 +11,7 @@ interface ArticleSearchProps {
 
 export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, addedArticleIds }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
@@ -121,15 +121,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
     }
   };
 
-  // Group results by source
-  const resultsBySource = searchResults.reduce((groups, result) => {
-    const source = result.source || 'Unknown Source';
-    if (!groups[source]) {
-      groups[source] = [];
-    }
-    groups[source].push(result);
-    return groups;
-  }, {} as Record<string, SearchResult[]>);
+
 
   // Handle API filters changed
   const handleFiltersChanged = () => {
@@ -146,16 +138,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
     setSelectedSubcategory(null);
   };
 
-  // Convert search result to article
-  const convertToArticle = (result: SearchResult): Article => {
-    return {
-      id: result.id,
-      title: result.title,
-      content: result.content,
-      source: result.source,
-      url: result.url
-    };
-  };
+
 
   // Check if article is already added
   const isArticleAdded = (id: string): boolean => {
@@ -314,78 +297,31 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             </button>
           </div>
           
-          {/* Results grouped by source */}
-          <div className="space-y-6">
-            {Object.entries(resultsBySource).map(([source, sourceResults]) => (
-              <div key={source} className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Globe className="h-4 w-4 text-blue-600" />
-                  <h4 className="font-medium text-blue-800">{source} ({sourceResults.length} {sourceResults.length === 1 ? 'article' : 'articles'})</h4>
-                </div>
-                
-                <div className="space-y-3 pl-6">
-                  {sourceResults.filter(result => result.title && result.description).map((result) => (
-                    <ArticleResultItem 
-                      key={result.id} 
-                      result={result} 
-                      isAdded={isArticleAdded(result.id)} 
-                      onAddArticle={() => onAddArticle(convertToArticle(result))} 
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Old non-grouped results - now hidden */}
-          {false && <div className="space-y-3">
-            {searchResults.filter(result => result.title && result.description).map((result) => {
-              const isAdded = isArticleAdded(result.id);
-              const breakingNews = classifyBreakingNews(result);
-              const breakingBadge = getBreakingNewsBadge(breakingNews);
+          {/* Individual Articles */}
+          <div className="space-y-4">
+            {searchResults.filter(article => article.title && article.content).map((article) => {
+              const isAdded = isArticleAdded(article.id);
               
               return (
                 <div
-                  key={result.id}
+                  key={article.id}
                   className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs text-gray-500">{result.source}</span>
-                        {result.publishedAt && (
-                          <span className="text-xs text-gray-400">
-                            {new Date(result.publishedAt).toLocaleDateString()} {new Date(result.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          </span>
-                        )}
-                        {breakingBadge.show && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${breakingBadge.className}`}>
-                            {breakingBadge.icon} {breakingBadge.text}
-                          </span>
-                        )}
+                        <span className="text-xs text-blue-600 font-medium">{article.source || 'Unknown Source'}</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
                       </div>
-                      <h4 className="font-medium text-gray-900 mb-2">{result.title}</h4>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{result.description}</p>
-                      
-                      {/* Engagement Metrics */}
-                      {breakingNews.engagementMetrics && (
-                        <div className="flex items-center space-x-3 text-xs text-gray-500 mb-3">
-                          <span title="Views">
-                            👁️ {formatEngagementNumber(breakingNews.engagementMetrics.views)}
-                          </span>
-                          <span title="Shares">
-                            🔄 {formatEngagementNumber(breakingNews.engagementMetrics.shares)}
-                          </span>
-                          <span title="Comments">
-                            💬 {formatEngagementNumber(breakingNews.engagementMetrics.comments)}
-                          </span>
-                        </div>
-                      )}
+                      <h4 className="font-medium text-gray-900 mb-2 leading-tight">{article.title}</h4>
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-3">{article.content.substring(0, 200)}...</p>
                       
                       <div className="flex items-center space-x-3">
-                        {result.url && (
+                        {article.url && (
                           <a
-                            href={result.url}
+                            href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
@@ -394,15 +330,13 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                             <span>View Source</span>
                           </a>
                         )}
-                        {result.viewpoint && (
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
-                            {result.viewpoint}
-                          </span>
-                        )}
+                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                          Real Article
+                        </span>
                       </div>
                     </div>
                     <button
-                      onClick={() => onAddArticle(convertToArticle(result))}
+                      onClick={() => onAddArticle(article)}
                       className={`ml-4 p-2 rounded-lg transition-colors ${
                         isAdded
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -420,7 +354,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 </div>
               );
             })}
-          </div>}
+          </div>
+          
+
         </div>
       )}
     </div>
