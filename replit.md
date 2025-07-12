@@ -53,6 +53,7 @@ Preferred communication style: Simple, everyday language.
 - **Quality Analysis**: Comprehensive content quality metrics and improvement suggestions
 
 ### 3. Content Enhancement
+- **Story Depth Meter**: AI-powered visual indicator showing article comprehensiveness with fact/perspective analysis
 - **Image Generation**: AI-powered image creation with customizable styles and prompts
 - **SEO Optimization**: Keyword extraction and metadata generation
 - **Fact Checking**: Integration with fact-checking services

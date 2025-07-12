@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, X, Link, FileText, Search } from 'lucide-react';
 import { Article } from '../types';
 import { ArticleSearch } from './ArticleSearch';
+import { StoryDepthMeter } from './StoryDepthMeter';
 
 interface SourceInputProps {
   sources: Article[];
@@ -130,6 +131,9 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
           </div>
         )}
       </div>
+
+      {/* Story Depth Meter */}
+      <StoryDepthMeter articles={sources} />
 
       {/* Added Sources Display */}
       {sources.length > 0 && (
