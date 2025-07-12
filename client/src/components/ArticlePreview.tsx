@@ -4,7 +4,7 @@ import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, Refresh
 import { ChatGPTMetrics } from './ChatGPTMetrics';
 import { ImageGenerator } from './ImageGenerator';
 import { editAIImage, ImageGenerationOptions } from '../utils/imageGeneration';
-import { sendMessageToChatGPT, processArticleEdit } from '../utils/chatGptService';
+import { sendMessageToChatGPT } from '../utils/chatGptService';
 
 interface ArticlePreviewProps {
   article: SynthesizedArticle;

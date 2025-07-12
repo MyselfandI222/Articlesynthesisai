@@ -2,7 +2,7 @@
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
 import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
-import { processArticleEdit } from './chatGptService';
+import { sendMessageToChatGPT } from './chatGptService';
 import { synthesizeWithOpenAI } from './openAISynthesis';
 
 // Get user's AI service preference

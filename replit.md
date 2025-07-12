@@ -44,6 +44,10 @@ Preferred communication style: Simple, everyday language.
 
 ### 2. AI Content Synthesis
 - **Multiple AI Services**: Support for default AI and Manus AI integration
+- **AI Article Generation**: ChatGPT automatically creates viral articles when real sources unavailable
+- **Viral Content Focus**: AI generates trending, engaging articles optimized for sharing
+- **Smart API Detection**: Automatically switches to real search when Google API keys provided
+- **Real-time Generation**: Fast loading with background AI content enhancement
 - **Style Adaptation**: 7 different writing styles (academic, journalistic, blog, technical, creative, business, opinion)
 - **Advanced Editing**: Natural language processing for content refinement
 - **Quality Analysis**: Comprehensive content quality metrics and improvement suggestions

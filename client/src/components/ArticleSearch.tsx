@@ -313,6 +313,11 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                           {article.source || 'Unknown Source'}
                         </span>
+                        {article.source?.includes('AI') && (
+                          <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full text-xs font-medium">
+                            🤖 AI Generated
+                          </span>
+                        )}
                         <span className="text-xs text-gray-500">
                           {new Date().toLocaleDateString()} • {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
