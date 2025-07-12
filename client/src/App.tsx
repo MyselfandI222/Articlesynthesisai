@@ -6,6 +6,7 @@ import { TitleRecommendations } from './components/TitleRecommendations';
 import { ChatGPTSettings } from './components/ChatGPTSettings';
 import { ArticlePreview } from './components/ArticlePreview';
 import { PublishModal } from './components/PublishModal';
+import { WelcomeOnboarding } from './components/WelcomeOnboarding';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
@@ -22,12 +23,19 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [dailyNewsNotification, setDailyNewsNotification] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // ChatGPT integration
   const [isChatGPTEnabled, setIsChatGPTEnabled] = useState(() => getAIServicePreference() === 'chatgpt');
   const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
 
   useEffect(() => {
+    // Check if user has seen onboarding
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+
     // Check for today's breaking news and show notification
     const checkDailyNews = async () => {
       try {
@@ -105,7 +113,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Header />
+      <Header onShowOnboarding={() => setShowOnboarding(true)} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Daily News Notification */}
@@ -255,6 +263,12 @@ function App() {
           isOpen={isPublishModalOpen}
           onClose={() => setIsPublishModalOpen(false)}
           onPublish={handlePublish}
+        />
+      )}
+
+      {showOnboarding && (
+        <WelcomeOnboarding
+          onClose={() => setShowOnboarding(false)}
         />
       )}
     </div>

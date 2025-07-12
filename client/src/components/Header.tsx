@@ -1,10 +1,14 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Globe, TrendingUp, Bot } from 'lucide-react';
+import { FileText, Sparkles, Globe, TrendingUp, Bot, HelpCircle } from 'lucide-react';
 import { getTodaysBreakingNews } from '../utils/dailyNewsUpdater';
 import { classifyBreakingNews, formatEngagementNumber } from '../utils/breakingNewsDetector';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onShowOnboarding?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onShowOnboarding }) => {
   const [breakingNewsCount, setBreakingNewsCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -78,6 +82,16 @@ export const Header: React.FC = () => {
               <FileText className="h-4 w-4" />
               <span>Legal & Original</span>
             </div>
+            {onShowOnboarding && (
+              <button
+                onClick={onShowOnboarding}
+                className="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-1.5 transition-colors"
+                title="Show tutorial"
+              >
+                <HelpCircle className="h-4 w-4 text-gray-600" />
+                <span className="text-xs font-medium text-gray-700">Help</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
