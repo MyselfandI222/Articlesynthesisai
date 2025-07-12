@@ -112,15 +112,17 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <Header onShowOnboarding={() => setShowOnboarding(true)} />
       
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Daily News Notification */}
         {dailyNewsNotification && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center space-x-3">
-              <Sparkles className="h-5 w-5 text-blue-600" />
+              <div className="bg-blue-100 p-2 rounded-full">
+                <Sparkles className="h-5 w-5 text-blue-600" />
+              </div>
               <div>
                 <p className="font-medium text-blue-900">Daily News Update</p>
                 <p className="text-sm text-blue-800">{dailyNewsNotification}</p>
@@ -128,7 +130,7 @@ function App() {
             </div>
             <button
               onClick={() => setDailyNewsNotification(null)}
-              className="text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-full hover:bg-blue-100"
             >
               <AlertCircle className="h-5 w-5" />
             </button>
@@ -137,21 +139,39 @@ function App() {
 
         {!synthesizedArticle ? (
           <div className="space-y-8">
-            <div className="text-center max-w-3xl mx-auto">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                AI Article Synthesis
-              </h1>
-              <p className="text-gray-600 leading-relaxed">
-                Transform multiple source articles into original content. Our AI analyzes 
-                different perspectives and creates unique, synthesized articles.
-              </p>
+            <div className="text-center max-w-4xl mx-auto">
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4 shadow-lg">
+                  <Sparkles className="h-8 w-8 text-white" />
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+                  AI Article Synthesis
+                </h1>
+                <p className="text-xl text-gray-600 leading-relaxed mb-4">
+                  Transform multiple source articles into original content
+                </p>
+                <div className="flex flex-wrap justify-center gap-4 text-sm">
+                  <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-gray-700">15+ Live Sources</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-gray-700">AI-Powered Analysis</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                    <span className="text-gray-700">Real-time Synthesis</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 <SourceInput sources={sources} onSourcesChange={setSources} />
                 
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-6 shadow-lg">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Article Topic
                   </label>
@@ -159,7 +179,7 @@ function App() {
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm hover:shadow-md"
                     placeholder="What is the main topic of your article?"
                   />
                 </div>
@@ -196,35 +216,44 @@ function App() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-4 flex items-center space-x-3 shadow-md">
+                <div className="bg-red-100 p-2 rounded-full">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                </div>
                 <p className="text-red-800">{error}</p>
               </div>
             )}
 
             {/* Synthesize Button */}
             <div className="text-center">
-              <button
-                onClick={handleSynthesize}
-                disabled={isLoading || sources.length === 0 || !topic.trim()}
-                className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex items-center space-x-3 mx-auto text-lg font-medium"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader className="h-5 w-5 animate-spin" />
-                    <span>Synthesizing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-5 w-5" />
-                    <span>Synthesize Article</span>
-                  </>
-                )}
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleSynthesize}
+                  disabled={isLoading || sources.length === 0 || !topic.trim()}
+                  className="relative px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all flex items-center space-x-3 mx-auto text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl blur opacity-30 group-hover:opacity-40 transition-opacity"></div>
+                  <div className="relative flex items-center space-x-3">
+                    {isLoading ? (
+                      <>
+                        <Loader className="h-5 w-5 animate-spin" />
+                        <span>Synthesizing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5" />
+                        <span>Synthesize Article</span>
+                      </>
+                    )}
+                  </div>
+                </button>
+              </div>
               {sources.length > 0 && topic.trim() && (
-                <p className="text-sm text-gray-600 mt-2">
-                  Ready to synthesize {sources.length} sources about "{topic}"
-                </p>
+                <div className="mt-4 bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200 inline-block">
+                  <p className="text-sm text-gray-700">
+                    Ready to synthesize <span className="font-medium text-blue-600">{sources.length}</span> sources about <span className="font-medium text-purple-600">"{topic}"</span>
+                  </p>
+                </div>
               )}
             </div>
           </div>

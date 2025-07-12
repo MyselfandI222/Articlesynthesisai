@@ -47,33 +47,35 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-6 shadow-lg hover:shadow-xl transition-shadow">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-blue-600" />
+          <h2 className="text-lg font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center">
+            <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-2 rounded-lg mr-3">
+              <FileText className="h-5 w-5 text-blue-600" />
+            </div>
             Source Articles
           </h2>
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl p-1 shadow-inner">
             <button
               onClick={() => setActiveTab('search')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'search'
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-blue-600 shadow-md transform scale-105'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Search className="h-4 w-4 inline mr-1" />
+              <Search className="h-4 w-4 inline mr-2" />
               Search
             </button>
             <button
               onClick={() => setActiveTab('manual')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'manual'
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-blue-600 shadow-md transform scale-105'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Plus className="h-4 w-4 inline mr-1" />
+              <Plus className="h-4 w-4 inline mr-2" />
               Manual
             </button>
           </div>
@@ -145,31 +147,36 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
 
       {/* Added Sources Display */}
       {sources.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Added Sources ({sources.length})</h3>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 p-6 shadow-lg">
+          <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-4 flex items-center">
+            <div className="bg-gradient-to-r from-green-100 to-blue-100 px-3 py-1 rounded-full mr-3">
+              <span className="text-sm font-bold text-green-700">{sources.length}</span>
+            </div>
+            Added Sources
+          </h3>
           <div className="space-y-3">
             {sources.map((source) => (
-              <div key={source.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div key={source.id} className="flex items-start justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:shadow-md transition-all">
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900 mb-1">{source.title}</h4>
                   <p className="text-sm text-gray-600 line-clamp-2">{source.content.substring(0, 150)}...</p>
                   <div className="flex items-center space-x-4 mt-2">
                     {source.url && (
-                      <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline inline-flex items-center">
+                      <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline inline-flex items-center hover:text-blue-800 transition-colors">
                         <Link className="h-3 w-3 mr-1" />
                         View Source
                       </a>
                     )}
                     {source.source && (
-                      <span className="text-xs text-gray-500">
-                        Source: {source.source}
+                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                        {source.source}
                       </span>
                     )}
                   </div>
                 </div>
                 <button
                   onClick={() => removeSource(source.id)}
-                  className="ml-4 p-2 text-gray-400 hover:text-red-500 transition-colors hover:bg-red-50 rounded-lg"
+                  className="ml-4 p-2 text-gray-400 hover:text-red-500 transition-all hover:bg-red-50 rounded-xl hover:shadow-sm"
                 >
                   <X className="h-4 w-4" />
                 </button>
