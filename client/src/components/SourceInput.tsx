@@ -3,6 +3,7 @@ import { Plus, X, Link, FileText, Search } from 'lucide-react';
 import { Article } from '../types';
 import { ArticleSearch } from './ArticleSearch';
 import { StoryDepthMeter } from './StoryDepthMeter';
+import { PerspectiveCompass } from './PerspectiveCompass';
 
 interface SourceInputProps {
   sources: Article[];
@@ -134,6 +135,9 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
 
       {/* Story Depth Meter */}
       <StoryDepthMeter articles={sources} />
+
+      {/* Perspective Compass */}
+      <PerspectiveCompass articles={sources} />
 
       {/* Added Sources Display */}
       {sources.length > 0 && (
