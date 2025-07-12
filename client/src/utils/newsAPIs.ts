@@ -76,12 +76,29 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
     // Filter out sources with no results and ensure query relevance
     const filteredResults = results.filter(result => {
       const hasContent = result.title && result.content && result.description;
-      const isRelevant = result.title.toLowerCase().includes(query.toLowerCase()) || 
-                        result.description.toLowerCase().includes(query.toLowerCase());
+      
+      // Enhanced relevance checking - split query into individual terms
+      const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+      const titleLower = result.title.toLowerCase();
+      const descriptionLower = result.description.toLowerCase();
+      
+      // Check if ANY search term appears in title or description
+      const isRelevant = searchTerms.some(term => 
+        titleLower.includes(term) || descriptionLower.includes(term)
+      ) || titleLower.includes(query.toLowerCase()) || descriptionLower.includes(query.toLowerCase());
+      
       return hasContent && isRelevant;
     });
     
     console.log(`Found ${filteredResults.length} relevant articles from free sources for "${query}"`);
+    
+    // Add debugging info to show which sources returned results
+    const sourceBreakdown = filteredResults.reduce((acc, result) => {
+      acc[result.source] = (acc[result.source] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    console.log('Articles by source:', sourceBreakdown);
     return filteredResults;
   } catch (error) {
     console.error('Free news sources search failed:', error);
@@ -114,8 +131,16 @@ const searchBBCNews = async (query: string): Promise<SearchResult[]> => {
           const link = item.querySelector('link')?.textContent || '';
           const pubDate = item.querySelector('pubDate')?.textContent || '';
           
-          if (title.toLowerCase().includes(query.toLowerCase()) || 
-              description.toLowerCase().includes(query.toLowerCase())) {
+          // Check if keyword appears anywhere in title, description, or content
+          const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+          const titleLower = title.toLowerCase();
+          const descriptionLower = description.toLowerCase();
+          
+          const isRelevant = searchTerms.some(term => 
+            titleLower.includes(term) || descriptionLower.includes(term)
+          ) || titleLower.includes(query.toLowerCase()) || descriptionLower.includes(query.toLowerCase());
+          
+          if (isRelevant) {
             results.push({
               id: `bbc-${Date.now()}-${index}`,
               title: title,
@@ -166,8 +191,16 @@ const searchCNNNews = async (query: string): Promise<SearchResult[]> => {
           const link = item.querySelector('link')?.textContent || '';
           const pubDate = item.querySelector('pubDate')?.textContent || '';
           
-          if (title.toLowerCase().includes(query.toLowerCase()) || 
-              description.toLowerCase().includes(query.toLowerCase())) {
+          // Check if keyword appears anywhere in title, description, or content
+          const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+          const titleLower = title.toLowerCase();
+          const descriptionLower = description.toLowerCase();
+          
+          const isRelevant = searchTerms.some(term => 
+            titleLower.includes(term) || descriptionLower.includes(term)
+          ) || titleLower.includes(query.toLowerCase()) || descriptionLower.includes(query.toLowerCase());
+          
+          if (isRelevant) {
             results.push({
               id: `cnn-${Date.now()}-${index}`,
               title: title,
@@ -217,8 +250,16 @@ const searchNPRNews = async (query: string): Promise<SearchResult[]> => {
           const link = item.querySelector('link')?.textContent || '';
           const pubDate = item.querySelector('pubDate')?.textContent || '';
           
-          if (title.toLowerCase().includes(query.toLowerCase()) || 
-              description.toLowerCase().includes(query.toLowerCase())) {
+          // Check if keyword appears anywhere in title, description, or content
+          const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+          const titleLower = title.toLowerCase();
+          const descriptionLower = description.toLowerCase();
+          
+          const isRelevant = searchTerms.some(term => 
+            titleLower.includes(term) || descriptionLower.includes(term)
+          ) || titleLower.includes(query.toLowerCase()) || descriptionLower.includes(query.toLowerCase());
+          
+          if (isRelevant) {
             results.push({
               id: `npr-${Date.now()}-${index}`,
               title: title,
@@ -269,8 +310,16 @@ const searchGuardianNews = async (query: string): Promise<SearchResult[]> => {
           const link = item.querySelector('link')?.textContent || '';
           const pubDate = item.querySelector('pubDate')?.textContent || '';
           
-          if (title.toLowerCase().includes(query.toLowerCase()) || 
-              description.toLowerCase().includes(query.toLowerCase())) {
+          // Check if keyword appears anywhere in title, description, or content
+          const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+          const titleLower = title.toLowerCase();
+          const descriptionLower = description.toLowerCase();
+          
+          const isRelevant = searchTerms.some(term => 
+            titleLower.includes(term) || descriptionLower.includes(term)
+          ) || titleLower.includes(query.toLowerCase()) || descriptionLower.includes(query.toLowerCase());
+          
+          if (isRelevant) {
             results.push({
               id: `guardian-${Date.now()}-${index}`,
               title: title,
