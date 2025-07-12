@@ -33,7 +33,11 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### 1. Article Search and Aggregation
-- **Multi-API Integration**: Comprehensive news source coverage including NewsAPI, Guardian, CNN, Fox News, BBC, and more
+- **Multi-API Integration**: Comprehensive news source coverage with 15+ major outlets including:
+  - **Primary Sources**: BBC, CNN, NPR, Guardian, Reuters, Associated Press
+  - **Major Networks**: Fox News, MSNBC, CBS News, ABC News, NBC News
+  - **Print Media**: New York Times, Washington Post, USA Today, Politico
+  - **API Integration**: NewsAPI with 70+ sources when available
 - **Location-Based Search**: Geolocation service for local news integration
 - **Breaking News Detection**: AI-powered engagement metrics analysis
 - **API Filtering**: User-customizable source selection with category-based filtering

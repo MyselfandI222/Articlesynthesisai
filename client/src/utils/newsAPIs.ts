@@ -72,12 +72,22 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
     
     // Search multiple sources in parallel for better performance
     const searchPromises = [
+      // Major News Sources
       searchBBCNews(query),
       searchCNNNews(query),
       searchNPRNews(query),
       searchGuardianNews(query),
       searchReutersNews(query),
-      searchAPNews(query)
+      searchAPNews(query),
+      searchNYTimesNews(query),
+      searchWashingtonPostNews(query),
+      searchUSATodayNews(query),
+      searchFoxNews(query),
+      searchMSNBCNews(query),
+      searchCBSNews(query),
+      searchABCNews(query),
+      searchNBCNews(query),
+      searchPoliticoNews(query)
     ];
     
     // Execute all searches in parallel and collect results
@@ -87,7 +97,7 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
       if (result.status === 'fulfilled') {
         results.push(...result.value);
       } else {
-        const sources = ['BBC', 'CNN', 'NPR', 'Guardian', 'Reuters', 'AP'];
+        const sources = ['BBC', 'CNN', 'NPR', 'Guardian', 'Reuters', 'AP', 'NYTimes', 'WashPost', 'USAToday', 'Fox', 'MSNBC', 'CBS', 'ABC', 'NBC', 'Politico'];
         console.warn(`${sources[index]} feed error:`, result.reason);
       }
     });
@@ -480,6 +490,501 @@ const searchAPNews = async (query: string): Promise<SearchResult[]> => {
     return results;
   } catch (error) {
     console.error('AP search failed:', error);
+    return [];
+  }
+};
+
+// New York Times RSS
+const searchNYTimesNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+      'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+      'https://rss.nytimes.com/services/xml/rss/nyt/US.xml',
+      'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',
+      'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `nytimes-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'New York Times',
+              publishedAt: pubDate,
+              author: 'NYTimes',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('NYTimes feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('NYTimes search failed:', error);
+    return [];
+  }
+};
+
+// Washington Post RSS
+const searchWashingtonPostNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.washingtonpost.com/rss/national',
+      'https://feeds.washingtonpost.com/rss/world',
+      'https://feeds.washingtonpost.com/rss/business',
+      'https://feeds.washingtonpost.com/rss/politics'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `washpost-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'Washington Post',
+              publishedAt: pubDate,
+              author: 'WashPost',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('WashPost feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('WashPost search failed:', error);
+    return [];
+  }
+};
+
+// USA Today RSS
+const searchUSATodayNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://rssfeeds.usatoday.com/usatoday-NewsTopStories',
+      'https://rssfeeds.usatoday.com/usatoday-newspolitics',
+      'https://rssfeeds.usatoday.com/usatoday-newswashington',
+      'https://rssfeeds.usatoday.com/usatoday-newsworld'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `usatoday-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'USA Today',
+              publishedAt: pubDate,
+              author: 'USA Today',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('USA Today feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('USA Today search failed:', error);
+    return [];
+  }
+};
+
+// Fox News RSS
+const searchFoxNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.foxnews.com/foxnews/latest',
+      'https://feeds.foxnews.com/foxnews/politics',
+      'https://feeds.foxnews.com/foxnews/national',
+      'https://feeds.foxnews.com/foxnews/world'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `foxnews-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'Fox News',
+              publishedAt: pubDate,
+              author: 'Fox News',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Fox News feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Fox News search failed:', error);
+    return [];
+  }
+};
+
+// MSNBC RSS
+const searchMSNBCNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.msnbc.com/msnbc/public/news',
+      'https://feeds.msnbc.com/msnbc/public/politics',
+      'https://feeds.msnbc.com/msnbc/public/world'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `msnbc-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'MSNBC',
+              publishedAt: pubDate,
+              author: 'MSNBC',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('MSNBC feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('MSNBC search failed:', error);
+    return [];
+  }
+};
+
+// CBS News RSS
+const searchCBSNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://www.cbsnews.com/latest/rss/main',
+      'https://www.cbsnews.com/latest/rss/politics',
+      'https://www.cbsnews.com/latest/rss/world',
+      'https://www.cbsnews.com/latest/rss/us'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `cbs-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'CBS News',
+              publishedAt: pubDate,
+              author: 'CBS News',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('CBS News feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('CBS News search failed:', error);
+    return [];
+  }
+};
+
+// ABC News RSS
+const searchABCNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.abcnews.com/abcnews/topstories',
+      'https://feeds.abcnews.com/abcnews/usheadlines',
+      'https://feeds.abcnews.com/abcnews/internationalheadlines',
+      'https://feeds.abcnews.com/abcnews/politicsheadlines'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `abc-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'ABC News',
+              publishedAt: pubDate,
+              author: 'ABC News',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('ABC News feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('ABC News search failed:', error);
+    return [];
+  }
+};
+
+// NBC News RSS
+const searchNBCNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.nbcnews.com/nbcnews/public/news',
+      'https://feeds.nbcnews.com/nbcnews/public/politics',
+      'https://feeds.nbcnews.com/nbcnews/public/world',
+      'https://feeds.nbcnews.com/nbcnews/public/us-news'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `nbc-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'NBC News',
+              publishedAt: pubDate,
+              author: 'NBC News',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('NBC News feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('NBC News search failed:', error);
+    return [];
+  }
+};
+
+// Politico RSS
+const searchPoliticoNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://rss.politico.com/politics-news.xml',
+      'https://rss.politico.com/congress.xml',
+      'https://rss.politico.com/whitehouse.xml',
+      'https://rss.politico.com/campaigns.xml'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `politico-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'Politico',
+              publishedAt: pubDate,
+              author: 'Politico',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Politico feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Politico search failed:', error);
     return [];
   }
 };
