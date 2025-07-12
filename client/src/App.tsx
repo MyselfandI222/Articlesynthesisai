@@ -112,17 +112,15 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       <Header onShowOnboarding={() => setShowOnboarding(true)} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Daily News Notification */}
         {dailyNewsNotification && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 p-2 rounded-xl">
-                <Sparkles className="h-5 w-5 text-blue-600" />
-              </div>
+              <Sparkles className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="font-medium text-blue-900">Daily News Update</p>
                 <p className="text-sm text-blue-800">{dailyNewsNotification}</p>
@@ -139,25 +137,21 @@ function App() {
 
         {!synthesizedArticle ? (
           <div className="space-y-8">
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                AI-Powered Article Synthesis
+            <div className="text-center max-w-3xl mx-auto">
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                AI Article Synthesis
               </h1>
-              <p className="text-lg text-gray-600 leading-relaxed">
-                Transform multiple source articles into original, legally compliant content. 
-                Our AI analyzes different perspectives and creates unique, synthesized articles 
-                that combine the best insights from your sources.
-              </p>
-              <p className="text-sm text-blue-600 mt-2 font-medium">
-                ✨ Breaking news updates automatically daily • 🌐 Live Google Search • 📊 150K+ engagement = Breaking News
+              <p className="text-gray-600 leading-relaxed">
+                Transform multiple source articles into original content. Our AI analyzes 
+                different perspectives and creates unique, synthesized articles.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
                 <SourceInput sources={sources} onSourcesChange={setSources} />
                 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Article Topic
                   </label>
@@ -165,7 +159,7 @@ function App() {
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="What is the main topic of your article?"
                   />
                 </div>
@@ -178,6 +172,18 @@ function App() {
                   tone={tone}
                   onTitleSelect={setTopic}
                 />
+              </div>
+
+              <div className="space-y-6">
+                <StyleSelector
+                  selectedStyle={style}
+                  onStyleChange={setStyle}
+                  tone={tone}
+                  onToneChange={setTone}
+                  length={length}
+                  onLengthChange={setLength}
+                  sources={sources}
+                />
                 
                 {/* ChatGPT Settings */}
                 <ChatGPTSettings
@@ -187,59 +193,45 @@ function App() {
                   onSettingsChange={handleChatGPTSettingsChange}
                 />
               </div>
-
-              <StyleSelector
-                selectedStyle={style}
-                onStyleChange={setStyle}
-                tone={tone}
-                onToneChange={setTone}
-                length={length}
-                onLengthChange={setLength}
-                sources={sources}
-              />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center space-x-3 shadow-sm">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
                 <AlertCircle className="h-5 w-5 text-red-600" />
                 <p className="text-red-800">{error}</p>
               </div>
             )}
 
-            {/* Synthesize Button - Made more prominent */}
-            <div className="text-center bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to Synthesize?</h3>
-                <p className="text-sm text-gray-600">
-                  {sources.length > 0 && topic.trim() 
-                    ? `Synthesize ${sources.length} sources into your article about "${topic}"`
-                    : 'Add sources and specify a topic to begin synthesis'
-                  }
-                </p>
-              </div>
+            {/* Synthesize Button */}
+            <div className="text-center">
               <button
                 onClick={handleSynthesize}
                 disabled={isLoading || sources.length === 0 || !topic.trim()}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-3 mx-auto text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex items-center space-x-3 mx-auto text-lg font-medium"
               >
                 {isLoading ? (
                   <>
-                    <Loader className="h-6 w-6 animate-spin" />
-                    <span>Synthesizing Article...</span>
+                    <Loader className="h-5 w-5 animate-spin" />
+                    <span>Synthesizing...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-6 w-6" />
+                    <Sparkles className="h-5 w-5" />
                     <span>Synthesize Article</span>
                   </>
                 )}
               </button>
+              {sources.length > 0 && topic.trim() && (
+                <p className="text-sm text-gray-600 mt-2">
+                  Ready to synthesize {sources.length} sources about "{topic}"
+                </p>
+              )}
             </div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Your Synthesized Article</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Your Synthesized Article</h2>
               <button
                 onClick={() => setSynthesizedArticle(null)}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors hover:bg-gray-100 rounded-lg"

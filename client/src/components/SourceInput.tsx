@@ -47,34 +47,34 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
             <FileText className="h-5 w-5 mr-2 text-blue-600" />
             Source Articles
           </h2>
-          <div className="flex bg-gray-100 rounded-xl p-1 shadow-inner">
+          <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setActiveTab('search')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 activeTab === 'search'
-                  ? 'bg-white text-blue-600 shadow-sm transform scale-105'
+                  ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Search className="h-4 w-4 inline mr-2" />
-              Search Articles
+              <Search className="h-4 w-4 inline mr-1" />
+              Search
             </button>
             <button
               onClick={() => setActiveTab('manual')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 activeTab === 'manual'
-                  ? 'bg-white text-blue-600 shadow-sm transform scale-105'
+                  ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Plus className="h-4 w-4 inline mr-2" />
-              Add Manually
+              <Plus className="h-4 w-4 inline mr-1" />
+              Manual
             </button>
           </div>
         </div>
@@ -134,27 +134,22 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
         )}
       </div>
 
-      {/* Story Depth Meter */}
-      <StoryDepthMeter articles={sources} />
-
-      {/* Perspective Compass */}
-      <PerspectiveCompass articles={sources} />
-
-      {/* Mood Meter */}
-      <MoodMeter articles={sources} />
+      {/* Analysis Tools */}
+      {sources.length > 0 && (
+        <div className="space-y-4">
+          <StoryDepthMeter articles={sources} />
+          <PerspectiveCompass articles={sources} />
+          <MoodMeter articles={sources} />
+        </div>
+      )}
 
       {/* Added Sources Display */}
       {sources.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold mr-2">
-              {sources.length}
-            </span>
-            Added Sources
-          </h3>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Added Sources ({sources.length})</h3>
           <div className="space-y-3">
             {sources.map((source) => (
-              <div key={source.id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 flex justify-between items-start border border-gray-100 hover:shadow-sm transition-all">
+              <div key={source.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900 mb-1">{source.title}</h4>
                   <p className="text-sm text-gray-600 line-clamp-2">{source.content.substring(0, 150)}...</p>
