@@ -1,7 +1,8 @@
 import React from 'react';
 import { WritingStyle } from '../types';
-import { BookOpen, Newspaper, PenTool, Code, Palette, Briefcase, MessageCircle } from 'lucide-react';
+import { BookOpen, Newspaper, PenTool, Code, Palette, Briefcase, MessageCircle, BarChart3, Users, FileText } from 'lucide-react';
 import { analyzeArticlesForStyle, getStyleDescription, getToneDescription } from '../utils/styleRecommendations';
+import { analyzeContentAndRecommendLength, getDetailedContentAnalysis } from '../utils/contentAnalysis';
 import { Article } from '../types';
 
 interface StyleSelectorProps {
@@ -36,6 +37,11 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
   // Get AI recommendations based on selected articles
   const recommendations = analyzeArticlesForStyle(sources);
   const showRecommendations = sources.length > 0 && recommendations.confidence > 30;
+  
+  // Get intelligent length recommendations based on content analysis
+  const lengthRecommendation = analyzeContentAndRecommendLength(sources);
+  const contentAnalysis = getDetailedContentAnalysis(sources);
+  const showLengthRecommendations = sources.length > 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
@@ -74,167 +80,221 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-medium text-blue-900">Length: </span>
-                      <span className="text-sm text-blue-800 capitalize">{recommendations.recommendedLength}</span>
-                      {length === recommendations.recommendedLength && (
-                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full shadow-sm">✓ Selected</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-blue-700 mt-2 italic">
-                  {recommendations.reasoning}
-                </p>
-                
-                {/* Article Count Analysis */}
-                <div className="mt-3 p-2 bg-blue-100 rounded-lg">
-                  <p className="text-xs text-blue-800">
-                    <span className="font-medium">Article Analysis:</span> {recommendations.articleCountAnalysis}
-                  </p>
-                </div>
-                
-                <div className="flex space-x-2 mt-3">
-                  {selectedStyle !== recommendations.recommendedStyle && (
-                    <button
-                      onClick={() => onStyleChange(recommendations.recommendedStyle)}
-                      className="text-xs bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      Use Recommended Style
-                    </button>
-                  )}
-                  {tone !== recommendations.recommendedTone && (
-                    <button
-                      onClick={() => onToneChange(recommendations.recommendedTone)}
-                      className="text-xs bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      Use Recommended Tone
-                    </button>
-                  )}
-                  {length !== recommendations.recommendedLength && (
-                    <button
-                      onClick={() => onLengthChange(recommendations.recommendedLength)}
-                      className="text-xs bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      Use Recommended Length
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
 
+        {/* Intelligent Length Recommendations */}
+        {showLengthRecommendations && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-start space-x-3">
+              <div className="bg-green-100 p-2 rounded-xl">
+                <BarChart3 className="h-4 w-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-green-900 mb-1">Content Analysis & Length Recommendation</h3>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-green-600" />
+                    <div>
+                      <span className="text-sm font-medium text-green-900">Facts: </span>
+                      <span className="text-sm text-green-800">{contentAnalysis.factCount}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-green-600" />
+                    <div>
+                      <span className="text-sm font-medium text-green-900">Perspectives: </span>
+                      <span className="text-sm text-green-800">{contentAnalysis.perspectiveCount}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-lg p-3 mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <span className="text-sm font-medium text-green-900">Recommended Length: </span>
+                      <span className="text-sm text-green-800 capitalize font-semibold">{lengthRecommendation.recommended}</span>
+                      {length === lengthRecommendation.recommended && (
+                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full shadow-sm">✓ Selected</span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-green-600 font-medium">{Math.round(lengthRecommendation.confidence * 100)}% confidence</span>
+                      <div className="text-xs text-green-500 mt-1">
+                        Content depth: {contentAnalysis.contentDepth}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-green-700 leading-relaxed">
+                    {lengthRecommendation.reasoning}
+                  </p>
+                </div>
+                {length !== lengthRecommendation.recommended && (
+                  <button
+                    onClick={() => onLengthChange(lengthRecommendation.recommended)}
+                    className="text-xs text-green-700 hover:text-green-900 hover:underline font-medium"
+                  >
+                    Use recommended length
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Style Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">Writing Style</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {styleOptions.map((option) => (
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Writing Style</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {styleOptions.map((style) => (
               <button
-                key={option.value}
-                onClick={() => onStyleChange(option.value)}
-                className={`p-4 rounded-xl border-2 transition-all text-left relative hover:shadow-md transform hover:-translate-y-0.5 ${
-                  selectedStyle === option.value
-                    ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 shadow-md'
-                    : showRecommendations && option.value === recommendations.recommendedStyle
-                    ? 'border-green-300 bg-gradient-to-r from-green-50 to-green-100 text-green-900'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
+                key={style.value}
+                onClick={() => onStyleChange(style.value)}
+                className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                  selectedStyle === style.value
+                    ? 'border-blue-500 bg-blue-50 shadow-lg'
+                    : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                 }`}
               >
-                {showRecommendations && option.value === recommendations.recommendedStyle && selectedStyle !== option.value && (
-                  <div className="absolute top-2 right-2">
-                    <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full shadow-sm">Recommended</span>
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg ${selectedStyle === style.value ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                    {style.icon}
                   </div>
-                )}
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className={
-                    selectedStyle === option.value 
-                      ? 'text-blue-600' 
-                      : showRecommendations && option.value === recommendations.recommendedStyle
-                      ? 'text-green-600'
-                      : 'text-gray-400'
-                  }>
-                    {option.icon}
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">{style.label}</div>
+                    <div className="text-xs text-gray-500">{style.description}</div>
                   </div>
-                  <span className="font-medium">{option.label}</span>
                 </div>
-                <p className="text-xs text-gray-600">{option.description}</p>
-                {showRecommendations && option.value === recommendations.recommendedStyle && (
-                  <p className="text-xs text-green-700 mt-1 font-medium">
-                    {getStyleDescription(option.value)}
-                  </p>
-                )}
               </button>
             ))}
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tone</label>
-          <div className="relative">
-            <select
-              value={tone}
-              onChange={(e) => onToneChange(e.target.value)}
-              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                showRecommendations && tone === recommendations.recommendedTone
-                  ? 'border-green-300 bg-gradient-to-r from-green-50 to-green-100'
-                  : 'border-gray-300'
-              }`}
-            >
-              <option value="neutral">Neutral</option>
-              <option value="formal">Formal</option>
-              <option value="casual">Casual</option>
-              <option value="enthusiastic">Enthusiastic</option>
-              <option value="authoritative">Authoritative</option>
-              <option value="conversational">Conversational</option>
-            </select>
-            {showRecommendations && tone !== recommendations.recommendedTone && (
-              <div className="mt-1">
-                <p className="text-xs text-green-700">
-                  <span className="font-medium">Recommended:</span> {recommendations.recommendedTone} - {getToneDescription(recommendations.recommendedTone)}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">Article Length</label>
-          {showRecommendations && (
-            <div className="mb-3 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl shadow-sm">
-              <p className="text-xs text-amber-800">
-                <span className="font-medium">Length Recommendation:</span> {recommendations.lengthReasoning}
-              </p>
+          {showRecommendations && selectedStyle !== recommendations.recommendedStyle && (
+            <div className="mt-2 text-center">
+              <button
+                onClick={() => onStyleChange(recommendations.recommendedStyle)}
+                className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Use recommended style: {recommendations.recommendedStyle}
+              </button>
             </div>
           )}
-          <div className="flex space-x-3">
-            {[
-              { value: 'short', label: 'Short', description: '300-500 words' },
-              { value: 'medium', label: 'Medium', description: '500-1000 words' },
-              { value: 'long', label: 'Long', description: '1000+ words' },
-            ].map((option) => (
+        </div>
+
+        {/* Tone Selection */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Tone</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {['professional', 'casual', 'persuasive', 'informative', 'analytical', 'conversational'].map((toneOption) => (
               <button
-                key={option.value}
-                onClick={() => onLengthChange(option.value as 'short' | 'medium' | 'long')}
-                className={`flex-1 p-3 rounded-xl border-2 transition-all text-center hover:shadow-md transform hover:-translate-y-0.5 relative ${
-                  length === option.value
-                    ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 shadow-md'
-                    : showRecommendations && option.value === recommendations.recommendedLength
-                    ? 'border-green-300 bg-gradient-to-r from-green-50 to-green-100 text-green-900'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
+                key={toneOption}
+                onClick={() => onToneChange(toneOption)}
+                className={`px-3 py-2 rounded-lg text-sm transition-all transform hover:scale-105 ${
+                  tone === toneOption
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {showRecommendations && option.value === recommendations.recommendedLength && length !== option.value && (
-                  <div className="absolute top-1 right-1">
-                    <span className="text-xs bg-green-600 text-white px-1 py-0.5 rounded shadow-sm">Rec</span>
-                  </div>
-                )}
-                <div className="font-medium">{option.label}</div>
-                <div className="text-xs text-gray-600 mt-1">{option.description}</div>
+                {toneOption}
               </button>
             ))}
           </div>
+          {showRecommendations && tone !== recommendations.recommendedTone && (
+            <div className="mt-2 text-center">
+              <button
+                onClick={() => onToneChange(recommendations.recommendedTone)}
+                className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Use recommended tone: {recommendations.recommendedTone}
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Length Selection */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Article Length</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { 
+                value: 'short' as const, 
+                label: 'Short', 
+                description: '300-500 words',
+                icon: <FileText className="h-4 w-4" />,
+                wordRange: '300-500',
+                bestFor: 'Quick reads, summaries'
+              },
+              { 
+                value: 'medium' as const, 
+                label: 'Medium', 
+                description: '500-800 words',
+                icon: <FileText className="h-4 w-4" />,
+                wordRange: '500-800',
+                bestFor: 'Balanced coverage'
+              },
+              { 
+                value: 'long' as const, 
+                label: 'Long', 
+                description: '800+ words',
+                icon: <FileText className="h-4 w-4" />,
+                wordRange: '800+',
+                bestFor: 'Comprehensive analysis'
+              }
+            ].map((lengthOption) => (
+              <button
+                key={lengthOption.value}
+                onClick={() => onLengthChange(lengthOption.value)}
+                className={`p-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                  length === lengthOption.value
+                    ? 'border-blue-500 bg-blue-50 shadow-lg'
+                    : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                } ${lengthOption.value === lengthRecommendation.recommended ? 'ring-2 ring-green-300' : ''}`}
+              >
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className={`p-2 rounded-lg ${length === lengthOption.value ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                    {lengthOption.icon}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{lengthOption.label}</div>
+                    <div className="text-xs text-gray-500">{lengthOption.wordRange} words</div>
+                    <div className="text-xs text-gray-400 mt-1">{lengthOption.bestFor}</div>
+                    {lengthOption.value === lengthRecommendation.recommended && (
+                      <div className="text-xs text-green-600 font-medium mt-1">✓ AI Recommended</div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          {showLengthRecommendations && length !== lengthRecommendation.recommended && (
+            <div className="mt-2 text-center">
+              <button
+                onClick={() => onLengthChange(lengthRecommendation.recommended)}
+                className="text-xs text-green-600 hover:text-green-800 hover:underline font-medium"
+              >
+                Use AI recommended length: {lengthRecommendation.recommended}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Content Analysis Summary */}
+        {showLengthRecommendations && contentAnalysis.keyTopics.length > 0 && (
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Content Topics Detected</h4>
+            <div className="flex flex-wrap gap-2">
+              {contentAnalysis.keyTopics.map((topic, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs"
+                >
+                  {topic}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
