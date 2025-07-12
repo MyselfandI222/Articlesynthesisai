@@ -12,9 +12,6 @@ Preferred communication style: Simple, everyday language.
 
 - **Article Self-Reference Removal (Jan 2025)**: Updated all AI synthesis services to prevent generated articles from referencing their own titles within the content. Modified ChatGPT, OpenAI, and AI article generation services to avoid self-referential phrases like "this article", "in this piece", and mentioning the article's own title within the content.
 - **Mood Meter Implementation (Jan 2025)**: Added comprehensive emotional tone analysis with circular visualization showing sentiment distribution, emotional intensity, and article breakdown. Features interactive emotion selection, mood insights, and trending indicators.
-- **Welcome Onboarding System (Jan 2025)**: Implemented automatic introduction system for new users with 5-step guided tour covering platform features, search functionality, analysis tools, and synthesis process. Includes progress tracking, help button in header, and localStorage persistence.
-- **UI Cleanup and Simplification (Jan 2025)**: Streamlined the interface by removing excessive visual effects, simplified the header badges, improved layout spacing, changed background from gradient to clean gray, and consolidated analysis tools into a cleaner grouped section.
-- **Visual Enhancement for Appeal (Jan 2025)**: Enhanced the website's visual appeal with attractive gradient backgrounds, backdrop blur effects, improved shadows and hover animations, colorful status indicators, and a more engaging design while maintaining professionalism.
 
 ## System Architecture
 
