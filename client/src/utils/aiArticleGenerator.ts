@@ -95,8 +95,10 @@ const generateSingleViralArticle = async (
             
             IMPORTANT: 
             1. Do not reference or mention names/titles of other articles in your content
-            2. Use generic phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
-            3. Return your response in JSON format with exactly this structure:
+            2. Do not reference or mention the title of your own article within the article content
+            3. Use generic phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
+            4. Write the article content without self-referencing (avoid phrases like "this article", "in this piece", etc.)
+            5. Return your response in JSON format with exactly this structure:
             {
               "title": "Compelling headline that hooks readers",
               "content": "Full article content (500-800 words)",

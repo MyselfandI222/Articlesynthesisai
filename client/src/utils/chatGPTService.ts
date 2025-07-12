@@ -99,7 +99,11 @@ export const synthesizeWithChatGPT = async (
 
     const prompt = `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
 
-IMPORTANT: Do not reference or mention the names/titles of the source articles in your writing. Instead, use phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest".
+IMPORTANT: 
+1. Do not reference or mention the names/titles of the source articles in your writing
+2. Do not reference or mention the title of your own article within the article content
+3. Use phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
+4. Write the article content without self-referencing (avoid phrases like "this article", "in this piece", etc.)
 
 Sources:
 ${sourcesText}
@@ -113,7 +117,7 @@ Requirements:
 - Maintain factual accuracy
 - Include SEO-friendly keywords
 - Add fact-checking insights where relevant
-- DO NOT reference source article titles or names in the content
+- DO NOT reference source article titles or your own article title in the content
 
 Please provide a well-structured article with clear sections and a summary.`;
 

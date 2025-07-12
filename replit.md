@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **Article Reference Removal (Jan 2025)**: Updated all AI synthesis services to avoid referencing source article titles in generated content. Modified ChatGPT, OpenAI, and AI article generation services to use generic phrases like "according to research", "studies show", "experts indicate" instead of mentioning article names.
+- **Article Self-Reference Removal (Jan 2025)**: Updated all AI synthesis services to prevent generated articles from referencing their own titles within the content. Modified ChatGPT, OpenAI, and AI article generation services to avoid self-referential phrases like "this article", "in this piece", and mentioning the article's own title within the content.
 
 ## System Architecture
 
