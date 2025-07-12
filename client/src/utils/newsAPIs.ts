@@ -351,10 +351,6 @@ const searchGuardianNews = async (query: string): Promise<SearchResult[]> => {
 const getFallbackNewsResults = (query: string): SearchResult[] => {
   console.log('No API keys available, please add VITE_NEWS_API_KEY to access real news sources');
   return [];
-      viewpoint: 'analytical',
-      keywords: ['analysis', 'expert opinion', 'impact assessment', query.toLowerCase()]
-    }
-  ];
 };
 
 // Guardian API (Free with registration)
