@@ -9,6 +9,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = req.query.q as string;
       const apiKey = process.env.VITE_NEWS_API_KEY;
       
+      console.log('Current API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NOT SET');
+      
       if (!query) {
         return res.status(400).json({ error: 'Query parameter is required' });
       }
