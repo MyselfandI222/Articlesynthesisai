@@ -2,31 +2,18 @@
 import { SearchResult } from '../types';
 import { getEnabledAPISources } from './apiFilters';
 
-// NewsAPI.org (Free tier: 1000 requests/month)
+// NewsAPI.org (Free tier: 1000 requests/month) - Using backend proxy to bypass CORS
 const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
   try {
-    const NEWS_API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+    console.log('Using NewsAPI backend proxy for:', query);
     
-    console.log('NewsAPI Key check:', NEWS_API_KEY ? 'Found' : 'Missing');
-    
-    if (!NEWS_API_KEY || NEWS_API_KEY === 'your-news-api-key-here' || NEWS_API_KEY.length < 10) {
-      console.log('No NewsAPI key found, trying free sources');
-      return searchFreeNewsSources(query);
-    }
-
-    // Real NewsAPI call with proper headers and error handling
-    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'NewsApp/1.0',
-        'Accept': 'application/json',
-      },
-    });
+    // Call our backend API proxy instead of NewsAPI directly to bypass CORS
+    const response = await fetch(`/api/news/search?q=${encodeURIComponent(query)}`);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`NewsAPI error: ${response.status} - ${errorText}`);
-      throw new Error(`NewsAPI error: ${response.status}`);
+      console.error(`Backend NewsAPI proxy error: ${response.status}`);
+      // Fall back to free sources if backend fails
+      return searchFreeNewsSources(query);
     }
     
     const data = await response.json();
@@ -34,7 +21,7 @@ const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
     // Check for API-specific errors
     if (data.status === 'error') {
       console.error('NewsAPI returned error:', data.message);
-      throw new Error(`NewsAPI error: ${data.message}`);
+      return searchFreeNewsSources(query);
     }
     
     const results: SearchResult[] = [];
