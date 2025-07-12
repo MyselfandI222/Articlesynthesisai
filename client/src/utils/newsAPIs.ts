@@ -14,14 +14,28 @@ const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
       return searchFreeNewsSources(query);
     }
 
-    // Real NewsAPI call
-    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`);
+    // Real NewsAPI call with proper headers and error handling
+    const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'NewsApp/1.0',
+        'Accept': 'application/json',
+      },
+    });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`NewsAPI error: ${response.status} - ${errorText}`);
       throw new Error(`NewsAPI error: ${response.status}`);
     }
     
     const data = await response.json();
+    
+    // Check for API-specific errors
+    if (data.status === 'error') {
+      console.error('NewsAPI returned error:', data.message);
+      throw new Error(`NewsAPI error: ${data.message}`);
+    }
     
     const results: SearchResult[] = [];
     
@@ -56,21 +70,27 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
   try {
     const results: SearchResult[] = [];
     
-    // Search BBC News
-    const bbcResults = await searchBBCNews(query);
-    results.push(...bbcResults);
+    // Search multiple sources in parallel for better performance
+    const searchPromises = [
+      searchBBCNews(query),
+      searchCNNNews(query),
+      searchNPRNews(query),
+      searchGuardianNews(query),
+      searchReutersNews(query),
+      searchAPNews(query)
+    ];
     
-    // Search CNN News
-    const cnnResults = await searchCNNNews(query);
-    results.push(...cnnResults);
+    // Execute all searches in parallel and collect results
+    const searchResults = await Promise.allSettled(searchPromises);
     
-    // Search NPR News
-    const nprResults = await searchNPRNews(query);
-    results.push(...nprResults);
-    
-    // Search The Guardian
-    const guardianResults = await searchGuardianNews(query);
-    results.push(...guardianResults);
+    searchResults.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        results.push(...result.value);
+      } else {
+        const sources = ['BBC', 'CNN', 'NPR', 'Guardian', 'Reuters', 'AP'];
+        console.warn(`${sources[index]} feed error:`, result.reason);
+      }
+    });
     
     // Filter out sources with no results and ensure query relevance
     const filteredResults = results.filter(result => {
@@ -344,7 +364,125 @@ const searchGuardianNews = async (query: string): Promise<SearchResult[]> => {
   }
 };
 
+// Reuters News RSS
+const searchReutersNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.reuters.com/reuters/topNews',
+      'https://feeds.reuters.com/reuters/businessNews',
+      'https://feeds.reuters.com/reuters/technologyNews'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, {
+          headers: {
+            'User-Agent': 'NewsApp/1.0',
+            'Accept': 'application/rss+xml, application/xml, text/xml',
+          },
+        });
+        
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `reuters-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'Reuters',
+              publishedAt: pubDate,
+              author: 'Reuters',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Reuters feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Reuters search failed:', error);
+    return [];
+  }
+};
 
+// Associated Press News RSS  
+const searchAPNews = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const feeds = [
+      'https://feeds.apnews.com/rss/apf-topnews',
+      'https://feeds.apnews.com/rss/apf-usnews',
+      'https://feeds.apnews.com/rss/apf-business'
+    ];
+    
+    for (const feedUrl of feeds) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, {
+          headers: {
+            'User-Agent': 'NewsApp/1.0',
+            'Accept': 'application/rss+xml, application/xml, text/xml',
+          },
+        });
+        
+        if (!response.ok) continue;
+        
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+        
+        Array.from(items).forEach((item, index) => {
+          if (results.length >= 10) return;
+          
+          const title = item.querySelector('title')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          if (title && description && (title.toLowerCase().includes(query.toLowerCase()) || description.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+              id: `ap-${index}-${Date.now()}`,
+              title: title,
+              description: description,
+              content: description,
+              url: link,
+              source: 'Associated Press',
+              publishedAt: pubDate,
+              author: 'AP',
+              viewpoint: 'neutral'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('AP feed error:', error);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('AP search failed:', error);
+    return [];
+  }
+};
 
 // Function to get real news from various sources
 const getRealNewsFromSources = async (query: string): Promise<SearchResult[]> => {
@@ -509,38 +647,64 @@ const searchWikipediaAPI = async (query: string): Promise<SearchResult[]> => {
   }
 };
 
-// Main news search function
+// Main news search function that combines all sources
 const searchNewsAPIs = async (query: string): Promise<SearchResult[]> => {
-  const enabledAPIs = getEnabledAPISources();
+  console.log(`Starting comprehensive news search for: "${query}"`);
   
-  const apiMap = {
-    'newsapi': searchNewsAPI,
-    'guardian': searchGuardianAPI,
-    'reddit': searchRedditAPI,
-    'hacker-news': searchHackerNews,
-    'wikipedia': searchWikipediaAPI
-  };
+  const allResults: SearchResult[] = [];
   
-  // Only search enabled APIs
-  const searchPromises = Object.entries(apiMap)
-    .filter(([apiId]) => enabledAPIs.includes(apiId))
-    .map(([_, searchFn]) => searchFn(query));
-
+  // First, try NewsAPI if available
   try {
-    const results = await Promise.allSettled(searchPromises);
-    const allResults: SearchResult[] = [];
-
-    results.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        allResults.push(...result.value);
-      }
-    });
-
-    return allResults.slice(0, 10); // Limit news results
+    const newsAPIResults = await searchNewsAPI(query);
+    if (newsAPIResults.length > 0) {
+      console.log(`NewsAPI returned ${newsAPIResults.length} results`);
+      allResults.push(...newsAPIResults);
+    }
   } catch (error) {
-    console.error('Error searching news APIs:', error);
-    return [];
+    console.error('NewsAPI search failed:', error);
   }
+  
+  // Then try all free news sources in parallel
+  try {
+    const freeSourceResults = await searchFreeNewsSources(query);
+    if (freeSourceResults.length > 0) {
+      console.log(`Free sources returned ${freeSourceResults.length} results`);
+      allResults.push(...freeSourceResults);
+    }
+  } catch (error) {
+    console.error('Free sources search failed:', error);
+  }
+  
+  // Add additional API sources
+  const additionalSources = [
+    searchGuardianAPI,
+    searchRedditAPI,
+    searchHackerNews,
+    searchWikipediaAPI
+  ];
+  
+  const additionalPromises = additionalSources.map(fn => fn(query));
+  const additionalResults = await Promise.allSettled(additionalPromises);
+  
+  additionalResults.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      allResults.push(...result.value);
+    }
+  });
+  
+  // Remove duplicates based on title similarity
+  const uniqueResults = allResults.filter((result, index, self) => 
+    index === self.findIndex(r => r.title.toLowerCase() === result.title.toLowerCase())
+  );
+  
+  console.log(`Total unique results found: ${uniqueResults.length}`);
+  
+  // Sort by relevance (NewsAPI results first, then others)
+  return uniqueResults.sort((a, b) => {
+    if (a.source === 'NewsAPI' && b.source !== 'NewsAPI') return -1;
+    if (a.source !== 'NewsAPI' && b.source === 'NewsAPI') return 1;
+    return 0;
+  }).slice(0, 20); // Return top 20 results
 };
 
 // Export the newsAPIs object with expected methods
