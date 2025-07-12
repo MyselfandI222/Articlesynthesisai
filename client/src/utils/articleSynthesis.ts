@@ -248,9 +248,13 @@ const generateParagraph = (
   tone: string,
   index: number
 ): string => {
-  // Get a random source to draw content from
-  const randomSource = sources[Math.floor(Math.random() * sources.length)];
-  const sourceContent = randomSource?.content || '';
+  // Extract key themes from sources without referencing article titles
+  const extractedThemes = sources.map(source => {
+    const content = source.content.toLowerCase();
+    // Extract key sentences or phrases without referencing the article title
+    const sentences = content.split('.').filter(s => s.trim().length > 20);
+    return sentences.slice(0, 2).join('. ');
+  });
   
   // Paragraph templates based on position in article
   const paragraphTemplates = [

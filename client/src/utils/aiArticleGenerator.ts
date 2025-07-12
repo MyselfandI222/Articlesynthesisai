@@ -93,7 +93,10 @@ const generateSingleViralArticle = async (
             role: 'system',
             content: `You are a viral content creator. Create compelling, engaging articles that people want to share. 
             
-            IMPORTANT: Return your response in JSON format with exactly this structure:
+            IMPORTANT: 
+            1. Do not reference or mention names/titles of other articles in your content
+            2. Use generic phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
+            3. Return your response in JSON format with exactly this structure:
             {
               "title": "Compelling headline that hooks readers",
               "content": "Full article content (500-800 words)",

@@ -8,6 +8,10 @@ This is a comprehensive AI-powered article synthesis application that combines m
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- **Article Reference Removal (Jan 2025)**: Updated all AI synthesis services to avoid referencing source article titles in generated content. Modified ChatGPT, OpenAI, and AI article generation services to use generic phrases like "according to research", "studies show", "experts indicate" instead of mentioning article names.
+
 ## System Architecture
 
 ### Frontend Architecture

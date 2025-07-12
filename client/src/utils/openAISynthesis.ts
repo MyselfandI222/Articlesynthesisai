@@ -15,12 +15,14 @@ export const synthesizeWithOpenAI = async (
       throw new Error('OpenAI API key not found');
     }
 
-    // Prepare the prompt for OpenAI
-    const sourcesText = sources.map(source => 
-      `Title: ${source.title}\nContent: ${source.content.substring(0, 500)}...\nSource: ${source.source}\n`
+    // Prepare the prompt for OpenAI without referencing article titles
+    const sourcesText = sources.map((source, index) => 
+      `Source ${index + 1}: ${source.content.substring(0, 500)}...\nFrom: ${source.source}\n`
     ).join('\n---\n');
 
     const prompt = `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
+
+IMPORTANT: Do not reference or mention the names/titles of the source articles in your writing. Instead, use phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest".
 
 Sources:
 ${sourcesText}
@@ -32,6 +34,7 @@ Requirements:
 - Include relevant information from all sources
 - Create a compelling title
 - Maintain factual accuracy
+- DO NOT reference source article titles or names in the content
 
 Please provide a well-structured article with clear sections.`;
 
