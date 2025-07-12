@@ -4,6 +4,7 @@ import { Article } from '../types';
 import { ArticleSearch } from './ArticleSearch';
 import { StoryDepthMeter } from './StoryDepthMeter';
 import { PerspectiveCompass } from './PerspectiveCompass';
+import { MoodMeter } from './MoodMeter';
 
 interface SourceInputProps {
   sources: Article[];
@@ -138,6 +139,9 @@ export const SourceInput: React.FC<SourceInputProps> = ({ sources, onSourcesChan
 
       {/* Perspective Compass */}
       <PerspectiveCompass articles={sources} />
+
+      {/* Mood Meter */}
+      <MoodMeter articles={sources} />
 
       {/* Added Sources Display */}
       {sources.length > 0 && (
