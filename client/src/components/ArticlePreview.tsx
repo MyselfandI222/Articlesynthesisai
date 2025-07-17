@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { SynthesizedArticle, ChatMessage, AIImage } from '../types';
-import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, RefreshCw } from 'lucide-react';
+import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, RefreshCw, X } from 'lucide-react';
 import { ChatGPTMetrics } from './ChatGPTMetrics';
 import { ImageGenerator } from './ImageGenerator';
+import { ArticleExport } from './ArticleExport';
 import { editAIImage, ImageGenerationOptions } from '../utils/imageGeneration';
 import { sendMessageToChatGPT } from '../utils/chatGptService';
 
@@ -495,6 +496,11 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, onEdit,
           seoMetadata={article.seoMetadata}
         />
       )}
+
+      {/* Article Export */}
+      <div className="border-t border-gray-200">
+        <ArticleExport article={article} />
+      </div>
     </div>
   );
 };
