@@ -6,8 +6,8 @@ import { classifyBreakingNews, formatEngagementNumber } from '../utils/breakingN
 import { useAuth } from '../hooks/useAuth';
 
 interface HeaderProps {
-  onNavigate?: (page: 'home' | 'affiliate' | 'premium' | 'subscribe') => void;
-  currentPage?: 'home' | 'affiliate' | 'premium' | 'subscribe';
+  onNavigate?: (page: 'home' | 'affiliate' | 'subscribe') => void;
+  currentPage?: 'home' | 'affiliate' | 'subscribe';
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home' }) => {
@@ -112,17 +112,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Affiliate</span>
                 </button>
-                <button
-                  onClick={() => onNavigate('premium')}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    currentPage === 'premium' 
-                      ? 'bg-purple-100 text-purple-800' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Crown className="h-4 w-4" />
-                  <span className="hidden sm:inline">Premium</span>
-                </button>
+
                 <button
                   onClick={() => onNavigate('subscribe')}
                   className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${

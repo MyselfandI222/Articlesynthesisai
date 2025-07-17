@@ -7,7 +7,7 @@ interface PremiumFeature {
   description: string;
   icon: React.ReactNode;
   isPremium: boolean;
-  tier: 'free' | 'pro' | 'premium';
+  tier: 'free' | 'pro';
 }
 
 const FEATURES: PremiumFeature[] = [
@@ -81,7 +81,7 @@ const FEATURES: PremiumFeature[] = [
     description: 'Create and save your own writing style presets',
     icon: <Crown className="h-5 w-5" />,
     isPremium: true,
-    tier: 'premium'
+    tier: 'pro'
   },
   {
     id: 'api_access',
@@ -89,28 +89,26 @@ const FEATURES: PremiumFeature[] = [
     description: 'Full API access for integrations and bulk processing',
     icon: <Zap className="h-5 w-5" />,
     isPremium: true,
-    tier: 'premium'
+    tier: 'pro'
   }
 ];
 
 interface PremiumFeaturesProps {
-  userTier: 'free' | 'pro' | 'premium';
+  userTier: 'free' | 'pro';
   onUpgrade?: () => void;
 }
 
 export const PremiumFeatures: React.FC<PremiumFeaturesProps> = ({ userTier, onUpgrade }) => {
-  const hasAccess = (featureTier: 'free' | 'pro' | 'premium') => {
-    if (userTier === 'premium') return true;
-    if (userTier === 'pro' && (featureTier === 'free' || featureTier === 'pro')) return true;
+  const hasAccess = (featureTier: 'free' | 'pro') => {
+    if (userTier === 'pro') return true;
     if (userTier === 'free' && featureTier === 'free') return true;
     return false;
   };
 
-  const getTierColor = (tier: 'free' | 'pro' | 'premium') => {
+  const getTierColor = (tier: 'free' | 'pro') => {
     switch (tier) {
       case 'free': return 'text-green-600 bg-green-100';
       case 'pro': return 'text-blue-600 bg-blue-100';
-      case 'premium': return 'text-purple-600 bg-purple-100';
     }
   };
 
@@ -122,7 +120,7 @@ export const PremiumFeatures: React.FC<PremiumFeaturesProps> = ({ userTier, onUp
             <Crown className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Premium Features</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Pro Features</h2>
             <p className="text-sm text-gray-600">
               Current plan: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTierColor(userTier)}`}>
                 {userTier.charAt(0).toUpperCase() + userTier.slice(1)}
@@ -130,12 +128,12 @@ export const PremiumFeatures: React.FC<PremiumFeaturesProps> = ({ userTier, onUp
             </p>
           </div>
         </div>
-        {userTier !== 'premium' && (
+        {userTier !== 'pro' && (
           <button
             onClick={onUpgrade}
             className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
           >
-            Upgrade Plan
+            Upgrade to Pro
           </button>
         )}
       </div>
@@ -193,17 +191,17 @@ export const PremiumFeatures: React.FC<PremiumFeaturesProps> = ({ userTier, onUp
         <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
           <div className="flex items-center space-x-3 mb-2">
             <Crown className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-blue-900">Unlock Premium Features</h3>
+            <h3 className="font-semibold text-blue-900">Unlock Pro Features</h3>
           </div>
           <p className="text-sm text-blue-800 mb-3">
             Upgrade to Pro for advanced AI synthesis, unlimited sources, and professional export capabilities.
           </p>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-blue-700">
-              <span className="font-semibold">Pro Plan:</span> $9.99/month
+              <span className="font-semibold">Pro Monthly:</span> $5/month
             </div>
             <div className="text-sm text-blue-700">
-              <span className="font-semibold">Premium Plan:</span> $19.99/month
+              <span className="font-semibold">Pro Lifetime:</span> $50 one-time
             </div>
           </div>
         </div>
@@ -212,13 +210,12 @@ export const PremiumFeatures: React.FC<PremiumFeaturesProps> = ({ userTier, onUp
   );
 };
 
-export const useFeatureAccess = (userTier: 'free' | 'pro' | 'premium') => {
+export const useFeatureAccess = (userTier: 'free' | 'pro') => {
   const hasFeature = (featureId: string) => {
     const feature = FEATURES.find(f => f.id === featureId);
     if (!feature) return false;
     
-    if (userTier === 'premium') return true;
-    if (userTier === 'pro' && (feature.tier === 'free' || feature.tier === 'pro')) return true;
+    if (userTier === 'pro') return true;
     if (userTier === 'free' && feature.tier === 'free') return true;
     return false;
   };
