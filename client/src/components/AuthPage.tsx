@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Sparkles, User, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { queryClient } from '../lib/queryClient';
 
 interface LoginData {
   username: string;
@@ -27,7 +28,7 @@ const AuthPage = () => {
     lastName: '' 
   });
   
-  const queryClient = useQueryClient();
+
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {

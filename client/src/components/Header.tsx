@@ -1,14 +1,20 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Globe, TrendingUp, Bot, LogOut } from 'lucide-react';
+import { FileText, Sparkles, Globe, TrendingUp, Bot, LogOut, Users, Crown, Menu, X } from 'lucide-react';
 import { getTodaysBreakingNews } from '../utils/dailyNewsUpdater';
 import { classifyBreakingNews, formatEngagementNumber } from '../utils/breakingNewsDetector';
 import { useAuth } from '../hooks/useAuth';
 
-export const Header: React.FC = () => {
-  const { user } = useAuth();
+interface HeaderProps {
+  onNavigate?: (page: 'home' | 'affiliate' | 'premium') => void;
+  currentPage?: 'home' | 'affiliate' | 'premium';
+}
+
+export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home' }) => {
+  const { user, logoutMutation } = useAuth();
   const [breakingNewsCount, setBreakingNewsCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     // Load today's breaking news count
@@ -81,6 +87,45 @@ export const Header: React.FC = () => {
               <span>Legal & Original</span>
             </div>
             
+            {/* Navigation Menu */}
+            {user && onNavigate && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => onNavigate('home')}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    currentPage === 'home' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">Home</span>
+                </button>
+                <button
+                  onClick={() => onNavigate('affiliate')}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    currentPage === 'affiliate' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Affiliate</span>
+                </button>
+                <button
+                  onClick={() => onNavigate('premium')}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    currentPage === 'premium' 
+                      ? 'bg-purple-100 text-purple-800' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Crown className="h-4 w-4" />
+                  <span className="hidden sm:inline">Premium</span>
+                </button>
+              </div>
+            )}
+
             {/* User Profile and Logout */}
             {user && (
               <div className="flex items-center space-x-3">

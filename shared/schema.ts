@@ -31,14 +31,61 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  subscriptionStatus: varchar("subscription_status").default("free"), // free, pro, premium
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  affiliateCode: varchar("affiliate_code").unique(), // unique code for each user
+  referredBy: integer("referred_by"), // user ID who referred this user
+  totalReferrals: integer("total_referrals").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Affiliate tracking table
+export const affiliateLinks = pgTable("affiliate_links", {
+  id: integer("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  affiliateCode: varchar("affiliate_code").notNull(),
+  clickCount: integer("click_count").default(0),
+  conversions: integer("conversions").default(0),
+  totalEarnings: integer("total_earnings").default(0), // in cents
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Referral rewards table
+export const referralRewards = pgTable("referral_rewards", {
+  id: integer("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull(),
+  referredUserId: integer("referred_user_id").notNull(),
+  rewardType: varchar("reward_type").notNull(), // discount, credit, cash
+  rewardAmount: integer("reward_amount").notNull(), // in cents or percentage
+  status: varchar("status").default("pending"), // pending, applied, expired
+  createdAt: timestamp("created_at").defaultNow(),
+  appliedAt: timestamp("applied_at"),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
+  affiliateCode: true,
+  totalReferrals: true,
+});
+
+export const insertAffiliateLinkSchema = createInsertSchema(affiliateLinks).omit({
+  createdAt: true,
+  updatedAt: true,
+  clickCount: true,
+  conversions: true,
+  totalEarnings: true,
+});
+
+export const insertReferralRewardSchema = createInsertSchema(referralRewards).omit({
+  createdAt: true,
+  appliedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type AffiliateLink = typeof affiliateLinks.$inferSelect;
+export type ReferralReward = typeof referralRewards.$inferSelect;

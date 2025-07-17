@@ -73,7 +73,7 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { username, password, email, firstName, lastName } = req.body;
+      const { username, password, email, firstName, lastName, referralCode } = req.body;
       
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required" });
@@ -92,6 +92,16 @@ export function setupAuth(app: Express) {
         lastName,
       });
 
+      // Handle referral code if provided
+      if (referralCode) {
+        try {
+          await storage.trackAffiliateConversion(referralCode, user.id);
+        } catch (error) {
+          console.error("Error tracking referral:", error);
+          // Continue with registration even if referral tracking fails
+        }
+      }
+
       req.login(user, (err) => {
         if (err) return next(err);
         res.status(201).json({ 
@@ -101,6 +111,8 @@ export function setupAuth(app: Express) {
           firstName: user.firstName,
           lastName: user.lastName,
           profileImageUrl: user.profileImageUrl,
+          subscriptionStatus: user.subscriptionStatus,
+          affiliateCode: user.affiliateCode,
         });
       });
     } catch (error) {
@@ -118,6 +130,8 @@ export function setupAuth(app: Express) {
       firstName: user.firstName,
       lastName: user.lastName,
       profileImageUrl: user.profileImageUrl,
+      subscriptionStatus: user.subscriptionStatus,
+      affiliateCode: user.affiliateCode,
     });
   });
 
@@ -138,6 +152,9 @@ export function setupAuth(app: Express) {
       firstName: user.firstName,
       lastName: user.lastName,
       profileImageUrl: user.profileImageUrl,
+      subscriptionStatus: user.subscriptionStatus,
+      affiliateCode: user.affiliateCode,
+      totalReferrals: user.totalReferrals,
     });
   });
 }

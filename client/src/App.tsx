@@ -8,6 +8,8 @@ import { ArticlePreview } from './components/ArticlePreview';
 import { PublishModal } from './components/PublishModal';
 import AuthPage from './components/AuthPage';
 import SourceCredibilityMeter from './components/SourceCredibilityMeter';
+import AffiliateDashboard from './components/AffiliateDashboard';
+import PremiumFeatures, { useFeatureAccess } from './components/PremiumFeatures';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
@@ -16,6 +18,7 @@ import { Sparkles, Loader, AlertCircle } from 'lucide-react';
 
 function App() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const [currentPage, setCurrentPage] = useState<'home' | 'affiliate' | 'premium'>('home');
   const [sources, setSources] = useState<Article[]>([]);
   const [topic, setTopic] = useState('');
   const [style, setStyle] = useState<WritingStyle>('blog');
@@ -30,6 +33,10 @@ function App() {
   // ChatGPT integration
   const [isChatGPTEnabled, setIsChatGPTEnabled] = useState(() => getAIServicePreference() === 'chatgpt');
   const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
+
+  // Feature access based on user subscription
+  const userTier = user?.subscriptionStatus === 'active' ? 'pro' : 'free';
+  const { hasFeature } = useFeatureAccess(userTier);
 
   useEffect(() => {
     // Check for today's breaking news and show notification
@@ -120,11 +127,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Header />
+      <Header 
+        onNavigate={setCurrentPage} 
+        currentPage={currentPage}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Daily News Notification */}
-        {dailyNewsNotification && (
+        {dailyNewsNotification && currentPage === 'home' && (
           <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center space-x-3">
               <div className="bg-blue-100 p-2 rounded-xl">
@@ -144,7 +154,21 @@ function App() {
           </div>
         )}
 
-        {!synthesizedArticle ? (
+        {/* Render different pages */}
+        {currentPage === 'affiliate' && (
+          <AffiliateDashboard />
+        )}
+
+        {currentPage === 'premium' && (
+          <PremiumFeatures 
+            userTier={userTier}
+            onUpgrade={() => console.log('Upgrade clicked')}
+          />
+        )}
+
+        {currentPage === 'home' && (
+          <>
+            {!synthesizedArticle ? (
           <div className="space-y-8">
             <div className="text-center max-w-4xl mx-auto">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
@@ -264,6 +288,8 @@ function App() {
               onPublish={() => setIsPublishModalOpen(true)}
             />
           </div>
+        )}
+          </>
         )}
       </main>
 
