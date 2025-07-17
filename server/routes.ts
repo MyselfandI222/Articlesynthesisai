@@ -52,6 +52,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   // Auth routes are now handled in auth.ts
+  
+  // Debug endpoint to create a test user
+  app.post('/api/debug/create-user', async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password required' });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: 'User already exists' });
+      }
+      
+      // Create user using the auth system's password hashing
+      const { scrypt, randomBytes } = require('crypto');
+      const { promisify } = require('util');
+      const scryptAsync = promisify(scrypt);
+      
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      // Create user
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        email: `${username}@example.com`,
+        subscriptionStatus: 'free'
+      });
+      
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          username: user.username,
+          subscriptionStatus: user.subscriptionStatus 
+        } 
+      });
+    } catch (error) {
+      console.error('Error creating test user:', error);
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  });
 
   // Protected route example
   app.get("/api/protected", isAuthenticated, async (req, res) => {
