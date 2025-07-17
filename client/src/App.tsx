@@ -6,7 +6,7 @@ import { TitleRecommendations } from './components/TitleRecommendations';
 import { ChatGPTSettings } from './components/ChatGPTSettings';
 import { ArticlePreview } from './components/ArticlePreview';
 import { PublishModal } from './components/PublishModal';
-import Landing from './components/Landing';
+import AuthPage from './components/AuthPage';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
@@ -113,7 +113,7 @@ function App() {
         <Loader className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     ) : (
-      <Landing />
+      <AuthPage />
     );
   }
 

@@ -91,11 +91,14 @@ export const Header: React.FC = () => {
                     className="w-5 h-5 rounded-full object-cover"
                   />
                   <span className="text-xs font-medium text-gray-800 hidden sm:inline">
-                    {user.firstName || user.email}
+                    {user.firstName || user.username}
                   </span>
                 </div>
                 <button
-                  onClick={() => window.location.href = '/api/logout'}
+                  onClick={async () => {
+                    await fetch('/api/logout', { method: 'POST' });
+                    window.location.reload();
+                  }}
                   className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-full px-3 py-1.5 shadow-sm hover:from-red-100 hover:to-red-200 transition-all"
                 >
                   <LogOut className="h-4 w-4 text-red-600" />
