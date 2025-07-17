@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -152,6 +153,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error handling affiliate redirect:', error);
       res.redirect('/signup');
+    }
+  });
+
+  // PayPal payment routes
+  app.get("/api/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/api/paypal/order", async (req, res) => {
+    // Request body should contain: { intent, amount, currency }
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/api/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
+
+  // Premium subscription endpoints
+  app.post("/api/subscribe", isAuthenticated, async (req, res) => {
+    try {
+      const { tier, paymentDetails } = req.body;
+      const userId = (req.user as any).id;
+      
+      // Validate tier
+      if (!['pro', 'premium'].includes(tier)) {
+        return res.status(400).json({ error: 'Invalid subscription tier' });
+      }
+      
+      // Update user subscription
+      await storage.updateUserSubscription(userId, tier, paymentDetails);
+      
+      res.json({ success: true, tier });
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      res.status(500).json({ error: 'Failed to create subscription' });
+    }
+  });
+
+  app.post("/api/cancel-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      await storage.updateUserSubscription(userId, 'free', null);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      res.status(500).json({ error: 'Failed to cancel subscription' });
     }
   });
 

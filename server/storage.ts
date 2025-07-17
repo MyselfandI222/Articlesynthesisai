@@ -30,6 +30,9 @@ export interface IStorage {
   createReferralReward(referrerId: number, referredUserId: number, rewardType: string, rewardAmount: number): Promise<ReferralReward>;
   getUserRewards(userId: number): Promise<ReferralReward[]>;
   
+  // Subscription management
+  updateUserSubscription(userId: number, tier: string, paymentDetails: any): Promise<void>;
+  
   sessionStore: session.Store;
 }
 
@@ -166,6 +169,16 @@ export class DatabaseStorage implements IStorage {
   async getUserRewards(userId: number): Promise<ReferralReward[]> {
     const rewards = await db.select().from(referralRewards).where(eq(referralRewards.referrerId, userId));
     return rewards;
+  }
+  
+  async updateUserSubscription(userId: number, tier: string, paymentDetails: any): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        subscriptionStatus: tier,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
   }
 }
 

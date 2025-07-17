@@ -10,6 +10,7 @@ import AuthPage from './components/AuthPage';
 import SourceCredibilityMeter from './components/SourceCredibilityMeter';
 import AffiliateDashboard from './components/AffiliateDashboard';
 import PremiumFeatures, { useFeatureAccess } from './components/PremiumFeatures';
+import SubscriptionPage from './pages/subscribe';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
@@ -18,7 +19,7 @@ import { Sparkles, Loader, AlertCircle } from 'lucide-react';
 
 function App() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
-  const [currentPage, setCurrentPage] = useState<'home' | 'affiliate' | 'premium'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'affiliate' | 'premium' | 'subscribe'>('home');
   const [sources, setSources] = useState<Article[]>([]);
   const [topic, setTopic] = useState('');
   const [style, setStyle] = useState<WritingStyle>('blog');
@@ -162,8 +163,12 @@ function App() {
         {currentPage === 'premium' && (
           <PremiumFeatures 
             userTier={userTier}
-            onUpgrade={() => console.log('Upgrade clicked')}
+            onUpgrade={() => setCurrentPage('subscribe')}
           />
+        )}
+
+        {currentPage === 'subscribe' && (
+          <SubscriptionPage />
         )}
 
         {currentPage === 'home' && (
