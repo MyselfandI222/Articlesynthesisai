@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Comparative Article Synthesis (Jan 2025)**: Enhanced AI synthesis to automatically detect when multiple articles cover the same topic and create comparative analysis instead of separate paragraphs. Both OpenAI and ChatGPT services now analyze topic similarity, identify common themes, conflicting viewpoints, and synthesize comprehensive articles that compare and contrast different sources on the same subject.
 - **Article Self-Reference Removal (Jan 2025)**: Updated all AI synthesis services to prevent generated articles from referencing their own titles within the content. Modified ChatGPT, OpenAI, and AI article generation services to avoid self-referential phrases like "this article", "in this piece", and mentioning the article's own title within the content.
 - **Mood Meter Implementation (Jan 2025)**: Added comprehensive emotional tone analysis with circular visualization showing sentiment distribution, emotional intensity, and article breakdown. Features interactive emotion selection, mood insights, and trending indicators.
 - **Article Export Feature (Jan 2025)**: Added professional article export functionality supporting HTML, Text, and Markdown formats. Includes clean styling, proper typography, metadata, and download capabilities for polished article presentation.

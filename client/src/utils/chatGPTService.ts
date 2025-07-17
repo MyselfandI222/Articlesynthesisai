@@ -79,6 +79,68 @@ const mapLengthToChatGPTLength = (length: 'short' | 'medium' | 'long'): string =
   return lengthMap[length] || 'standard';
 };
 
+// Helper function to analyze topic similarity for ChatGPT
+const analyzeTopicSimilarityWithChatGPT = async (sources: Article[], topic: string): Promise<{
+  isCommonTopic: boolean;
+  keyThemes: string[];
+  perspectives: string[];
+  conflictingPoints: string[];
+}> => {
+  if (!OPENAI_API_KEY || sources.length < 2) {
+    return { isCommonTopic: false, keyThemes: [], perspectives: [], conflictingPoints: [] };
+  }
+
+  const sourcesText = sources.map((source, index) => 
+    `Source ${index + 1}: ${source.content.substring(0, 300)}...\nFrom: ${source.source}\n`
+  ).join('\n---\n');
+
+  const analysisPrompt = `Analyze these sources to determine if they cover the same topic and identify key themes, perspectives, and conflicting points.
+
+Sources:
+${sourcesText}
+
+Return a JSON object with:
+- isCommonTopic: boolean (true if 2+ sources cover the same main topic)
+- keyThemes: array of main themes/subjects covered
+- perspectives: array of different viewpoints or approaches
+- conflictingPoints: array of contradictory facts or opinions between sources
+
+Focus on factual analysis, not just surface-level similarities.`;
+
+  try {
+    const response = await fetch(`${OPENAI_API_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          { role: 'system', content: 'You are an expert content analyst. Always respond with valid JSON.' },
+          { role: 'user', content: analysisPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 500
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+      try {
+        return JSON.parse(content);
+      } catch {
+        return { isCommonTopic: false, keyThemes: [], perspectives: [], conflictingPoints: [] };
+      }
+    }
+  } catch (error) {
+    console.error('ChatGPT topic analysis failed:', error);
+  }
+  
+  return { isCommonTopic: false, keyThemes: [], perspectives: [], conflictingPoints: [] };
+};
+
 // Synthesize articles using ChatGPT
 export const synthesizeWithChatGPT = async (
   sources: Article[],
@@ -92,12 +154,54 @@ export const synthesizeWithChatGPT = async (
       throw new Error('OpenAI API key not found');
     }
 
+    // Analyze topic similarity first
+    const topicAnalysis = await analyzeTopicSimilarityWithChatGPT(sources, topic);
+
     // Prepare the sources text without referencing article titles
     const sourcesText = sources.map((source, index) => 
-      `Source ${index + 1}: ${source.content.substring(0, 500)}...\nFrom: ${source.source}\n`
+      `Source ${index + 1}: ${source.content.substring(0, 800)}...\nFrom: ${source.source}\n`
     ).join('\n---\n');
 
-    const prompt = `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
+    let prompt;
+    
+    if (topicAnalysis.isCommonTopic && sources.length >= 2) {
+      // Enhanced comparative synthesis prompt
+      prompt = `You are an expert article writer specializing in comparative analysis. Multiple sources cover the same topic "${topic}". Create a comprehensive ${length} article that COMPARES AND CONTRASTS these sources rather than simply combining them.
+
+SYNTHESIS APPROACH:
+1. IDENTIFY COMMON GROUND: What facts, findings, or viewpoints do multiple sources agree on?
+2. HIGHLIGHT DIFFERENCES: Where do sources disagree, offer different perspectives, or present conflicting information?
+3. ANALYZE CONTRADICTIONS: When sources conflict, present both sides fairly and note the disagreement
+4. SYNTHESIZE INSIGHTS: Draw connections between different sources' approaches to the same topic
+5. PROVIDE BALANCED PERSPECTIVE: Don't favor one source over another - integrate all viewpoints
+
+Key Themes Identified: ${topicAnalysis.keyThemes.join(', ')}
+Different Perspectives: ${topicAnalysis.perspectives.join(', ')}
+Conflicting Points: ${topicAnalysis.conflictingPoints.join(', ')}
+
+IMPORTANT GUIDELINES:
+- Do not reference source article titles or your own article title in the content
+- Use phrases like "according to research", "studies show", "experts indicate", "some reports suggest", "other findings indicate"
+- Write the article content without self-referencing (avoid phrases like "this article", "in this piece", etc.)
+- When sources disagree, use phrases like "while some research indicates..., other studies suggest..."
+- Create a narrative that weaves together different perspectives on the same topic
+
+Sources:
+${sourcesText}
+
+Requirements:
+- Write in ${style} style with ${tone} tone
+- Target length: ${length === 'short' ? '300-500' : length === 'medium' ? '600-1000' : '1200-2000'} words
+- CREATE COMPARATIVE ANALYSIS, not separate paragraphs for each source
+- Highlight agreements, disagreements, and different approaches to the same topic
+- Include SEO-friendly keywords and fact-checking insights
+- Maintain factual accuracy while presenting multiple viewpoints
+- Structure as a cohesive analysis that compares and contrasts throughout
+
+Please provide a well-structured comparative article with clear sections and a summary.`;
+    } else {
+      // Standard synthesis prompt for different topics
+      prompt = `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
 
 IMPORTANT: 
 1. Do not reference or mention the names/titles of the source articles in your writing
@@ -120,6 +224,7 @@ Requirements:
 - DO NOT reference source article titles or your own article title in the content
 
 Please provide a well-structured article with clear sections and a summary.`;
+    }
 
     const response = await fetch(`${OPENAI_API_BASE_URL}/chat/completions`, {
       method: 'POST',
