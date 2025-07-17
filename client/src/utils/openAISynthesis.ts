@@ -49,7 +49,7 @@ Please provide a well-structured article with clear sections.`;
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           { role: 'system', content: 'You are an expert article writer and synthesizer.' },
           { role: 'user', content: prompt }

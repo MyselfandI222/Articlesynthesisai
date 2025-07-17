@@ -14,6 +14,7 @@ Preferred communication style: Simple, everyday language.
 - **Mood Meter Implementation (Jan 2025)**: Added comprehensive emotional tone analysis with circular visualization showing sentiment distribution, emotional intensity, and article breakdown. Features interactive emotion selection, mood insights, and trending indicators.
 - **Article Export Feature (Jan 2025)**: Added professional article export functionality supporting HTML, Text, and Markdown formats. Includes clean styling, proper typography, metadata, and download capabilities for polished article presentation.
 - **Single Column Layout (Jan 2025)**: Updated pre-synthesis interface from two-column to single-column layout for better mobile experience and natural scroll flow to synthesis button.
+- **Premium ChatGPT Upgrade (Jan 2025)**: Upgraded all AI services from GPT-3.5-turbo to GPT-4o for enhanced article quality, better reasoning, and more sophisticated content generation and editing capabilities.
 
 ## System Architecture
 

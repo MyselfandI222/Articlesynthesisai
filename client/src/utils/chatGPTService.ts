@@ -128,7 +128,7 @@ Please provide a well-structured article with clear sections and a summary.`;
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           { role: 'system', content: 'You are an expert article writer and synthesizer.' },
           { role: 'user', content: prompt }
@@ -170,7 +170,7 @@ Please provide a well-structured article with clear sections and a summary.`;
       },
       processingMetrics: {
         processingTimeMs: 3000,
-        aiModelUsed: 'gpt-3.5-turbo',
+        aiModelUsed: 'gpt-4o',
         contentQualityScore: 88
       }
     };
@@ -209,7 +209,7 @@ Please provide the edited article with the same structure but improved according
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           { role: 'system', content: 'You are an expert article editor and writer.' },
           { role: 'user', content: prompt }
@@ -234,7 +234,7 @@ Please provide the edited article with the same structure but improved according
       processingMetrics: {
         ...article.processingMetrics,
         processingTimeMs: 2000,
-        aiModelUsed: 'gpt-3.5-turbo'
+        aiModelUsed: 'gpt-4o'
       }
     };
   } catch (error) {
