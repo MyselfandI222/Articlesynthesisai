@@ -287,7 +287,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-medium text-gray-700">
-              {searchResults.length} results for "{searchQuery}"
+              {searchResults.length} viral articles for "{searchQuery}"
             </h3>
             <button
               onClick={clearSearch}
@@ -313,13 +313,11 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                           {article.source || 'Unknown Source'}
                         </span>
-                        {article.source?.includes('AI') && (
-                          <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full text-xs font-medium">
-                            🤖 AI Generated
-                          </span>
-                        )}
+                        <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-orange-100 text-red-800 rounded-full text-xs font-medium">
+                          🔥 Viral
+                        </span>
                         <span className="text-xs text-gray-500">
-                          {new Date().toLocaleDateString()} • {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : new Date().toLocaleDateString()} • {article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
                       <h4 className="font-semibold text-gray-900 mb-3 leading-tight text-lg group-hover:text-blue-700 transition-colors">
@@ -335,13 +333,13 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                             href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 text-xs font-medium"
                           >
                             <ExternalLink className="h-3 w-3" />
-                            <span>View Source</span>
+                            <span>View Original</span>
                           </a>
                         )}
-                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
                           Real Article
                         </span>
                       </div>

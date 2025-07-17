@@ -2,6 +2,63 @@
 import { SearchResult } from '../types';
 import { getEnabledAPISources } from './apiFilters';
 
+// Calculate viral score based on article characteristics
+const calculateViralScore = (article: SearchResult): number => {
+  let score = 0;
+  
+  // Viral keywords boost score
+  const viralKeywords = [
+    'breaking', 'urgent', 'exclusive', 'shocking', 'revealed', 'exposed', 'crisis', 
+    'scandal', 'dramatic', 'unprecedented', 'massive', 'huge', 'bombshell', 
+    'investigation', 'leaked', 'viral', 'trending', 'controversy', 'debate',
+    'record', 'historic', 'milestone', 'breakthrough', 'game-changer', 'revolution',
+    'threat', 'warning', 'alert', 'emergency', 'update', 'latest', 'just in'
+  ];
+  
+  const titleLower = article.title.toLowerCase();
+  const descriptionLower = article.description.toLowerCase();
+  
+  // Check for viral keywords in title (higher weight)
+  viralKeywords.forEach(keyword => {
+    if (titleLower.includes(keyword)) {
+      score += 10;
+    }
+    if (descriptionLower.includes(keyword)) {
+      score += 5;
+    }
+  });
+  
+  // Shorter, punchier titles tend to be more viral
+  if (article.title.length < 50) {
+    score += 5;
+  }
+  
+  // Recent articles are more viral
+  if (article.publishedAt) {
+    const articleDate = new Date(article.publishedAt);
+    const now = new Date();
+    const hoursDiff = (now.getTime() - articleDate.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursDiff < 1) score += 20;
+    else if (hoursDiff < 6) score += 15;
+    else if (hoursDiff < 24) score += 10;
+    else if (hoursDiff < 72) score += 5;
+  }
+  
+  // Certain sources tend to have more viral content
+  const viralSources = ['CNN', 'BBC', 'Guardian', 'Reuters', 'AP'];
+  if (viralSources.includes(article.source)) {
+    score += 8;
+  }
+  
+  // Articles with numbers or statistics tend to be more engaging
+  if (/\d+/.test(article.title)) {
+    score += 5;
+  }
+  
+  return score;
+};
+
 // NewsAPI.org (Free tier: 1000 requests/month) - Using backend proxy to bypass CORS
 const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
   try {
@@ -45,7 +102,13 @@ const searchNewsAPI = async (query: string): Promise<SearchResult[]> => {
       });
     }
 
-    return results;
+    // Sort NewsAPI results by viral score
+    const viralResults = results.map(article => ({
+      ...article,
+      viralScore: calculateViralScore(article)
+    })).sort((a, b) => b.viralScore - a.viralScore);
+
+    return viralResults;
   } catch (error) {
     console.error('NewsAPI error:', error);
     return searchFreeNewsSources(query);
@@ -115,7 +178,14 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
     }, {} as Record<string, number>);
     
     console.log('Articles by source:', sourceBreakdown);
-    return filteredResults;
+    
+    // Score articles for viral potential and sort by most viral
+    const viralArticles = filteredResults.map(article => ({
+      ...article,
+      viralScore: calculateViralScore(article)
+    })).sort((a, b) => b.viralScore - a.viralScore);
+    
+    return viralArticles;
   } catch (error) {
     console.error('Free news sources search failed:', error);
     return [];
@@ -1189,14 +1259,26 @@ const searchNewsAPIs = async (query: string): Promise<SearchResult[]> => {
     index === self.findIndex(r => r.title.toLowerCase() === result.title.toLowerCase())
   );
   
-  console.log(`Total unique results found: ${uniqueResults.length}`);
+  // Filter to only real news articles with valid URLs
+  const realArticles = uniqueResults.filter(article => 
+    article.url && 
+    article.url.startsWith('http') &&
+    !article.source?.includes('AI') &&
+    !article.source?.includes('Generated') &&
+    !article.source?.includes('Wikipedia') &&
+    !article.source?.includes('Reddit') &&
+    !article.source?.includes('Hacker News')
+  );
   
-  // Sort by relevance (NewsAPI results first, then others)
-  return uniqueResults.sort((a, b) => {
-    if (a.source === 'NewsAPI' && b.source !== 'NewsAPI') return -1;
-    if (a.source !== 'NewsAPI' && b.source === 'NewsAPI') return 1;
-    return 0;
-  }).slice(0, 20); // Return top 20 results
+  // Score and sort by viral potential
+  const viralArticles = realArticles.map(article => ({
+    ...article,
+    viralScore: calculateViralScore(article)
+  })).sort((a, b) => b.viralScore - a.viralScore);
+  
+  console.log(`Found ${viralArticles.length} real viral articles for "${query}"`);
+  
+  return viralArticles.slice(0, 15); // Return top 15 most viral articles
 };
 
 // Export the newsAPIs object with expected methods
