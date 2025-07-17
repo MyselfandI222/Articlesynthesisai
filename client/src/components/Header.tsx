@@ -1,10 +1,12 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Globe, TrendingUp, Bot } from 'lucide-react';
+import { FileText, Sparkles, Globe, TrendingUp, Bot, LogOut } from 'lucide-react';
 import { getTodaysBreakingNews } from '../utils/dailyNewsUpdater';
 import { classifyBreakingNews, formatEngagementNumber } from '../utils/breakingNewsDetector';
+import { useAuth } from '../hooks/useAuth';
 
 export const Header: React.FC = () => {
+  const { user } = useAuth();
   const [breakingNewsCount, setBreakingNewsCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -78,6 +80,29 @@ export const Header: React.FC = () => {
               <FileText className="h-4 w-4" />
               <span>Legal & Original</span>
             </div>
+            
+            {/* User Profile and Logout */}
+            {user && (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-full px-3 py-1.5 shadow-sm">
+                  <img 
+                    src={user.profileImageUrl || 'https://via.placeholder.com/24'} 
+                    alt="Profile" 
+                    className="w-5 h-5 rounded-full object-cover"
+                  />
+                  <span className="text-xs font-medium text-gray-800 hidden sm:inline">
+                    {user.firstName || user.email}
+                  </span>
+                </div>
+                <button
+                  onClick={() => window.location.href = '/api/logout'}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-full px-3 py-1.5 shadow-sm hover:from-red-100 hover:to-red-200 transition-all"
+                >
+                  <LogOut className="h-4 w-4 text-red-600" />
+                  <span className="text-xs font-medium text-red-800 hidden sm:inline">Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

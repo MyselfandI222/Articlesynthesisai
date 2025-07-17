@@ -6,12 +6,15 @@ import { TitleRecommendations } from './components/TitleRecommendations';
 import { ChatGPTSettings } from './components/ChatGPTSettings';
 import { ArticlePreview } from './components/ArticlePreview';
 import { PublishModal } from './components/PublishModal';
+import Landing from './components/Landing';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
+import { useAuth } from './hooks/useAuth';
 import { Sparkles, Loader, AlertCircle } from 'lucide-react';
 
 function App() {
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [sources, setSources] = useState<Article[]>([]);
   const [topic, setTopic] = useState('');
   const [style, setStyle] = useState<WritingStyle>('blog');
@@ -102,6 +105,17 @@ function App() {
     setChatGPTSettings(settings);
     saveChatGPTSettings(settings);
   };
+
+  // Show landing page for unauthenticated users
+  if (authLoading || !isAuthenticated) {
+    return authLoading ? (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    ) : (
+      <Landing />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
