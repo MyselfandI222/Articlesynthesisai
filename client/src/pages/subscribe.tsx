@@ -32,14 +32,17 @@ const SubscriptionPage = () => {
       badgeColor: "bg-gray-500"
     },
     {
-      id: "pro",
-      name: "Pro",
-      price: 9.99,
-      description: "Advanced features for professionals and content creators",
+      id: "pro-monthly",
+      name: "Pro Monthly",
+      price: 5,
+      description: "Full access with monthly billing",
       features: [
         "Advanced AI synthesis (GPT-4o)",
         "Unlimited searches",
         "All premium meters (Story Depth, Perspective Compass, Mood)",
+        "API access for custom integrations",
+        "White-label solutions",
+        "Advanced analytics dashboard",
         "Priority support",
         "Advanced export options",
         "Custom AI writing styles",
@@ -48,25 +51,27 @@ const SubscriptionPage = () => {
       icon: Zap,
       color: "bg-blue-50 dark:bg-blue-900/20",
       badgeColor: "bg-blue-500",
-      popular: true
+      popular: true,
+      billing: "monthly"
     },
     {
-      id: "premium",
-      name: "Premium",
-      price: 19.99,
-      description: "Ultimate access with API integration and advanced features",
+      id: "pro-lifetime",
+      name: "Pro Lifetime",
+      price: 50,
+      description: "One-time payment for lifetime access",
       features: [
-        "Everything in Pro",
-        "API access for custom integrations",
-        "White-label solutions",
-        "Advanced analytics dashboard",
-        "Custom AI model training",
+        "Everything in Pro Monthly",
+        "Lifetime access - no recurring fees",
+        "Future feature updates included",
         "Priority customer success manager",
-        "Advanced collaboration tools"
+        "Advanced collaboration tools",
+        "Custom AI model training"
       ],
       icon: Crown,
       color: "bg-purple-50 dark:bg-purple-900/20",
-      badgeColor: "bg-purple-500"
+      badgeColor: "bg-purple-500",
+      billing: "lifetime",
+      savings: "Save $10 compared to 10 months of Pro Monthly"
     }
   ];
 
@@ -115,7 +120,7 @@ const SubscriptionPage = () => {
 
   const getCurrentTier = () => {
     if (!user) return "free";
-    // subscriptionStatus can be "free", "pro", "premium", or "inactive"
+    // subscriptionStatus can be "free", "pro-monthly", "pro-lifetime", or "inactive"
     return user.subscriptionStatus === "inactive" ? "free" : (user.subscriptionStatus || "free");
   };
 
@@ -134,7 +139,7 @@ const SubscriptionPage = () => {
         {subscriptionPlans.map((plan) => {
           const IconComponent = plan.icon;
           const isCurrentTier = currentTier === plan.id;
-          const isUpgrade = plan.id !== "free" && (currentTier === "free" || (currentTier === "pro" && plan.id === "premium"));
+          const isUpgrade = plan.id !== "free" && currentTier === "free";
 
           return (
             <Card key={plan.id} className={`relative ${plan.color} ${plan.popular ? 'ring-2 ring-blue-500' : ''}`}>
@@ -156,8 +161,19 @@ const SubscriptionPage = () => {
                   <span className="text-3xl font-bold">
                     ${plan.price}
                   </span>
-                  {plan.price > 0 && <span className="text-gray-500">/month</span>}
+                  {plan.price > 0 && (
+                    <span className="text-gray-500">
+                      {plan.billing === "monthly" ? "/month" : " lifetime"}
+                    </span>
+                  )}
                 </div>
+                {plan.savings && (
+                  <div className="mt-2">
+                    <span className="text-sm text-green-600 font-medium">
+                      {plan.savings}
+                    </span>
+                  </div>
+                )}
               </CardHeader>
 
               <CardContent>
@@ -231,7 +247,7 @@ const SubscriptionPage = () => {
 
       <div className="text-center mt-12">
         <p className="text-gray-600 dark:text-gray-300">
-          All plans include our core AI synthesis features. Cancel anytime.
+          All plans include our core AI synthesis features. Monthly subscriptions can be cancelled anytime.
         </p>
       </div>
     </div>

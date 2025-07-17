@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       
       // Validate tier
-      if (!['pro', 'premium'].includes(tier)) {
+      if (!['pro-monthly', 'pro-lifetime'].includes(tier)) {
         return res.status(400).json({ error: 'Invalid subscription tier' });
       }
       

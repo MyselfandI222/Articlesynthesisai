@@ -36,7 +36,7 @@ function App() {
   const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
 
   // Feature access based on user subscription
-  const userTier = user?.subscriptionStatus === 'active' ? 'pro' : 'free';
+  const userTier = user?.subscriptionStatus && !['free', 'inactive'].includes(user.subscriptionStatus) ? 'pro' : 'free';
   const { hasFeature } = useFeatureAccess(userTier);
 
   useEffect(() => {
