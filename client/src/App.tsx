@@ -7,6 +7,7 @@ import { ChatGPTSettings } from './components/ChatGPTSettings';
 import { ArticlePreview } from './components/ArticlePreview';
 import { PublishModal } from './components/PublishModal';
 import AuthPage from './components/AuthPage';
+import SourceCredibilityMeter from './components/SourceCredibilityMeter';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
@@ -161,6 +162,11 @@ function App() {
 
             <div className="max-w-4xl mx-auto space-y-6">
               <SourceInput sources={sources} onSourcesChange={setSources} />
+              
+              {/* Source Credibility Meter */}
+              {sources.length > 0 && (
+                <SourceCredibilityMeter sources={sources} />
+              )}
               
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
