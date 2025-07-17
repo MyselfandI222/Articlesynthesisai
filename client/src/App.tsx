@@ -145,41 +145,31 @@ function App() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <SourceInput sources={sources} onSourcesChange={setSources} />
-                
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Article Topic
-                  </label>
-                  <input
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="What is the main topic of your article?"
-                  />
-                </div>
-                
-                {/* AI Title Recommendations */}
-                <TitleRecommendations
-                  articles={sources}
-                  currentTopic={topic}
-                  style={style}
-                  tone={tone}
-                  onTitleSelect={setTopic}
-                />
-                
-                {/* ChatGPT Settings */}
-                <ChatGPTSettings
-                  isEnabled={isChatGPTEnabled}
-                  onToggleEnabled={handleToggleChatGPT}
-                  settings={chatGPTSettings}
-                  onSettingsChange={handleChatGPTSettingsChange}
+            <div className="max-w-4xl mx-auto space-y-6">
+              <SourceInput sources={sources} onSourcesChange={setSources} />
+              
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Article Topic
+                </label>
+                <input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="What is the main topic of your article?"
                 />
               </div>
-
+              
+              {/* AI Title Recommendations */}
+              <TitleRecommendations
+                articles={sources}
+                currentTopic={topic}
+                style={style}
+                tone={tone}
+                onTitleSelect={setTopic}
+              />
+              
               <StyleSelector
                 selectedStyle={style}
                 onStyleChange={setStyle}
@@ -189,17 +179,25 @@ function App() {
                 onLengthChange={setLength}
                 sources={sources}
               />
+              
+              {/* ChatGPT Settings */}
+              <ChatGPTSettings
+                isEnabled={isChatGPTEnabled}
+                onToggleEnabled={handleToggleChatGPT}
+                settings={chatGPTSettings}
+                onSettingsChange={handleChatGPTSettingsChange}
+              />
             </div>
-
+            
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center space-x-3 shadow-sm">
+              <div className="max-w-4xl mx-auto bg-red-50 border border-red-200 rounded-xl p-4 flex items-center space-x-3 shadow-sm">
                 <AlertCircle className="h-5 w-5 text-red-600" />
                 <p className="text-red-800">{error}</p>
               </div>
             )}
 
             {/* Synthesize Button - Made more prominent */}
-            <div className="text-center bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
+            <div className="max-w-4xl mx-auto text-center bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
               <div className="mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to Synthesize?</h3>
                 <p className="text-sm text-gray-600">
