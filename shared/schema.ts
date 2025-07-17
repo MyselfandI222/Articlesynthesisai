@@ -31,7 +31,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  subscriptionStatus: varchar("subscription_status").default("free"), // free, pro, premium
+  subscriptionStatus: varchar("subscription_status").default("free"), // free, pro
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   affiliateCode: varchar("affiliate_code").unique(), // unique code for each user

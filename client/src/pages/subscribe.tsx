@@ -33,13 +33,13 @@ const SubscriptionPage = () => {
     },
     {
       id: "pro-monthly",
-      name: "Pro Monthly",
+      name: "Pro",
       price: 5,
-      description: "Full access with monthly billing",
+      description: "Monthly billing - cancel anytime",
       features: [
         "Advanced AI synthesis (GPT-4o)",
         "Unlimited searches",
-        "All premium meters (Story Depth, Perspective Compass, Mood)",
+        "All Pro meters (Story Depth, Perspective Compass, Mood)",
         "API access for custom integrations",
         "White-label solutions",
         "Advanced analytics dashboard",
@@ -56,7 +56,7 @@ const SubscriptionPage = () => {
     },
     {
       id: "pro-lifetime",
-      name: "Pro Lifetime",
+      name: "Pro",
       price: 50,
       description: "One-time payment for lifetime access",
       features: [
@@ -120,7 +120,7 @@ const SubscriptionPage = () => {
 
   const getCurrentTier = () => {
     if (!user) return "free";
-    // subscriptionStatus can be "free", "pro-monthly", "pro-lifetime", or "inactive"
+    // subscriptionStatus can be "free", "pro", or "inactive"
     return user.subscriptionStatus === "inactive" ? "free" : (user.subscriptionStatus || "free");
   };
 
@@ -131,14 +131,14 @@ const SubscriptionPage = () => {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Unlock the full potential of AI-powered news synthesis with our premium features
+          Unlock the full potential of AI-powered news synthesis with Pro features
         </p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {subscriptionPlans.map((plan) => {
           const IconComponent = plan.icon;
-          const isCurrentTier = currentTier === plan.id;
+          const isCurrentTier = currentTier === plan.id || (currentTier === "pro" && plan.id.startsWith("pro"));
           const isUpgrade = plan.id !== "free" && currentTier === "free";
 
           return (

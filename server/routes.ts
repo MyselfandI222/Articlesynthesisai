@@ -216,21 +216,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await capturePaypalOrder(req, res);
   });
 
-  // Premium subscription endpoints
+  // Pro subscription endpoints
   app.post("/api/subscribe", isAuthenticated, async (req, res) => {
     try {
       const { tier, paymentDetails } = req.body;
       const userId = (req.user as any).id;
       
       // Validate tier
-      if (!['pro-monthly', 'pro-lifetime'].includes(tier)) {
+      if (!['pro-monthly', 'pro-lifetime', 'free'].includes(tier)) {
         return res.status(400).json({ error: 'Invalid subscription tier' });
       }
       
-      // Update user subscription
-      await storage.updateUserSubscription(userId, tier, paymentDetails);
+      // Map tier to subscription status
+      let subscriptionStatus = 'free';
+      if (tier === 'pro-monthly' || tier === 'pro-lifetime') {
+        subscriptionStatus = 'pro';
+      }
       
-      res.json({ success: true, tier });
+      // Update user subscription
+      await storage.updateUserSubscription(userId, subscriptionStatus, paymentDetails);
+      
+      res.json({ success: true, tier: subscriptionStatus });
     } catch (error) {
       console.error('Error creating subscription:', error);
       res.status(500).json({ error: 'Failed to create subscription' });
