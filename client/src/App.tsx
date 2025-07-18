@@ -13,9 +13,11 @@ import PremiumFeatures, { useFeatureAccess } from './components/PremiumFeatures'
 import SubscriptionPage from './pages/subscribe';
 import MoodMeter from './components/MoodMeter';
 import ClaudeSettings from './components/ClaudeSettings';
+import GeminiSettings from './components/GeminiSettings';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getClaudeSettings, saveClaudeSettings, ClaudeServiceConfig } from './utils/claudeService';
+import { getGeminiSettings, saveGeminiSettings, GeminiSearchConfig } from './utils/geminiSearchService';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
 import { useAuth } from './hooks/useAuth';
 import { Sparkles, Loader, AlertCircle } from 'lucide-react';
@@ -39,6 +41,8 @@ function App() {
   const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
   const [isClaudeEnabled, setIsClaudeEnabled] = useState(() => getAIServicePreference() === 'claude');
   const [claudeSettings, setClaudeSettings] = useState(() => getClaudeSettings());
+  const [isGeminiEnabled, setIsGeminiEnabled] = useState(false);
+  const [geminiSettings, setGeminiSettings] = useState(() => getGeminiSettings());
 
   // Feature access based on user subscription
   const userTier = user?.subscriptionStatus && !['free', 'inactive'].includes(user.subscriptionStatus) ? 'pro' : 'free';
@@ -142,6 +146,17 @@ function App() {
   const handleClaudeSettingsChange = (settings: ClaudeServiceConfig) => {
     setClaudeSettings(settings);
     saveClaudeSettings(settings);
+  };
+
+  // Handle Gemini toggle
+  const handleToggleGemini = (enabled: boolean) => {
+    setIsGeminiEnabled(enabled);
+  };
+
+  // Handle Gemini settings change
+  const handleGeminiSettingsChange = (settings: GeminiSearchConfig) => {
+    setGeminiSettings(settings);
+    saveGeminiSettings(settings);
   };
 
   // Show landing page for unauthenticated users
@@ -277,6 +292,14 @@ function App() {
                 onToggleEnabled={handleToggleClaude}
                 settings={claudeSettings}
                 onSettingsChange={handleClaudeSettingsChange}
+              />
+              
+              {/* Gemini Settings */}
+              <GeminiSettings
+                isEnabled={isGeminiEnabled}
+                onToggleEnabled={handleToggleGemini}
+                settings={geminiSettings}
+                onSettingsChange={handleGeminiSettingsChange}
               />
             </div>
             

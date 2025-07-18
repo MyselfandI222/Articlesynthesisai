@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Loader, TrendingUp, X, Globe, AlertCircle, ExternalLink, Plus, Check } from 'lucide-react';
+import { Search, Filter, Loader, TrendingUp, X, Globe, AlertCircle, ExternalLink, Plus, Check, Brain } from 'lucide-react';
 import { Article, Category } from '../types';
 import { searchArticles, getAllCategories, getTrendingTopics } from '../utils/articleSearch';
 import { classifyBreakingNews, getBreakingNewsBadge, formatEngagementNumber } from '../utils/breakingNewsDetector';
+import { searchWithGemini, convertSearchResultsToArticles, detectBreakingNews } from '../utils/geminiSearchService';
 
 interface ArticleSearchProps {
   onAddArticle: (article: Article) => void;
@@ -20,6 +21,9 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [useGeminiSearch, setUseGeminiSearch] = useState(false);
+  const [geminiResults, setGeminiResults] = useState<Article[]>([]);
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false);
 
   // Load trending topics and categories on mount
   useEffect(() => {
@@ -106,10 +110,28 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
         subcategory: selectedSubcategory || undefined,
       };
       
+      // Standard search results
       const results = await searchArticles(query, filters, searchContext);
       setSearchResults(results);
       
-      if (results.length === 0 && query.trim().length > 0) {
+      // If Gemini search is enabled, also search with Gemini
+      if (useGeminiSearch) {
+        setIsGeminiLoading(true);
+        try {
+          const geminiSearchResults = await searchWithGemini(query);
+          const geminiArticles = convertSearchResultsToArticles(geminiSearchResults);
+          setGeminiResults(geminiArticles);
+        } catch (geminiErr) {
+          console.error('Gemini search error:', geminiErr);
+          // Don't fail the entire search if Gemini fails
+        } finally {
+          setIsGeminiLoading(false);
+        }
+      } else {
+        setGeminiResults([]);
+      }
+      
+      if (results.length === 0 && !useGeminiSearch && query.trim().length > 0) {
         setError(`No results found for "${query}". Try a different search term or category.`);
       }
     } catch (err) {
@@ -149,7 +171,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
     <div className="space-y-6">
       {/* Search Bar */}
       <form onSubmit={handleSearchSubmit} className="relative">
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
           <div className="relative flex-1">
             <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${isSearching ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
             <input
@@ -169,12 +191,30 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               </button>
             )}
           </div>
+          
+          {/* Gemini Search Toggle */}
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setUseGeminiSearch(!useGeminiSearch)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                useGeminiSearch
+                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Enhanced search with Google's Gemini AI"
+            >
+              <Brain className="h-4 w-4" />
+              <span className="hidden sm:inline">Gemini</span>
+              {isGeminiLoading && <Loader className="h-3 w-3 animate-spin" />}
+            </button>
+          </div>
         </div>
         {isSearching && (
           <div className="absolute -bottom-6 left-0 right-0 text-center">
             <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               <Loader className="w-3 h-3 mr-1 animate-spin" />
-              Searching real articles...
+              {useGeminiSearch ? 'Searching with Gemini AI...' : 'Searching real articles...'}
             </div>
           </div>
         )}
@@ -364,8 +404,98 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
               );
             })}
           </div>
-          
+        </div>
+      )}
 
+      {/* Gemini Search Results */}
+      {!isLoading && useGeminiSearch && geminiResults.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-medium text-gray-700 flex items-center">
+              <Brain className="h-4 w-4 mr-2 text-blue-600" />
+              {geminiResults.length} results from Gemini AI for "{searchQuery}"
+            </h3>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                AI-Enhanced
+              </span>
+            </div>
+          </div>
+          
+          {/* Gemini Articles */}
+          <div className="space-y-4">
+            {geminiResults.filter(article => article.title && article.content).map((article) => {
+              const isAdded = isArticleAdded(article.id);
+              
+              return (
+                <div
+                  key={article.id}
+                  className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-300 group"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                          {article.source || 'Gemini AI'}
+                        </span>
+                        <span className="px-2 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 rounded-full text-xs font-medium">
+                          🧠 AI-Enhanced
+                        </span>
+                        {article.relevanceScore && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                            {article.relevanceScore}% Relevant
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-500">
+                          {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : new Date().toLocaleDateString()}
+                        </span>
+                      </div>
+                      <h4 className="font-semibold text-gray-900 mb-3 leading-tight text-lg group-hover:text-blue-700 transition-colors">
+                        {article.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                        {article.content.substring(0, 200)}...
+                      </p>
+                      
+                      <div className="flex items-center space-x-3">
+                        {article.url && (
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span>View Source</span>
+                          </a>
+                        )}
+                        {article.credibilityScore && (
+                          <span className="text-xs text-gray-500">
+                            Credibility: {article.credibilityScore}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onAddArticle(article)}
+                      className={`ml-4 p-2 rounded-lg transition-colors ${
+                        isAdded 
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
+                      title={isAdded ? 'Remove article' : 'Add article'}
+                    >
+                      {isAdded ? (
+                        <Check className="h-5 w-5" />
+                      ) : (
+                        <Plus className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
