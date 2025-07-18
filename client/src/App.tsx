@@ -11,6 +11,7 @@ import SourceCredibilityMeter from './components/SourceCredibilityMeter';
 import AffiliateDashboard from './components/AffiliateDashboard';
 import PremiumFeatures, { useFeatureAccess } from './components/PremiumFeatures';
 import SubscriptionPage from './pages/subscribe';
+import MoodMeter from './components/MoodMeter';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
@@ -195,6 +196,11 @@ function App() {
               {/* Source Credibility Meter */}
               {sources.length > 0 && (
                 <SourceCredibilityMeter sources={sources} />
+              )}
+              
+              {/* Mood Meter */}
+              {sources.length > 0 && hasFeature('mood-meter') && (
+                <MoodMeter articles={sources} />
               )}
               
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
