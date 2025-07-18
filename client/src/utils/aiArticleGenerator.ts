@@ -165,7 +165,7 @@ const generateFallbackViralArticles = (searchTerm: string, count: number): Artic
   
   for (let i = 0; i < count; i++) {
     const type = viralTypes[i % viralTypes.length];
-    const viralScore = Math.floor(Math.random() * 30) + 70; // 70-100 viral score
+    const viralScore = Math.floor(Math.random() * 40) + 40; // 40-80 viral score (lowered from 70-100)
     
     articles.push({
       id: `viral-fallback-${Date.now()}-${i}`,

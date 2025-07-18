@@ -327,7 +327,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-medium text-gray-700">
-              {searchResults.length} viral articles for "{searchQuery}"
+              {searchResults.length} popular articles for "{searchQuery}"
             </h3>
             <button
               onClick={clearSearch}
@@ -354,7 +354,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                           {article.source || 'Unknown Source'}
                         </span>
                         <span className="px-2 py-1 bg-gradient-to-r from-red-100 to-orange-100 text-red-800 rounded-full text-xs font-medium">
-                          🔥 Viral
+                          🔥 Popular
                         </span>
                         <span className="text-xs text-gray-500">
                           {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : new Date().toLocaleDateString()} • {article.publishedAt ? new Date(article.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

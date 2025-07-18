@@ -4,7 +4,7 @@ import { getEnabledAPISources } from './apiFilters';
 
 // Calculate viral score based on article characteristics
 const calculateViralScore = (article: SearchResult): number => {
-  let score = 0;
+  let score = 25; // Start with a base score to make more articles viral
   
   // Viral keywords boost score
   const viralKeywords = [
@@ -12,7 +12,9 @@ const calculateViralScore = (article: SearchResult): number => {
     'scandal', 'dramatic', 'unprecedented', 'massive', 'huge', 'bombshell', 
     'investigation', 'leaked', 'viral', 'trending', 'controversy', 'debate',
     'record', 'historic', 'milestone', 'breakthrough', 'game-changer', 'revolution',
-    'threat', 'warning', 'alert', 'emergency', 'update', 'latest', 'just in'
+    'threat', 'warning', 'alert', 'emergency', 'update', 'latest', 'just in',
+    'new', 'major', 'important', 'significant', 'key', 'top', 'best', 'worst',
+    'first', 'last', 'biggest', 'smallest', 'most', 'least', 'announces', 'reports'
   ];
   
   const titleLower = article.title.toLowerCase();
@@ -21,15 +23,20 @@ const calculateViralScore = (article: SearchResult): number => {
   // Check for viral keywords in title (higher weight)
   viralKeywords.forEach(keyword => {
     if (titleLower.includes(keyword)) {
-      score += 10;
+      score += 15; // Increased from 10
     }
     if (descriptionLower.includes(keyword)) {
-      score += 5;
+      score += 8; // Increased from 5
     }
   });
   
   // Shorter, punchier titles tend to be more viral
   if (article.title.length < 50) {
+    score += 10; // Increased from 5
+  }
+  
+  // Medium length titles are also good
+  if (article.title.length >= 50 && article.title.length < 80) {
     score += 5;
   }
   
@@ -39,20 +46,36 @@ const calculateViralScore = (article: SearchResult): number => {
     const now = new Date();
     const hoursDiff = (now.getTime() - articleDate.getTime()) / (1000 * 60 * 60);
     
-    if (hoursDiff < 1) score += 20;
-    else if (hoursDiff < 6) score += 15;
-    else if (hoursDiff < 24) score += 10;
-    else if (hoursDiff < 72) score += 5;
+    if (hoursDiff < 1) score += 25; // Increased from 20
+    else if (hoursDiff < 6) score += 20; // Increased from 15
+    else if (hoursDiff < 24) score += 15; // Increased from 10
+    else if (hoursDiff < 72) score += 10; // Increased from 5
+    else if (hoursDiff < 168) score += 5; // New: articles from last week
   }
   
-  // Certain sources tend to have more viral content
-  const viralSources = ['CNN', 'BBC', 'Guardian', 'Reuters', 'AP'];
+  // All reputable sources get a boost
+  const viralSources = ['CNN', 'BBC', 'Guardian', 'Reuters', 'AP', 'NBC', 'CBS', 'ABC', 'Fox', 'MSNBC', 'NPR', 'USA Today', 'Washington Post', 'New York Times', 'Politico'];
   if (viralSources.includes(article.source)) {
-    score += 8;
+    score += 15; // Increased from 8
   }
   
   // Articles with numbers or statistics tend to be more engaging
   if (/\d+/.test(article.title)) {
+    score += 10; // Increased from 5
+  }
+  
+  // Articles with quotes are engaging
+  if (titleLower.includes('"') || titleLower.includes("'")) {
+    score += 8;
+  }
+  
+  // Articles with question marks are engaging
+  if (titleLower.includes('?')) {
+    score += 8;
+  }
+  
+  // Give a bonus for having good content
+  if (article.description && article.description.length > 50) {
     score += 5;
   }
   
