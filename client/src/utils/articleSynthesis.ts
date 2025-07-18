@@ -2,21 +2,23 @@
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
 import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
-import { sendMessageToChatGPT } from './chatGptService';
+import { sendMessageToChatGPT, processArticleEdit } from './chatGptService';
 import { synthesizeWithOpenAI } from './openAISynthesis';
+import { synthesizeWithClaude, editWithClaude } from './claudeService';
 
 // Get user's AI service preference
-export const getAIServicePreference = (): 'default' | 'chatgpt' => {
+export const getAIServicePreference = (): 'default' | 'chatgpt' | 'claude' => {
   try {
     const preference = localStorage.getItem('aiServicePreference');
-    return preference === 'chatgpt' ? 'chatgpt' : 'default';
+    return preference === 'chatgpt' ? 'chatgpt' : 
+           preference === 'claude' ? 'claude' : 'default';
   } catch (error) {
     return 'default';
   }
 };
 
 // Save user's AI service preference
-export const saveAIServicePreference = (preference: 'default' | 'chatgpt'): void => {
+export const saveAIServicePreference = (preference: 'default' | 'chatgpt' | 'claude'): void => {
   try {
     localStorage.setItem('aiServicePreference', preference);
   } catch (error) {
@@ -68,6 +70,9 @@ export const synthesizeArticles = async (
   if (aiService === 'chatgpt') {
     // Use ChatGPT for synthesis
     return synthesizeWithChatGPT(sources, topic, style, tone, length);
+  } else if (aiService === 'claude') {
+    // Use Claude for synthesis
+    return synthesizeWithClaude(sources, topic, style, tone, length);
   } else {
     // Use OpenAI for default synthesis
     return synthesizeWithOpenAI(sources, topic, style, tone, length);
@@ -85,6 +90,9 @@ export const editArticle = async (
   if (aiService === 'chatgpt') {
     // Use ChatGPT for editing
     return editWithChatGPT(article, instructions);
+  } else if (aiService === 'claude') {
+    // Use Claude for editing
+    return editWithClaude(article, instructions);
   } else if (instructions.toLowerCase().includes('chatgpt') || instructions.toLowerCase().includes('ai')) {
     // Use ChatGPT for editing if explicitly requested
     try {

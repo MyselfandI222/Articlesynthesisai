@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+import { synthesizeArticles, editArticle, generateTitles, analyzeQuality } from "./claude";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -252,6 +253,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error cancelling subscription:', error);
       res.status(500).json({ error: 'Failed to cancel subscription' });
     }
+  });
+
+  // Claude API routes
+  app.post("/api/claude/synthesize", isAuthenticated, async (req, res) => {
+    await synthesizeArticles(req, res);
+  });
+
+  app.post("/api/claude/edit", isAuthenticated, async (req, res) => {
+    await editArticle(req, res);
+  });
+
+  app.post("/api/claude/titles", isAuthenticated, async (req, res) => {
+    await generateTitles(req, res);
+  });
+
+  app.post("/api/claude/quality", isAuthenticated, async (req, res) => {
+    await analyzeQuality(req, res);
   });
 
   const httpServer = createServer(app);

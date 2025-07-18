@@ -12,8 +12,10 @@ import AffiliateDashboard from './components/AffiliateDashboard';
 import PremiumFeatures, { useFeatureAccess } from './components/PremiumFeatures';
 import SubscriptionPage from './pages/subscribe';
 import MoodMeter from './components/MoodMeter';
+import ClaudeSettings from './components/ClaudeSettings';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
+import { getClaudeSettings, saveClaudeSettings, ClaudeServiceConfig } from './utils/claudeService';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
 import { useAuth } from './hooks/useAuth';
 import { Sparkles, Loader, AlertCircle } from 'lucide-react';
@@ -32,9 +34,11 @@ function App() {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [dailyNewsNotification, setDailyNewsNotification] = useState<string | null>(null);
 
-  // ChatGPT integration
+  // AI Service integration
   const [isChatGPTEnabled, setIsChatGPTEnabled] = useState(() => getAIServicePreference() === 'chatgpt');
   const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
+  const [isClaudeEnabled, setIsClaudeEnabled] = useState(() => getAIServicePreference() === 'claude');
+  const [claudeSettings, setClaudeSettings] = useState(() => getClaudeSettings());
 
   // Feature access based on user subscription
   const userTier = user?.subscriptionStatus && !['free', 'inactive'].includes(user.subscriptionStatus) ? 'pro' : 'free';
@@ -107,13 +111,37 @@ function App() {
   // Handle ChatGPT toggle
   const handleToggleChatGPT = (enabled: boolean) => {
     setIsChatGPTEnabled(enabled);
-    saveAIServicePreference(enabled ? 'chatgpt' : 'default');
+    if (enabled) {
+      // If enabling ChatGPT, disable Claude
+      setIsClaudeEnabled(false);
+      saveAIServicePreference('chatgpt');
+    } else {
+      saveAIServicePreference('default');
+    }
   };
 
   // Handle ChatGPT settings change
   const handleChatGPTSettingsChange = (settings: any) => {
     setChatGPTSettings(settings);
     saveChatGPTSettings(settings);
+  };
+
+  // Handle Claude toggle
+  const handleToggleClaude = (enabled: boolean) => {
+    setIsClaudeEnabled(enabled);
+    if (enabled) {
+      // If enabling Claude, disable ChatGPT
+      setIsChatGPTEnabled(false);
+      saveAIServicePreference('claude');
+    } else {
+      saveAIServicePreference('default');
+    }
+  };
+
+  // Handle Claude settings change
+  const handleClaudeSettingsChange = (settings: ClaudeServiceConfig) => {
+    setClaudeSettings(settings);
+    saveClaudeSettings(settings);
   };
 
   // Show landing page for unauthenticated users
@@ -241,6 +269,14 @@ function App() {
                 onToggleEnabled={handleToggleChatGPT}
                 settings={chatGPTSettings}
                 onSettingsChange={handleChatGPTSettingsChange}
+              />
+              
+              {/* Claude Settings */}
+              <ClaudeSettings
+                isEnabled={isClaudeEnabled}
+                onToggleEnabled={handleToggleClaude}
+                settings={claudeSettings}
+                onSettingsChange={handleClaudeSettingsChange}
               />
             </div>
             
