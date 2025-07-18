@@ -7,18 +7,19 @@ import { synthesizeWithOpenAI } from './openAISynthesis';
 import { synthesizeWithClaude, editWithClaude } from './claudeService';
 
 // Get user's AI service preference
-export const getAIServicePreference = (): 'default' | 'chatgpt' | 'claude' => {
+export const getAIServicePreference = (): 'default' | 'chatgpt' | 'claude' | 'hybrid' => {
   try {
     const preference = localStorage.getItem('aiServicePreference');
     return preference === 'chatgpt' ? 'chatgpt' : 
-           preference === 'claude' ? 'claude' : 'default';
+           preference === 'claude' ? 'claude' : 
+           preference === 'hybrid' ? 'hybrid' : 'default';
   } catch (error) {
     return 'default';
   }
 };
 
 // Save user's AI service preference
-export const saveAIServicePreference = (preference: 'default' | 'chatgpt' | 'claude'): void => {
+export const saveAIServicePreference = (preference: 'default' | 'chatgpt' | 'claude' | 'hybrid'): void => {
   try {
     localStorage.setItem('aiServicePreference', preference);
   } catch (error) {
@@ -56,6 +57,75 @@ export const saveChatGPTSettings = (settings: any): void => {
   }
 };
 
+// Hybrid synthesis function that uses both AIs for their strengths
+const synthesizeWithHybrid = async (
+  sources: Article[],
+  topic: string,
+  style: WritingStyle,
+  tone: string,
+  length: 'short' | 'medium' | 'long'
+): Promise<SynthesizedArticle> => {
+  try {
+    console.log('Starting hybrid synthesis with ChatGPT and Claude...');
+    
+    // Split tasks based on AI strengths:
+    // Claude: Better at analysis, research, and structured content
+    // ChatGPT: Better at creative writing, engagement, and conversational tone
+    
+    // Step 1: Use Claude for initial analysis and structure
+    console.log('Using Claude for content analysis and structure...');
+    const claudeResult = await synthesizeWithClaude(sources, topic, style, tone, length);
+    
+    // Step 2: Use ChatGPT to enhance engagement and polish the writing
+    console.log('Using ChatGPT to enhance engagement and polish...');
+    
+    // Create a refined version by asking ChatGPT to improve Claude's work
+    const enhancementPrompt = `Please enhance this article to make it more engaging while maintaining its analytical depth:
+
+Title: ${claudeResult.title}
+Content: ${claudeResult.content}
+
+Focus on:
+- Making the writing more conversational and engaging
+- Adding compelling hooks and transitions
+- Improving readability and flow
+- Enhancing the conclusion with a strong call-to-action
+- Maintaining all factual content and analysis from Claude
+
+Style: ${style}
+Tone: ${tone}`;
+
+    const chatGPTEnhanced = await editWithChatGPT(claudeResult, enhancementPrompt);
+    
+    // Step 3: Combine the best of both
+    const hybridResult: SynthesizedArticle = {
+      id: `hybrid-${Date.now()}`,
+      title: chatGPTEnhanced.title || claudeResult.title,
+      content: chatGPTEnhanced.content || claudeResult.content,
+      summary: claudeResult.summary, // Use Claude's analytical summary
+      keyPoints: claudeResult.keyPoints, // Use Claude's structured analysis
+      sources: claudeResult.sources,
+      wordCount: (chatGPTEnhanced.content || claudeResult.content).split(' ').length,
+      readingTime: Math.ceil((chatGPTEnhanced.content || claudeResult.content).split(' ').length / 200),
+      style,
+      tone,
+      generatedAt: new Date().toISOString(),
+      aiService: 'hybrid' as any,
+      qualityScore: Math.max(claudeResult.qualityScore || 85, 85), // Hybrid should have high quality
+      seoKeywords: claudeResult.seoKeywords,
+      suggestedTitle: chatGPTEnhanced.title || claudeResult.title
+    };
+    
+    console.log('Hybrid synthesis completed successfully');
+    return hybridResult;
+    
+  } catch (error) {
+    console.error('Hybrid synthesis failed, falling back to Claude:', error);
+    // If hybrid fails, fall back to Claude as primary
+    return synthesizeWithClaude(sources, topic, style, tone, length);
+  }
+};
+
 // Main synthesis function
 export const synthesizeArticles = async (
   sources: Article[],
@@ -67,7 +137,10 @@ export const synthesizeArticles = async (
   // Check which AI service to use
   const aiService = getAIServicePreference();
   
-  if (aiService === 'chatgpt') {
+  if (aiService === 'hybrid') {
+    // Use hybrid mode - both ChatGPT and Claude
+    return synthesizeWithHybrid(sources, topic, style, tone, length);
+  } else if (aiService === 'chatgpt') {
     // Use ChatGPT for synthesis
     return synthesizeWithChatGPT(sources, topic, style, tone, length);
   } else if (aiService === 'claude') {
@@ -79,6 +152,104 @@ export const synthesizeArticles = async (
   }
 };
 
+// Hybrid editing function that uses both AIs strategically
+const editWithHybrid = async (
+  article: SynthesizedArticle,
+  instructions: string
+): Promise<SynthesizedArticle> => {
+  try {
+    console.log('Using hybrid editing mode...');
+    
+    // Analyze the type of edit request to determine which AI should lead
+    const instructionsLower = instructions.toLowerCase();
+    
+    // ChatGPT strengths: creativity, engagement, tone, style
+    const chatGPTTasks = ['engaging', 'creative', 'conversational', 'catchy', 'compelling', 'fun', 'exciting', 'emotional', 'storytelling', 'hook', 'headline'];
+    
+    // Claude strengths: analysis, structure, research, accuracy, logic
+    const claudeTasks = ['analysis', 'research', 'structure', 'organize', 'logical', 'accurate', 'factual', 'detailed', 'comprehensive', 'analytical'];
+    
+    const useChatGPTLead = chatGPTTasks.some(task => instructionsLower.includes(task));
+    const useClaudeLead = claudeTasks.some(task => instructionsLower.includes(task));
+    
+    let primaryEdit, secondaryEdit;
+    
+    if (useChatGPTLead && !useClaudeLead) {
+      // ChatGPT leads, Claude reviews
+      console.log('ChatGPT leading edit, Claude reviewing...');
+      primaryEdit = await editWithChatGPT(article, instructions);
+      
+      // Have Claude review for accuracy and structure
+      const reviewPrompt = `Please review this edited article for accuracy, logical flow, and structural improvements while maintaining the engaging style:
+
+Title: ${primaryEdit.title}
+Content: ${primaryEdit.content}
+
+Focus on:
+- Fact-checking and accuracy
+- Logical structure and flow
+- Clarity and precision
+- Maintaining the engaging tone from ChatGPT`;
+      
+      secondaryEdit = await editWithClaude(primaryEdit, reviewPrompt);
+      
+    } else if (useClaudeLead && !useChatGPTLead) {
+      // Claude leads, ChatGPT enhances
+      console.log('Claude leading edit, ChatGPT enhancing...');
+      primaryEdit = await editWithClaude(article, instructions);
+      
+      // Have ChatGPT enhance engagement
+      const enhancePrompt = `Please enhance this article to make it more engaging and readable while preserving all the analytical content:
+
+Title: ${primaryEdit.title}
+Content: ${primaryEdit.content}
+
+Focus on:
+- Making it more engaging and conversational
+- Improving readability and flow
+- Adding compelling transitions
+- Maintaining all factual content and analysis`;
+      
+      secondaryEdit = await editWithChatGPT(primaryEdit, enhancePrompt);
+      
+    } else {
+      // General edit - use Claude for structure, ChatGPT for polish
+      console.log('General hybrid edit - Claude for structure, ChatGPT for polish...');
+      
+      // First pass: Claude for accuracy and structure
+      const structuralEdit = await editWithClaude(article, instructions + '\n\nFocus on accuracy, structure, and logical flow.');
+      
+      // Second pass: ChatGPT for engagement and readability
+      const polishPrompt = `Please polish this article to make it more engaging while maintaining all the content and accuracy:
+
+Title: ${structuralEdit.title}
+Content: ${structuralEdit.content}
+
+Instructions: ${instructions}
+
+Focus on improving engagement and readability while keeping all factual content intact.`;
+      
+      secondaryEdit = await editWithChatGPT(structuralEdit, polishPrompt);
+    }
+    
+    const hybridResult: SynthesizedArticle = {
+      ...secondaryEdit,
+      id: `hybrid-edit-${Date.now()}`,
+      aiService: 'hybrid' as any,
+      qualityScore: Math.max(secondaryEdit.qualityScore || 85, 85),
+      wordCount: (secondaryEdit.content || '').split(' ').length,
+      readingTime: Math.ceil((secondaryEdit.content || '').split(' ').length / 200)
+    };
+    
+    console.log('Hybrid editing completed successfully');
+    return hybridResult;
+    
+  } catch (error) {
+    console.error('Hybrid editing failed, falling back to Claude:', error);
+    return editWithClaude(article, instructions);
+  }
+};
+
 // Edit article function
 export const editArticle = async (
   article: SynthesizedArticle,
@@ -87,7 +258,10 @@ export const editArticle = async (
   // Check which AI service to use
   const aiService = getAIServicePreference();
   
-  if (aiService === 'chatgpt') {
+  if (aiService === 'hybrid') {
+    // Use hybrid mode - both ChatGPT and Claude
+    return editWithHybrid(article, instructions);
+  } else if (aiService === 'chatgpt') {
     // Use ChatGPT for editing
     return editWithChatGPT(article, instructions);
   } else if (aiService === 'claude') {

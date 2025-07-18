@@ -37,9 +37,15 @@ function App() {
   const [dailyNewsNotification, setDailyNewsNotification] = useState<string | null>(null);
 
   // AI Service integration
-  const [isChatGPTEnabled, setIsChatGPTEnabled] = useState(() => getAIServicePreference() === 'chatgpt');
+  const [isChatGPTEnabled, setIsChatGPTEnabled] = useState(() => {
+    const preference = getAIServicePreference();
+    return preference === 'chatgpt' || preference === 'hybrid';
+  });
   const [chatGPTSettings, setChatGPTSettings] = useState(() => getChatGPTSettings());
-  const [isClaudeEnabled, setIsClaudeEnabled] = useState(() => getAIServicePreference() === 'claude');
+  const [isClaudeEnabled, setIsClaudeEnabled] = useState(() => {
+    const preference = getAIServicePreference();
+    return preference === 'claude' || preference === 'hybrid';
+  });
   const [claudeSettings, setClaudeSettings] = useState(() => getClaudeSettings());
   const [isGeminiEnabled, setIsGeminiEnabled] = useState(false);
   const [geminiSettings, setGeminiSettings] = useState(() => getGeminiSettings());
@@ -115,10 +121,13 @@ function App() {
   // Handle ChatGPT toggle
   const handleToggleChatGPT = (enabled: boolean) => {
     setIsChatGPTEnabled(enabled);
-    if (enabled) {
-      // If enabling ChatGPT, disable Claude
-      setIsClaudeEnabled(false);
+    if (enabled && isClaudeEnabled) {
+      // Both enabled - use hybrid mode
+      saveAIServicePreference('hybrid');
+    } else if (enabled) {
       saveAIServicePreference('chatgpt');
+    } else if (isClaudeEnabled) {
+      saveAIServicePreference('claude');
     } else {
       saveAIServicePreference('default');
     }
@@ -133,10 +142,13 @@ function App() {
   // Handle Claude toggle
   const handleToggleClaude = (enabled: boolean) => {
     setIsClaudeEnabled(enabled);
-    if (enabled) {
-      // If enabling Claude, disable ChatGPT
-      setIsChatGPTEnabled(false);
+    if (enabled && isChatGPTEnabled) {
+      // Both enabled - use hybrid mode
+      saveAIServicePreference('hybrid');
+    } else if (enabled) {
       saveAIServicePreference('claude');
+    } else if (isChatGPTEnabled) {
+      saveAIServicePreference('chatgpt');
     } else {
       saveAIServicePreference('default');
     }
@@ -320,6 +332,32 @@ function App() {
                     : 'Add sources and specify a topic to begin synthesis'
                   }
                 </p>
+                
+                {/* AI Mode Indicator */}
+                {(isChatGPTEnabled || isClaudeEnabled) && (
+                  <div className="mt-3 flex items-center justify-center">
+                    {isChatGPTEnabled && isClaudeEnabled ? (
+                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full">
+                        <div className="flex items-center space-x-1">
+                          <div className="h-2 w-2 bg-purple-500 rounded-full"></div>
+                          <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <span className="text-xs font-medium text-purple-700">Hybrid AI Mode</span>
+                        <span className="text-xs text-purple-600">Claude + ChatGPT</span>
+                      </div>
+                    ) : isChatGPTEnabled ? (
+                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-green-100 border border-green-200 rounded-full">
+                        <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-green-700">ChatGPT Mode</span>
+                      </div>
+                    ) : isClaudeEnabled ? (
+                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full">
+                        <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-blue-700">Claude Mode</span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleSynthesize}

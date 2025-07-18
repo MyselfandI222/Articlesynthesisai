@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Hybrid AI Synthesis System (Jan 2025)**: Implemented intelligent dual-AI system allowing ChatGPT and Claude to work together simultaneously. Each AI handles what it excels at - Claude for analysis, structure, and research; ChatGPT for engagement, creativity, and polish. System automatically routes tasks based on strengths and provides seamless collaboration between both AI services.
 - **Google Gemini Search Integration (Jan 2025)**: Added Google Gemini API specifically for enhanced search functionality. Created comprehensive search service with intelligent query processing, contextual results, and dedicated settings component. Users can toggle between standard search and Gemini-powered search for better article discovery.
 - **Lowered Viral Standards (Jan 2025)**: Reduced viral score thresholds to make more articles appear in search results. Updated scoring algorithm with base score of 25 points, increased keyword bonuses, and expanded viral keyword list. Changed UI labels from "viral" to "popular" to better reflect the broader selection criteria.
 - **Comparative Article Synthesis (Jan 2025)**: Enhanced AI synthesis to automatically detect when multiple articles cover the same topic and create comparative analysis instead of separate paragraphs. Both OpenAI and ChatGPT services now analyze topic similarity, identify common themes, conflicting viewpoints, and synthesize comprehensive articles that compare and contrast different sources on the same subject.
