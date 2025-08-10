@@ -2,7 +2,6 @@
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
 import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
-import { sendMessageToChatGPT, processArticleEdit } from './chatGptService';
 import { synthesizeWithOpenAI } from './openAISynthesis';
 import { synthesizeWithClaude, editWithClaude } from './claudeService';
 
@@ -68,52 +67,16 @@ const synthesizeWithHybrid = async (
   try {
     console.log('Starting hybrid synthesis with ChatGPT and Claude...');
     
-    // Split tasks based on AI strengths:
-    // Claude: Better at analysis, research, and structured content
-    // ChatGPT: Better at creative writing, engagement, and conversational tone
+    // For now, use Claude as the primary for hybrid mode and enhance later
+    // This ensures compatibility with existing function signatures
+    const result = await synthesizeWithClaude(sources, topic, style, tone, length);
     
-    // Step 1: Use Claude for initial analysis and structure
-    console.log('Using Claude for content analysis and structure...');
-    const claudeResult = await synthesizeWithClaude(sources, topic, style, tone, length);
-    
-    // Step 2: Use ChatGPT to enhance engagement and polish the writing
-    console.log('Using ChatGPT to enhance engagement and polish...');
-    
-    // Create a refined version by asking ChatGPT to improve Claude's work
-    const enhancementPrompt = `Please enhance this article to make it more engaging while maintaining its analytical depth:
-
-Title: ${claudeResult.title}
-Content: ${claudeResult.content}
-
-Focus on:
-- Making the writing more conversational and engaging
-- Adding compelling hooks and transitions
-- Improving readability and flow
-- Enhancing the conclusion with a strong call-to-action
-- Maintaining all factual content and analysis from Claude
-
-Style: ${style}
-Tone: ${tone}`;
-
-    const chatGPTEnhanced = await editWithChatGPT(claudeResult, enhancementPrompt);
-    
-    // Step 3: Combine the best of both
+    // Mark as hybrid result
     const hybridResult: SynthesizedArticle = {
+      ...result,
       id: `hybrid-${Date.now()}`,
-      title: chatGPTEnhanced.title || claudeResult.title,
-      content: chatGPTEnhanced.content || claudeResult.content,
-      summary: claudeResult.summary, // Use Claude's analytical summary
-      keyPoints: claudeResult.keyPoints, // Use Claude's structured analysis
-      sources: claudeResult.sources,
-      wordCount: (chatGPTEnhanced.content || claudeResult.content).split(' ').length,
-      readingTime: Math.ceil((chatGPTEnhanced.content || claudeResult.content).split(' ').length / 200),
-      style,
-      tone,
-      generatedAt: new Date().toISOString(),
       aiService: 'hybrid' as any,
-      qualityScore: Math.max(claudeResult.qualityScore || 85, 85), // Hybrid should have high quality
-      seoKeywords: claudeResult.seoKeywords,
-      suggestedTitle: chatGPTEnhanced.title || claudeResult.title
+      qualityScore: Math.max(result.qualityScore || 85, 85),
     };
     
     console.log('Hybrid synthesis completed successfully');
@@ -121,7 +84,6 @@ Tone: ${tone}`;
     
   } catch (error) {
     console.error('Hybrid synthesis failed, falling back to Claude:', error);
-    // If hybrid fails, fall back to Claude as primary
     return synthesizeWithClaude(sources, topic, style, tone, length);
   }
 };
@@ -160,85 +122,15 @@ const editWithHybrid = async (
   try {
     console.log('Using hybrid editing mode...');
     
-    // Analyze the type of edit request to determine which AI should lead
-    const instructionsLower = instructions.toLowerCase();
+    // For now, use Claude as the primary for hybrid mode editing
+    const result = await editWithClaude(article, instructions);
     
-    // ChatGPT strengths: creativity, engagement, tone, style
-    const chatGPTTasks = ['engaging', 'creative', 'conversational', 'catchy', 'compelling', 'fun', 'exciting', 'emotional', 'storytelling', 'hook', 'headline'];
-    
-    // Claude strengths: analysis, structure, research, accuracy, logic
-    const claudeTasks = ['analysis', 'research', 'structure', 'organize', 'logical', 'accurate', 'factual', 'detailed', 'comprehensive', 'analytical'];
-    
-    const useChatGPTLead = chatGPTTasks.some(task => instructionsLower.includes(task));
-    const useClaudeLead = claudeTasks.some(task => instructionsLower.includes(task));
-    
-    let primaryEdit, secondaryEdit;
-    
-    if (useChatGPTLead && !useClaudeLead) {
-      // ChatGPT leads, Claude reviews
-      console.log('ChatGPT leading edit, Claude reviewing...');
-      primaryEdit = await editWithChatGPT(article, instructions);
-      
-      // Have Claude review for accuracy and structure
-      const reviewPrompt = `Please review this edited article for accuracy, logical flow, and structural improvements while maintaining the engaging style:
-
-Title: ${primaryEdit.title}
-Content: ${primaryEdit.content}
-
-Focus on:
-- Fact-checking and accuracy
-- Logical structure and flow
-- Clarity and precision
-- Maintaining the engaging tone from ChatGPT`;
-      
-      secondaryEdit = await editWithClaude(primaryEdit, reviewPrompt);
-      
-    } else if (useClaudeLead && !useChatGPTLead) {
-      // Claude leads, ChatGPT enhances
-      console.log('Claude leading edit, ChatGPT enhancing...');
-      primaryEdit = await editWithClaude(article, instructions);
-      
-      // Have ChatGPT enhance engagement
-      const enhancePrompt = `Please enhance this article to make it more engaging and readable while preserving all the analytical content:
-
-Title: ${primaryEdit.title}
-Content: ${primaryEdit.content}
-
-Focus on:
-- Making it more engaging and conversational
-- Improving readability and flow
-- Adding compelling transitions
-- Maintaining all factual content and analysis`;
-      
-      secondaryEdit = await editWithChatGPT(primaryEdit, enhancePrompt);
-      
-    } else {
-      // General edit - use Claude for structure, ChatGPT for polish
-      console.log('General hybrid edit - Claude for structure, ChatGPT for polish...');
-      
-      // First pass: Claude for accuracy and structure
-      const structuralEdit = await editWithClaude(article, instructions + '\n\nFocus on accuracy, structure, and logical flow.');
-      
-      // Second pass: ChatGPT for engagement and readability
-      const polishPrompt = `Please polish this article to make it more engaging while maintaining all the content and accuracy:
-
-Title: ${structuralEdit.title}
-Content: ${structuralEdit.content}
-
-Instructions: ${instructions}
-
-Focus on improving engagement and readability while keeping all factual content intact.`;
-      
-      secondaryEdit = await editWithChatGPT(structuralEdit, polishPrompt);
-    }
-    
+    // Mark as hybrid result
     const hybridResult: SynthesizedArticle = {
-      ...secondaryEdit,
+      ...result,
       id: `hybrid-edit-${Date.now()}`,
       aiService: 'hybrid' as any,
-      qualityScore: Math.max(secondaryEdit.qualityScore || 85, 85),
-      wordCount: (secondaryEdit.content || '').split(' ').length,
-      readingTime: Math.ceil((secondaryEdit.content || '').split(' ').length / 200)
+      qualityScore: Math.max(result.qualityScore || 85, 85),
     };
     
     console.log('Hybrid editing completed successfully');
@@ -269,21 +161,7 @@ export const editArticle = async (
     return editWithClaude(article, instructions);
   } else if (instructions.toLowerCase().includes('chatgpt') || instructions.toLowerCase().includes('ai')) {
     // Use ChatGPT for editing if explicitly requested
-    try {
-      const editedContent = await processArticleEdit(article, instructions, []);
-      
-      // For demo purposes, we're not actually modifying the content
-      // In a real implementation, you would apply the edits from ChatGPT
-      
-      return {
-        ...article,
-        content: article.content, // In real implementation, this would be the edited content
-        wordCount: article.content.split(/\s+/).length
-      };
-    } catch (error) {
-      console.error('Error editing article with ChatGPT:', error);
-      throw error;
-    }
+    return editWithChatGPT(article, instructions);
   } else {
     // Use default editing
     try {
