@@ -272,6 +272,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await analyzeQuality(req, res);
   });
 
+  // Mistral API routes
+  app.post("/api/mistral/synthesize", isAuthenticated, async (req, res) => {
+    try {
+      const { topic, style, urls, maxWords, model } = req.body;
+      
+      if (!process.env.MISTRAL_API_KEY) {
+        return res.status(400).json({ error: "Mistral API key not configured" });
+      }
+      
+      const { generateSynthesis } = await import('./mistralPipeline');
+      const result = await generateSynthesis({
+        topic,
+        style,
+        urls,
+        maxWords,
+        model
+      });
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error("Mistral synthesis error:", error);
+      res.status(500).json({ error: "Failed to synthesize articles with Mistral" });
+    }
+  });
+
+  app.post("/api/mistral/edit", isAuthenticated, async (req, res) => {
+    try {
+      const { article, title, instructions, model } = req.body;
+      
+      if (!process.env.MISTRAL_API_KEY) {
+        return res.status(400).json({ error: "Mistral API key not configured" });
+      }
+      
+      const { Mistral } = await import('@mistralai/mistralai');
+      const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+      
+      const prompt = `You are an expert article editor. Edit the following article according to the user's instructions.
+
+Original Article:
+Title: ${title}
+Content: ${article}
+
+User Instructions: ${instructions}
+
+Please provide the edited article with improved content according to the instructions. Maintain quality and factual accuracy.`;
+
+      const response = await client.chat.complete({
+        model: model || "mistral-small-latest",
+        messages: [
+          { role: "system", content: "You are an expert article editor and writer." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+      });
+
+      const editedContent = response.choices[0].message.content;
+      
+      // Extract title if present
+      const lines = editedContent.split('\n');
+      const firstLine = lines[0].trim();
+      let editedTitle = title;
+      let content = editedContent;
+      
+      if (firstLine.startsWith('#') || (firstLine.length < 100 && lines.length > 1)) {
+        editedTitle = firstLine.replace(/^#+\s*/, '');
+        content = lines.slice(1).join('\n').trim();
+      }
+      
+      res.json({
+        editedContent: content,
+        editedTitle
+      });
+      
+    } catch (error: any) {
+      console.error("Mistral edit error:", error);
+      res.status(500).json({ error: "Failed to edit article with Mistral" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

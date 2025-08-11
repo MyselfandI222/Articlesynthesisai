@@ -49,6 +49,10 @@ function App() {
   const [claudeSettings, setClaudeSettings] = useState(() => getClaudeSettings());
   const [isGeminiEnabled, setIsGeminiEnabled] = useState(false);
   const [geminiSettings, setGeminiSettings] = useState(() => getGeminiSettings());
+  const [isMistralEnabled, setIsMistralEnabled] = useState(() => {
+    const preference = getAIServicePreference();
+    return preference === 'mistral';
+  });
 
   // Feature access based on user subscription
   const userTier = user?.subscriptionStatus && !['free', 'inactive'].includes(user.subscriptionStatus) ? 'pro' : 'free';

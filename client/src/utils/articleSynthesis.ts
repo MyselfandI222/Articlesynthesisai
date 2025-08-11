@@ -4,21 +4,23 @@ import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
 import { synthesizeWithOpenAI } from './openAISynthesis';
 import { synthesizeWithClaude, editWithClaude } from './claudeService';
+import { synthesizeWithMistral, editWithMistral } from './mistralService';
 
 // Get user's AI service preference
-export const getAIServicePreference = (): 'default' | 'chatgpt' | 'claude' | 'hybrid' => {
+export const getAIServicePreference = (): 'default' | 'chatgpt' | 'claude' | 'hybrid' | 'mistral' => {
   try {
     const preference = localStorage.getItem('aiServicePreference');
     return preference === 'chatgpt' ? 'chatgpt' : 
            preference === 'claude' ? 'claude' : 
-           preference === 'hybrid' ? 'hybrid' : 'default';
+           preference === 'hybrid' ? 'hybrid' :
+           preference === 'mistral' ? 'mistral' : 'default';
   } catch (error) {
     return 'default';
   }
 };
 
 // Save user's AI service preference
-export const saveAIServicePreference = (preference: 'default' | 'chatgpt' | 'claude' | 'hybrid'): void => {
+export const saveAIServicePreference = (preference: 'default' | 'chatgpt' | 'claude' | 'hybrid' | 'mistral'): void => {
   try {
     localStorage.setItem('aiServicePreference', preference);
   } catch (error) {
@@ -108,6 +110,9 @@ export const synthesizeArticles = async (
   } else if (aiService === 'claude') {
     // Use Claude for synthesis
     return synthesizeWithClaude(sources, topic, style, tone, length);
+  } else if (aiService === 'mistral') {
+    // Use Mistral for synthesis
+    return synthesizeWithMistral(sources, topic, style, tone, length);
   } else {
     // Use OpenAI for default synthesis
     return synthesizeWithOpenAI(sources, topic, style, tone, length);
@@ -159,6 +164,9 @@ export const editArticle = async (
   } else if (aiService === 'claude') {
     // Use Claude for editing
     return editWithClaude(article, instructions);
+  } else if (aiService === 'mistral') {
+    // Use Mistral for editing
+    return editWithMistral(article, instructions);
   } else if (instructions.toLowerCase().includes('chatgpt') || instructions.toLowerCase().includes('ai')) {
     // Use ChatGPT for editing if explicitly requested
     return editWithChatGPT(article, instructions);

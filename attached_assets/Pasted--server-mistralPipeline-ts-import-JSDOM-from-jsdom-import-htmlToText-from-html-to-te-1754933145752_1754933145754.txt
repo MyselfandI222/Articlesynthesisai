@@ -1,0 +1,192 @@
+// server/mistralPipeline.ts
+import { JSDOM } from "jsdom";
+import { htmlToText } from "html-to-text";
+import * as nlp from "compromise";
+import { Mistral } from "@mistralai/mistralai";
+import { request } from "undici";
+
+type GenerateInput = {
+  topic?: string;
+  style?: "neutral" | "opinionated" | "technical" | "simple";
+  urls: string[];
+  maxWords?: number;
+  model?: string; // e.g., "mistral-small-latest" or "mistral-large-latest"
+};
+
+export type GenerateOutput = {
+  article: string;
+  outline: string[];
+  references: { url: string; title: string }[];
+  perSourceSummaries: { url: string; summary: string }[];
+};
+
+const DEFAULT_MODEL = "mistral-small-latest";
+
+const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY! }); // Set in .env
+
+// --- 1) fetch & clean ---
+async function fetchClean(url: string) {
+  const res = await request(url);
+  const html = await res.body.text();
+  const dom = new JSDOM(html);
+  const title = dom.window.document.querySelector("title")?.textContent?.trim() || url;
+  const main = dom.window.document.body;
+  const text = htmlToText(main?.innerHTML || "", {
+    wordwrap: false,
+    selectors: [{ selector: "a", options: { ignoreHref: true } }],
+  }).replace(/\s+\n/g, "\n").trim();
+  return { url, title, text };
+}
+
+// --- 2) chunk + quick de-dup ---
+function chunkText(t: string, chunkSize = 1600, overlap = 200): string[] {
+  const tokens = t.split(/\s+/);
+  const chunks: string[] = [];
+  for (let i = 0; i < tokens.length; i += (chunkSize - overlap)) {
+    chunks.push(tokens.slice(i, i + chunkSize).join(" "));
+    if (i + chunkSize >= tokens.length) break;
+  }
+  return chunks;
+}
+
+function fingerprint(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).slice(0, 70).join(" ");
+}
+function dedupe(chunks: { url: string; text: string }[], minDiff = 0.15) {
+  const seen = new Set<string>();
+  const out: typeof chunks = [];
+  for (const c of chunks) {
+    const fp = fingerprint(c.text);
+    if ([...seen].some((x) => jaccard(x, fp) > 1 - minDiff)) continue;
+    seen.add(fp);
+    out.push(c);
+  }
+  return out;
+}
+function jaccard(a: string, b: string) {
+  const A = new Set(a.split(/\s+/));
+  const B = new Set(b.split(/\s+/));
+  const inter = [...A].filter((x) => B.has(x)).length;
+  return inter / (A.size + B.size - inter);
+}
+
+// --- 3) summarize each source with Mistral ---
+async function summarizeChunk(model: string, chunk: string) {
+  const resp = await client.chat.complete({
+    model,
+    messages: [
+      { role: "system", content: "You are a meticulous note-taker. Summarize faithfully with no speculation." },
+      { role: "user", content: `Summarize this in 4-6 bullet points, preserving key claims, data, and stance:\n\n${chunk}` },
+    ],
+    temperature: 0.2,
+  });
+  return resp.choices[0].message!.content!;
+}
+
+async function summarizeSource(model: string, url: string, title: string, text: string) {
+  const chunks = chunkText(text);
+  const deduped = dedupe(chunks.map((t) => ({ url, text: t })));
+  const bullets: string[] = [];
+  for (const c of deduped.slice(0, 6)) { // cap for speed
+    bullets.push(await summarizeChunk(model, c.text));
+  }
+  return { url, title, summary: bullets.join("\n") };
+}
+
+// --- 4) synthesis prompt ---
+function buildSynthesisPrompt(topic: string | undefined, style: GenerateInput["style"], perSource: {url:string; title:string; summary:string}[], maxWords: number) {
+  const stanceNote =
+    style === "opinionated" ? "Write with a clear, argued viewpoint while representing opposing arguments fairly."
+    : style === "technical" ? "Use precise, technical language with brief definitions for nontrivial terms."
+    : style === "simple" ? "Use simple language suitable for a smart 8th grader."
+    : "Be neutral, balanced, and evidence-focused.";
+
+  const refsBlock = perSource.map((s, i) => `[#${i+1}] ${s.title} — ${s.url}\n${s.summary}`).join("\n\n");
+
+  return `You are writing a synthesis article that compares viewpoints and cites sources inline like [#1], [#2].
+Rules:
+- Accurately reflect each source's claims; do not invent facts.
+- Compare agreements/disagreements explicitly.
+- Quote sparingly; paraphrase instead.
+- Include a short outline first (5–8 bullets).
+- Keep body under ~${maxWords} words.
+- End with a "References" list with [#n] → title → URL.
+
+Style: ${stanceNote}
+
+Topic (if provided): ${topic ?? "(infer from sources)"}.
+
+Source digests:
+${refsBlock}
+`;
+}
+
+// --- 5) orchestrator ---
+export async function generateSynthesis(input: GenerateInput): Promise<GenerateOutput> {
+  if (!process.env.MISTRAL_API_KEY) throw new Error("Missing MISTRAL_API_KEY");
+  const model = input.model || DEFAULT_MODEL;
+
+  // fetch & clean
+  const raws = await Promise.all(input.urls.map(fetchClean));
+
+  // per-source summaries
+  const perSourceSummaries = [];
+  for (const r of raws) {
+    // Skip obviously tiny pages
+    if ((r.text || "").split(/\s+/).length < 120) continue;
+    perSourceSummaries.push(await summarizeSource(model, r.url, r.title, r.text));
+  }
+
+  // synthesis
+  const prompt = buildSynthesisPrompt(input.topic, input.style ?? "neutral", perSourceSummaries, input.maxWords ?? 1200);
+  const resp = await client.chat.complete({
+    model,
+    messages: [
+      { role: "system", content: "You are a careful synthesis writer. Cite sources inline like [#n]." },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.4,
+  });
+  const articleRaw = resp.choices[0].message!.content!;
+
+  // quick outline extraction (fallback if not returned cleanly)
+  const outline = (articleRaw.match(/(?<=^|\n)[\-•\*]\s.*$/gms) || [])
+    .map((l) => l.replace(/^[\-•\*]\s/, "").trim())
+    .slice(0, 12);
+
+  // assemble references in returned order
+  const references = perSourceSummaries.map((s) => ({ url: s.url, title: s.title }));
+
+  // basic plagiarism risk check (very rough): flag long verbatim runs
+  const redFlags: string[] = [];
+  for (const r of raws) {
+    const overlaps = longestCommonSubstring(articleRaw, r.text);
+    if (overlaps > 300) redFlags.push(`Potential long verbatim from: ${r.url}`);
+  }
+  if (redFlags.length) {
+    console.warn("Plagiarism check flags:", redFlags);
+  }
+
+  return {
+    article: articleRaw,
+    outline: outline,
+    references,
+    perSourceSummaries,
+  };
+}
+
+// helper: longest common substring length
+function longestCommonSubstring(a: string, b: string) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+  let best = 0;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+        if (dp[i][j] > best) best = dp[i][j];
+      }
+    }
+  }
+  return best;
+}
