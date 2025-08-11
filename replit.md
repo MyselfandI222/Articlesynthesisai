@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Mistral AI Integration (Jan 2025)**: Added comprehensive Mistral AI support with advanced content processing pipeline. Features include intelligent source deduplication, multi-URL content extraction, comparative analysis synthesis, inline citation management, and plagiarism detection. Users can now select Mistral as a primary AI service alongside ChatGPT, Claude, and hybrid modes.
 - **Hybrid AI Synthesis System (Jan 2025)**: Implemented intelligent dual-AI system allowing ChatGPT and Claude to work together simultaneously. Each AI handles what it excels at - Claude for analysis, structure, and research; ChatGPT for engagement, creativity, and polish. System automatically routes tasks based on strengths and provides seamless collaboration between both AI services.
 - **Google Gemini Search Integration (Jan 2025)**: Added Google Gemini API specifically for enhanced search functionality. Created comprehensive search service with intelligent query processing, contextual results, and dedicated settings component. Users can toggle between standard search and Gemini-powered search for better article discovery.
 - **Lowered Viral Standards (Jan 2025)**: Reduced viral score thresholds to make more articles appear in search results. Updated scoring algorithm with base score of 25 points, increased keyword bonuses, and expanded viral keyword list. Changed UI labels from "viral" to "popular" to better reflect the broader selection criteria.

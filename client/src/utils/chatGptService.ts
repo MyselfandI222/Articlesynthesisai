@@ -208,3 +208,25 @@ export const processArticleEdit = async (
     return 'I encountered an error while processing your edit request. Please try again with more specific instructions.';
   }
 };
+
+// Re-export functions from chatGPTService.ts for consistency
+export const synthesizeWithChatGPT = async (
+  sources: Article[],
+  topic: string,
+  style: WritingStyle,
+  tone: string,
+  length: 'short' | 'medium' | 'long'
+): Promise<SynthesizedArticle> => {
+  // Import and call the actual function from chatGPTService
+  const { synthesizeWithChatGPT: actualSynthesize } = await import('./chatGPTService');
+  return actualSynthesize(sources, topic, style, tone, length);
+};
+
+export const editWithChatGPT = async (
+  article: SynthesizedArticle,
+  instructions: string
+): Promise<SynthesizedArticle> => {
+  // Import and call the actual function from chatGPTService
+  const { editWithChatGPT: actualEdit } = await import('./chatGPTService');
+  return actualEdit(article, instructions);
+};

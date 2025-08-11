@@ -53,30 +53,13 @@ export const synthesizeWithMistral = async (
       title: extractTitleFromArticle(data.article) || `${topic}: Comprehensive Analysis`,
       content: data.article,
       summary: data.outline.slice(0, 3).join(' ') || data.article.substring(0, 200) + '...',
-      keyPoints: data.outline,
-      sources: data.references.map((ref: any) => ({
-        title: ref.title,
-        url: ref.url,
-        domain: new URL(ref.url).hostname
-      })),
       wordCount: data.article.split(/\s+/).length,
-      readingTime: Math.ceil(data.article.split(/\s+/).length / 200),
+      createdAt: new Date(),
       style,
-      tone,
-      generatedAt: new Date().toISOString(),
-      aiService: 'mistral',
-      qualityScore: calculateQualityScore(data),
-      seoKeywords: extractKeywords(data.article, topic),
-      suggestedTitle: extractTitleFromArticle(data.article) || `${topic}: Analysis`,
       processingMetrics: {
         processingTimeMs: 5000, // Estimated
         aiModelUsed: 'mistral-small-latest',
         contentQualityScore: calculateQualityScore(data)
-      },
-      sourceAnalysis: {
-        totalSources: sources.length,
-        validSources: data.references.length,
-        duplicateRemoval: sources.length - data.references.length
       },
       factCheckResults: {
         verifiedFacts: Math.floor(Math.random() * 15) + 10,
@@ -102,25 +85,23 @@ export const synthesizeWithMistral = async (
       title: `${topic}: Analysis`,
       content: `Analysis of "${topic}" using Mistral AI is currently unavailable. Please check your API configuration or try again later.`,
       summary: 'Mistral synthesis temporarily unavailable',
-      keyPoints: ['Mistral AI service temporarily unavailable'],
-      sources: sources.slice(0, 3).map(source => ({
-        title: source.title,
-        url: source.url || '#',
-        domain: source.source
-      })),
       wordCount: 0,
-      readingTime: 1,
+      createdAt: new Date(),
       style,
-      tone,
-      generatedAt: new Date().toISOString(),
-      aiService: 'mistral',
-      qualityScore: 60,
-      seoKeywords: [topic],
-      suggestedTitle: `${topic}: Analysis`,
       processingMetrics: {
         processingTimeMs: 1000,
         aiModelUsed: 'mistral-fallback',
         contentQualityScore: 60
+      },
+      factCheckResults: {
+        verifiedFacts: 0,
+        uncertainFacts: 0,
+        correctedFacts: 0
+      },
+      seoMetadata: {
+        keywords: [topic],
+        description: 'Mistral synthesis temporarily unavailable',
+        readabilityScore: 60
       }
     };
   }
@@ -158,11 +139,11 @@ export const editWithMistral = async (
       title: data.editedTitle || article.title,
       summary: data.editedContent.substring(0, 200) + '...',
       wordCount: data.editedContent.split(/\s+/).length,
-      readingTime: Math.ceil(data.editedContent.split(/\s+/).length / 200),
       processingMetrics: {
         ...article.processingMetrics,
         processingTimeMs: 3000,
-        aiModelUsed: 'mistral-small-latest'
+        aiModelUsed: 'mistral-small-latest',
+        contentQualityScore: article.processingMetrics?.contentQualityScore || 75
       }
     };
     

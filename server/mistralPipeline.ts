@@ -57,7 +57,8 @@ function dedupe(chunks: { url: string; text: string }[], minDiff = 0.15) {
   const out: typeof chunks = [];
   for (const c of chunks) {
     const fp = fingerprint(c.text);
-    if ([...seen].some((x) => jaccard(x, fp) > 1 - minDiff)) continue;
+    const seenArray = Array.from(seen);
+    if (seenArray.some((x) => jaccard(x, fp) > 1 - minDiff)) continue;
     seen.add(fp);
     out.push(c);
   }
@@ -66,7 +67,8 @@ function dedupe(chunks: { url: string; text: string }[], minDiff = 0.15) {
 function jaccard(a: string, b: string) {
   const A = new Set(a.split(/\s+/));
   const B = new Set(b.split(/\s+/));
-  const inter = [...A].filter((x) => B.has(x)).length;
+  const AArray = Array.from(A);
+  const inter = AArray.filter((x) => B.has(x)).length;
   return inter / (A.size + B.size - inter);
 }
 
@@ -80,7 +82,7 @@ async function summarizeChunk(model: string, chunk: string) {
     ],
     temperature: 0.2,
   });
-  return resp.choices[0].message!.content!;
+  return (resp.choices[0].message?.content as string) || "";
 }
 
 async function summarizeSource(model: string, url: string, title: string, text: string) {
@@ -147,11 +149,11 @@ export async function generateSynthesis(input: GenerateInput): Promise<GenerateO
     ],
     temperature: 0.4,
   });
-  const articleRaw = resp.choices[0].message!.content!;
+  const articleRaw = (resp.choices[0].message?.content as string) || "";
 
   // quick outline extraction (fallback if not returned cleanly)
-  const outline = (articleRaw.match(/(?<=^|\n)[\-•\*]\s.*$/gms) || [])
-    .map((l) => l.replace(/^[\-•\*]\s/, "").trim())
+  const outline = (articleRaw.match(/^[\-•\*]\s.*$/gm) || [])
+    .map((l: string) => l.replace(/^[\-•\*]\s/, "").trim())
     .slice(0, 12);
 
   // assemble references in returned order

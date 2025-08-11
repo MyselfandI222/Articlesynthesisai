@@ -1,6 +1,6 @@
 // Article Synthesis Service
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
-import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
+import { synthesizeWithChatGPT, editWithChatGPT } from './chatGptService';
 import { processAdvancedEditing } from './advancedEditing';
 import { synthesizeWithOpenAI } from './openAISynthesis';
 import { synthesizeWithClaude, editWithClaude } from './claudeService';
@@ -77,8 +77,11 @@ const synthesizeWithHybrid = async (
     const hybridResult: SynthesizedArticle = {
       ...result,
       id: `hybrid-${Date.now()}`,
-      aiService: 'hybrid' as any,
-      qualityScore: Math.max(result.qualityScore || 85, 85),
+      processingMetrics: {
+        ...result.processingMetrics,
+        aiModelUsed: 'hybrid-claude-chatgpt',
+        contentQualityScore: Math.max(result.processingMetrics?.contentQualityScore || 85, 85),
+      }
     };
     
     console.log('Hybrid synthesis completed successfully');
@@ -86,7 +89,7 @@ const synthesizeWithHybrid = async (
     
   } catch (error) {
     console.error('Hybrid synthesis failed, falling back to Claude:', error);
-    return synthesizeWithClaude(sources, topic, style, tone, length);
+    return await synthesizeWithClaude(sources, topic, style, tone, length);
   }
 };
 
@@ -106,16 +109,16 @@ export const synthesizeArticles = async (
     return synthesizeWithHybrid(sources, topic, style, tone, length);
   } else if (aiService === 'chatgpt') {
     // Use ChatGPT for synthesis
-    return synthesizeWithChatGPT(sources, topic, style, tone, length);
+    return await synthesizeWithChatGPT(sources, topic, style, tone, length);
   } else if (aiService === 'claude') {
-    // Use Claude for synthesis
-    return synthesizeWithClaude(sources, topic, style, tone, length);
+    // Use Claude for synthesis  
+    return await synthesizeWithClaude(sources, topic, style, tone, length);
   } else if (aiService === 'mistral') {
     // Use Mistral for synthesis
-    return synthesizeWithMistral(sources, topic, style, tone, length);
+    return await synthesizeWithMistral(sources, topic, style, tone, length);
   } else {
     // Use OpenAI for default synthesis
-    return synthesizeWithOpenAI(sources, topic, style, tone, length);
+    return await synthesizeWithOpenAI(sources, topic, style, tone, length);
   }
 };
 
@@ -134,8 +137,11 @@ const editWithHybrid = async (
     const hybridResult: SynthesizedArticle = {
       ...result,
       id: `hybrid-edit-${Date.now()}`,
-      aiService: 'hybrid' as any,
-      qualityScore: Math.max(result.qualityScore || 85, 85),
+      processingMetrics: {
+        ...result.processingMetrics,
+        aiModelUsed: 'hybrid-claude-chatgpt',
+        contentQualityScore: Math.max(result.processingMetrics?.contentQualityScore || 85, 85),
+      }
     };
     
     console.log('Hybrid editing completed successfully');
@@ -143,7 +149,7 @@ const editWithHybrid = async (
     
   } catch (error) {
     console.error('Hybrid editing failed, falling back to Claude:', error);
-    return editWithClaude(article, instructions);
+    return await editWithClaude(article, instructions);
   }
 };
 
@@ -160,16 +166,16 @@ export const editArticle = async (
     return editWithHybrid(article, instructions);
   } else if (aiService === 'chatgpt') {
     // Use ChatGPT for editing
-    return editWithChatGPT(article, instructions);
+    return await editWithChatGPT(article, instructions);
   } else if (aiService === 'claude') {
     // Use Claude for editing
-    return editWithClaude(article, instructions);
+    return await editWithClaude(article, instructions);
   } else if (aiService === 'mistral') {
     // Use Mistral for editing
-    return editWithMistral(article, instructions);
+    return await editWithMistral(article, instructions);
   } else if (instructions.toLowerCase().includes('chatgpt') || instructions.toLowerCase().includes('ai')) {
     // Use ChatGPT for editing if explicitly requested
-    return editWithChatGPT(article, instructions);
+    return await editWithChatGPT(article, instructions);
   } else {
     // Use default editing
     try {
