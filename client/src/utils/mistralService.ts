@@ -107,6 +107,33 @@ export const synthesizeWithMistral = async (
   }
 };
 
+export interface MistralServiceConfig {
+  sourceDeduplication: boolean;
+  citationManagement: boolean;
+  comparativeAnalysis: boolean;
+  contentExtraction: boolean;
+  plagiarismDetection: boolean;
+  advancedProcessing: boolean;
+}
+
+const defaultMistralSettings: MistralServiceConfig = {
+  sourceDeduplication: true,
+  citationManagement: true,
+  comparativeAnalysis: true,
+  contentExtraction: true,
+  plagiarismDetection: false,
+  advancedProcessing: true,
+};
+
+export const getMistralSettings = (): MistralServiceConfig => {
+  const saved = localStorage.getItem('mistralSettings');
+  return saved ? { ...defaultMistralSettings, ...JSON.parse(saved) } : defaultMistralSettings;
+};
+
+export const saveMistralSettings = (settings: MistralServiceConfig): void => {
+  localStorage.setItem('mistralSettings', JSON.stringify(settings));
+};
+
 export const editWithMistral = async (
   article: SynthesizedArticle,
   instructions: string

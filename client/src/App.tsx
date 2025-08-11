@@ -14,10 +14,12 @@ import SubscriptionPage from './pages/subscribe';
 import MoodMeter from './components/MoodMeter';
 import ClaudeSettings from './components/ClaudeSettings';
 import GeminiSettings from './components/GeminiSettings';
+import MistralSettings from './components/MistralSettings';
 import { Article, SynthesizedArticle, WritingStyle } from './types';
 import { synthesizeArticles, editArticle, getAIServicePreference, saveAIServicePreference, getChatGPTSettings, saveChatGPTSettings } from './utils/articleSynthesis';
 import { getClaudeSettings, saveClaudeSettings, ClaudeServiceConfig } from './utils/claudeService';
 import { getGeminiSettings, saveGeminiSettings, GeminiSearchConfig } from './utils/geminiSearchService';
+import { getMistralSettings, saveMistralSettings, MistralServiceConfig } from './utils/mistralService';
 import { getTodaysBreakingNews } from './utils/dailyNewsUpdater';
 import { useAuth } from './hooks/useAuth';
 import { Sparkles, Loader, AlertCircle } from 'lucide-react';
@@ -53,6 +55,7 @@ function App() {
     const preference = getAIServicePreference();
     return preference === 'mistral';
   });
+  const [mistralSettings, setMistralSettings] = useState(() => getMistralSettings());
 
   // Feature access based on user subscription
   const userTier = user?.subscriptionStatus && !['free', 'inactive'].includes(user.subscriptionStatus) ? 'pro' : 'free';
@@ -162,6 +165,22 @@ function App() {
   const handleClaudeSettingsChange = (settings: ClaudeServiceConfig) => {
     setClaudeSettings(settings);
     saveClaudeSettings(settings);
+  };
+
+  // Handle Mistral toggle
+  const handleToggleMistral = (enabled: boolean) => {
+    setIsMistralEnabled(enabled);
+    if (enabled) {
+      saveAIServicePreference('mistral');
+    } else {
+      saveAIServicePreference('default');
+    }
+  };
+
+  // Handle Mistral settings change
+  const handleMistralSettingsChange = (settings: MistralServiceConfig) => {
+    setMistralSettings(settings);
+    saveMistralSettings(settings);
   };
 
   // Handle Gemini toggle
@@ -317,6 +336,14 @@ function App() {
                 settings={geminiSettings}
                 onSettingsChange={handleGeminiSettingsChange}
               />
+              
+              {/* Mistral Settings */}
+              <MistralSettings
+                isEnabled={isMistralEnabled}
+                onToggleEnabled={handleToggleMistral}
+                settings={mistralSettings}
+                onSettingsChange={handleMistralSettingsChange}
+              />
             </div>
             
             {error && (
@@ -338,7 +365,7 @@ function App() {
                 </p>
                 
                 {/* AI Mode Indicator */}
-                {(isChatGPTEnabled || isClaudeEnabled) && (
+                {(isChatGPTEnabled || isClaudeEnabled || isMistralEnabled) && (
                   <div className="mt-3 flex items-center justify-center">
                     {isChatGPTEnabled && isClaudeEnabled ? (
                       <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full">
@@ -348,6 +375,11 @@ function App() {
                         </div>
                         <span className="text-xs font-medium text-purple-700">Hybrid AI Mode</span>
                         <span className="text-xs text-purple-600">Claude + ChatGPT</span>
+                      </div>
+                    ) : isMistralEnabled ? (
+                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-orange-100 border border-orange-200 rounded-full">
+                        <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+                        <span className="text-xs font-medium text-orange-700">Mistral AI Mode</span>
                       </div>
                     ) : isChatGPTEnabled ? (
                       <div className="flex items-center space-x-2 px-3 py-1.5 bg-green-100 border border-green-200 rounded-full">
