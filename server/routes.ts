@@ -13,8 +13,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/news/search', async (req, res) => {
     try {
       const query = req.query.q as string;
-      const apiKey = process.env.VITE_NEWS_API_KEY;
+      const apiKey = process.env.VITE_NEWS_API_KEY || process.env.NEWS_API_KEY;
       
+      console.log('Environment check:', {
+        VITE_NEWS_API_KEY: process.env.VITE_NEWS_API_KEY ? `${process.env.VITE_NEWS_API_KEY.substring(0, 8)}...` : 'NOT SET',
+        NEWS_API_KEY: process.env.NEWS_API_KEY ? `${process.env.NEWS_API_KEY.substring(0, 8)}...` : 'NOT SET'
+      });
       console.log('Current API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NOT SET');
       
       if (!query) {
