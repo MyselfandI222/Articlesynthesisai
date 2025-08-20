@@ -6,6 +6,7 @@ import {
   jsonb,
   index,
   integer,
+  serial,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -24,7 +25,7 @@ export const sessions = pgTable(
 
 // User storage table for local authentication
 export const users = pgTable("users", {
-  id: integer("id").primaryKey(),
+  id: serial("id").primaryKey(),
   username: varchar("username").unique().notNull(),
   email: varchar("email").unique(),
   password: varchar("password").notNull(),
@@ -66,6 +67,7 @@ export const referralRewards = pgTable("referral_rewards", {
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
   createdAt: true,
   updatedAt: true,
   affiliateCode: true,

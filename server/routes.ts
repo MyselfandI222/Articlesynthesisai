@@ -74,8 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create user using the auth system's password hashing
-      const { scrypt, randomBytes } = require('crypto');
-      const { promisify } = require('util');
+      const { scrypt, randomBytes } = await import('crypto');
+      const { promisify } = await import('util');
       const scryptAsync = promisify(scrypt);
       
       const salt = randomBytes(16).toString("hex");
