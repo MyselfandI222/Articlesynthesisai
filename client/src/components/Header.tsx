@@ -142,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                 </div>
                 <button
                   onClick={async () => {
-                    await fetch('/api/logout', { method: 'POST' });
+                    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
                     window.location.reload();
                   }}
                   className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-full px-3 py-1.5 shadow-sm hover:from-red-100 hover:to-red-200 transition-all"
