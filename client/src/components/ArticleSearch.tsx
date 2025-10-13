@@ -247,7 +247,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
 
       {/* Subcategories */}
       {!isLoading && searchResults.length === 0 && (
-        <div className="space-y-4">
+        <div className="hidden md:block space-y-4">
           {categories.map((category) => (
             <div key={category.id} className="mb-6">
               <div 
