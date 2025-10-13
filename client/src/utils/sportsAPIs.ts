@@ -2,6 +2,75 @@
 import { SearchResult } from '../types';
 import { getEnabledAPISources } from './apiFilters';
 
+// ESPN Hidden API Integration (No API Key Required)
+export const searchESPN = async (query: string): Promise<SearchResult[]> => {
+  try {
+    const results: SearchResult[] = [];
+    const searchTerms = query.toLowerCase();
+    
+    // ESPN sports league endpoints
+    const espnLeagues = [
+      { sport: 'football', league: 'nfl', name: 'NFL' },
+      { sport: 'basketball', league: 'nba', name: 'NBA' },
+      { sport: 'baseball', league: 'mlb', name: 'MLB' },
+      { sport: 'hockey', league: 'nhl', name: 'NHL' },
+      { sport: 'soccer', league: 'eng.1', name: 'Premier League' },
+      { sport: 'soccer', league: 'usa.1', name: 'MLS' },
+      { sport: 'football', league: 'college-football', name: 'College Football' },
+      { sport: 'basketball', league: 'mens-college-basketball', name: 'College Basketball' }
+    ];
+    
+    // Determine which leagues to fetch based on query
+    const leaguesToFetch = espnLeagues.filter(league => 
+      searchTerms.includes(league.name.toLowerCase()) || 
+      searchTerms.includes(league.sport) ||
+      searchTerms.includes(league.league.replace(/-/g, ' '))
+    );
+    
+    // If no specific league matches, fetch from popular leagues
+    const finalLeagues = leaguesToFetch.length > 0 ? leaguesToFetch : 
+      espnLeagues.slice(0, 4); // NFL, NBA, MLB, NHL by default
+    
+    // Fetch news from each league
+    for (const { sport, league, name } of finalLeagues) {
+      try {
+        const espnUrl = `http://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/news`;
+        const response = await fetch(espnUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Process ESPN articles
+          if (data.articles && Array.isArray(data.articles)) {
+            data.articles.slice(0, 3).forEach((article: any, index: number) => {
+              results.push({
+                id: `espn-${league}-${index}`,
+                title: article.headline || `${name} News Update`,
+                description: article.description || article.headline || 'ESPN sports coverage',
+                content: `${article.story || article.description || article.headline}\n\nFrom ESPN ${name} coverage: ${article.description || 'Breaking sports news and analysis.'}`,
+                url: article.links?.web?.href || `https://www.espn.com/${sport}/${league}`,
+                source: `ESPN ${name}`,
+                publishedAt: article.published || new Date().toISOString(),
+                author: article.byline || 'ESPN Staff',
+                viewpoint: 'sports coverage',
+                keywords: [name.toLowerCase(), sport, 'espn', 'sports news', league]
+              });
+            });
+          }
+        }
+      } catch (leagueError) {
+        console.error(`ESPN ${name} fetch error:`, leagueError);
+        // Continue with other leagues even if one fails
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('ESPN API error:', error);
+    return [];
+  }
+};
+
 // Fabrizio Romano and Bleacher Report content simulation
 export const searchFabrizioRomano = async (query: string): Promise<SearchResult[]> => {
   try {
@@ -300,6 +369,7 @@ export const searchSportsAPIs = async (query: string): Promise<SearchResult[]> =
   const enabledAPIs = getEnabledAPISources();
   
   const apiMap = {
+    'espn': searchESPN,
     'fabrizio-romano': searchFabrizioRomano,
     'bleacher-report': searchBleacherReport,
     'sports-db': searchSportsDB,
@@ -312,7 +382,8 @@ export const searchSportsAPIs = async (query: string): Promise<SearchResult[]> =
   const searchPromises = Object.entries(apiMap)
     .filter(([apiId]) => {
       // Map to actual API IDs in our system
-      const mappedId = apiId === 'fabrizio-romano' ? 'twitter' : // Fabrizio is on Twitter
+      const mappedId = apiId === 'espn' ? 'espn' :
+                       apiId === 'fabrizio-romano' ? 'twitter' : // Fabrizio is on Twitter
                        apiId === 'bleacher-report' ? 'bleacher-report' :
                        apiId === 'sports-db' ? 'sports-db' :
                        apiId === 'football-data' ? 'football-data' :
