@@ -5,7 +5,9 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const url = queryKey[0] as string;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          credentials: 'include',
+        });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
@@ -27,6 +29,7 @@ export const apiRequest = async (
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
   };
 
   if (data) {
@@ -46,7 +49,9 @@ export const apiRequest = async (
 export const getQueryFn = ({ on401 }: { on401?: 'returnNull' } = {}) => {
   return async ({ queryKey }: { queryKey: readonly unknown[] }) => {
     const url = queryKey[0] as string;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
     
     if (response.status === 401 && on401 === 'returnNull') {
       return null;
