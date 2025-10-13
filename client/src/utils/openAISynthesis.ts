@@ -99,15 +99,23 @@ SYNTHESIS APPROACH:
 3. ANALYZE CONTRADICTIONS: When sources conflict, present both sides fairly and note the disagreement
 4. SYNTHESIZE INSIGHTS: Draw connections between different sources' approaches to the same topic
 5. PROVIDE BALANCED PERSPECTIVE: Don't favor one source over another - integrate all viewpoints
+6. WRITE DETAILED IDEAS: Include specific concepts, findings, data points, and arguments from the sources - don't just summarize, elaborate on the ideas
 
 Key Themes Identified: ${topicAnalysis.keyThemes.join(', ')}
 Different Perspectives: ${topicAnalysis.perspectives.join(', ')}
 Conflicting Points: ${topicAnalysis.conflictingPoints.join(', ')}
 
-IMPORTANT GUIDELINES:
-- Do not reference source article titles or your own article title in the content
+CRITICAL - TITLE RULES (MUST FOLLOW):
+- NEVER mention or reference the title "${topic}" anywhere in the article body
+- NEVER use phrases like "this article", "in this piece", "the ${topic} article", "as discussed in ${topic}"
+- DO NOT start sentences with "The ${topic}..." or "${topic} reveals..."
+- Write as if the title doesn't exist - focus on the subject matter directly
+
+CONTENT GUIDELINES:
+- Write out DETAILED ideas and specific concepts from the sources - don't just mention them briefly
+- Include specific findings, data points, examples, and arguments presented in the sources
+- Elaborate on key concepts rather than just listing them
 - Use phrases like "according to research", "studies show", "experts indicate", "some reports suggest", "other findings indicate"
-- Write the article content without self-referencing (avoid phrases like "this article", "in this piece", etc.)
 - When sources disagree, use phrases like "while some research indicates..., other studies suggest..."
 - Create a narrative that weaves together different perspectives on the same topic
 
@@ -127,11 +135,18 @@ Please provide a well-structured comparative article with clear sections.`;
       // Standard synthesis prompt for different topics
       prompt = `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
 
-IMPORTANT: 
-1. Do not reference or mention the names/titles of the source articles in your writing
-2. Do not reference or mention the title of your own article within the article content
-3. Use phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
-4. Write the article content without self-referencing (avoid phrases like "this article", "in this piece", etc.)
+CRITICAL - TITLE RULES (MUST FOLLOW):
+- NEVER mention or reference the title "${topic}" anywhere in the article body
+- NEVER use phrases like "this article", "in this piece", "the ${topic} article", "as discussed in ${topic}"
+- DO NOT start sentences with "The ${topic}..." or "${topic} reveals..." or "${topic} explores..."
+- Write as if the title doesn't exist - focus on the subject matter directly
+
+CONTENT GUIDELINES:
+1. Write out DETAILED ideas and specific concepts from the sources - don't just mention them briefly
+2. Include specific findings, data points, examples, and arguments presented in the sources
+3. Elaborate on key concepts and explain them thoroughly rather than just listing them
+4. Do not reference or mention the names/titles of the source articles in your writing
+5. Use phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
 
 Sources:
 ${sourcesText}
@@ -140,12 +155,12 @@ Requirements:
 - Write in ${style} style
 - Use a ${tone} tone
 - Target length: ${length === 'short' ? '300-500' : length === 'medium' ? '600-1000' : '1200-2000'} words
-- Include relevant information from all sources
-- Create a compelling title
+- Write DETAILED content - elaborate on ideas, don't just list them
+- Include specific findings, data, examples, and arguments from sources
+- Create a compelling title (but NEVER reference this title in the article body)
 - Maintain factual accuracy
-- DO NOT reference source article titles or your own article title in the content
 
-Please provide a well-structured article with clear sections.`;
+Please provide a well-structured article with detailed content and clear sections.`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
