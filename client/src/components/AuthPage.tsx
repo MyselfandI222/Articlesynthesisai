@@ -36,6 +36,7 @@ const AuthPage = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -60,6 +61,7 @@ const AuthPage = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
+        credentials: 'include',
       });
       
       if (!response.ok) {
