@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { synthesizeArticles, editArticle, generateTitles, analyzeQuality } from "./claude";
+import { generateArticleImage } from "./imageGeneration";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -352,6 +353,41 @@ Please provide the edited article with improved content according to the instruc
     } catch (error: any) {
       console.error("Mistral edit error:", error);
       res.status(500).json({ error: "Failed to edit article with Mistral" });
+    }
+  });
+
+  // AI Image Generation endpoint
+  app.post("/api/generate-image", isAuthenticated, async (req, res) => {
+    try {
+      const { articleTitle, articleContent, style } = req.body;
+      
+      if (!articleTitle || !articleContent) {
+        return res.status(400).json({ error: "Article title and content required" });
+      }
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ error: "OpenAI API key not configured" });
+      }
+      
+      const validStyles = ['realistic', 'artistic', 'minimalist', 'abstract', 'photographic', 'illustration'];
+      const imageStyle = validStyles.includes(style) ? style : 'photographic';
+      
+      console.log(`Generating AI image for article: "${articleTitle.substring(0, 50)}..."`);
+      
+      const result = await generateArticleImage(articleTitle, articleContent, imageStyle as any);
+      
+      res.json({
+        success: true,
+        imageUrl: result.url,
+        revisedPrompt: result.revisedPrompt
+      });
+      
+    } catch (error: any) {
+      console.error("Image generation error:", error);
+      res.status(500).json({ 
+        error: "Failed to generate image",
+        message: error.message 
+      });
     }
   });
 
