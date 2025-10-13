@@ -3,6 +3,7 @@ import { Image, Wand2, Download, RefreshCw, Palette, Monitor, Square, Smartphone
 import { AIImage, SynthesizedArticle } from '../types';
 import { 
   generateAIImage, 
+  generateAIArticleImage,
   generateImagePrompt, 
   getSuggestedImageStyles,
   imageStyleOptions,
@@ -32,6 +33,28 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({ article, onImage
     setIsGenerating(true);
     
     try {
+      // Try new AI backend generation first (DALL-E 3)
+      const aiImageUrl = await generateAIArticleImage(
+        article.title,
+        article.content,
+        options.style
+      );
+      
+      if (aiImageUrl) {
+        // AI generation successful - create AIImage object
+        const image: AIImage = {
+          id: `ai-${Date.now()}`,
+          url: aiImageUrl,
+          prompt: `AI-generated image for: ${article.title}`,
+          style: options.style,
+          createdAt: new Date(),
+          isGenerating: false
+        };
+        onImageGenerated(image);
+        return;
+      }
+      
+      // Fallback to original method if AI generation fails
       const prompt = generateImagePrompt(
         article, 
         options, 

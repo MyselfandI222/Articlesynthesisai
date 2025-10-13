@@ -1,10 +1,50 @@
 // AI Image Generation Service
 import { AIImage, SynthesizedArticle } from '../types';
+import { apiRequest } from '@/lib/queryClient';
 
 export interface ImageGenerationOptions {
   style: 'realistic' | 'artistic' | 'minimalist' | 'abstract' | 'photographic' | 'illustration';
   aspectRatio: '16:9' | '4:3' | '1:1' | '3:4';
   mood: 'professional' | 'creative' | 'serious' | 'vibrant' | 'calm' | 'dramatic';
+}
+
+/**
+ * Generate AI image using backend DALL-E 3 API
+ * @param articleTitle Article title
+ * @param articleContent Article content
+ * @param style Image style
+ * @returns Generated image URL
+ */
+export async function generateAIArticleImage(
+  articleTitle: string,
+  articleContent: string,
+  style: 'realistic' | 'artistic' | 'minimalist' | 'abstract' | 'photographic' | 'illustration' = 'photographic'
+): Promise<string | null> {
+  try {
+    console.log('🎨 Generating AI image with DALL-E 3...');
+    
+    const response = await apiRequest('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        articleTitle,
+        articleContent: articleContent.substring(0, 1000), // First 1000 chars for context
+        style
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ AI image generated successfully');
+      return data.imageUrl;
+    } else {
+      console.warn('⚠️ AI image generation failed, falling back to placeholder');
+      return null;
+    }
+  } catch (error) {
+    console.error('AI image generation error:', error);
+    return null;
+  }
 }
 
 export interface ContentAnalysis {
