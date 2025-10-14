@@ -139,6 +139,10 @@ export function setupAuth(app: Express) {
         return res.status(500).json({ error: 'Failed to save session' });
       }
       
+      console.log('✅ Login successful - Session ID:', req.sessionID);
+      console.log('✅ Session data:', req.session);
+      console.log('✅ Response headers:', res.getHeaders());
+      
       res.status(200).json({
         id: user.id,
         username: user.username,
@@ -160,6 +164,11 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+    console.log('🔍 /api/user check - Session ID:', req.sessionID);
+    console.log('🔍 Cookie header:', req.headers.cookie);
+    console.log('🔍 Session:', req.session);
+    console.log('🔍 Is authenticated:', req.isAuthenticated());
+    
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
