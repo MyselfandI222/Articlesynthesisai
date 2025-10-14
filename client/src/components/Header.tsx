@@ -4,6 +4,7 @@ import { FileText, Sparkles, Globe, TrendingUp, Bot, LogOut, Users, Crown, Menu,
 import { getTodaysBreakingNews } from '../utils/dailyNewsUpdater';
 import { classifyBreakingNews, formatEngagementNumber } from '../utils/breakingNewsDetector';
 import { useAuth } from '../hooks/useAuth';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
   onNavigate?: (page: 'home' | 'affiliate' | 'subscribe') => void;
@@ -41,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
   }, []);
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14">
           <div className="flex items-center space-x-3">
@@ -49,8 +50,8 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">ArticleSynth</h1>
-              <p className="text-xs text-gray-500">AI-Powered Content Synthesis</p>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">ArticleSynth</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">AI-Powered Content Synthesis</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -127,16 +128,19 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
               </div>
             )}
 
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* User Profile and Logout */}
             {user && (
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-full px-3 py-1.5 shadow-sm">
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 shadow-sm">
                   <img 
                     src={user.profileImageUrl || 'https://via.placeholder.com/24'} 
                     alt="Profile" 
                     className="w-5 h-5 rounded-full object-cover"
                   />
-                  <span className="text-xs font-medium text-gray-800 hidden sm:inline">
+                  <span className="text-xs font-medium text-gray-800 dark:text-gray-200 hidden sm:inline">
                     {user.firstName || user.username}
                   </span>
                 </div>
@@ -145,10 +149,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                     await fetch('/api/logout', { method: 'POST', credentials: 'include' });
                     window.location.reload();
                   }}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-full px-3 py-1.5 shadow-sm hover:from-red-100 hover:to-red-200 transition-all"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-full px-3 py-1.5 shadow-sm hover:from-red-100 hover:to-red-200 dark:hover:from-red-900/50 dark:hover:to-red-800/50 transition-all"
                 >
-                  <LogOut className="h-4 w-4 text-red-600" />
-                  <span className="text-xs font-medium text-red-800 hidden sm:inline">Logout</span>
+                  <LogOut className="h-4 w-4 text-red-600 dark:text-red-400" />
+                  <span className="text-xs font-medium text-red-800 dark:text-red-300 hidden sm:inline">Logout</span>
                 </button>
               </div>
             )}
