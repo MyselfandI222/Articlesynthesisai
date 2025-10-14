@@ -50,20 +50,14 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log('Login attempt for username:', username);
         const user = await storage.getUserByUsername(username);
-        console.log('User found:', user ? 'Yes' : 'No');
         if (!user) {
-          console.log('No user found with username:', username);
           return done(null, false);
         }
         const passwordMatch = await comparePasswords(password, user.password);
-        console.log('Password match:', passwordMatch);
         if (!passwordMatch) {
-          console.log('Password mismatch for user:', username);
           return done(null, false);
         }
-        console.log('Login successful for user:', username);
         return done(null, user);
       } catch (error) {
         console.error('Login error:', error);
@@ -73,18 +67,15 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    console.log('🔵 serializeUser called with user:', user.id);
     done(null, user.id);
   });
   
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log('🟢 deserializeUser called with id:', id);
       const user = await storage.getUser(id);
-      console.log('🟢 deserializeUser found user:', user ? user.username : 'null');
       done(null, user);
     } catch (error) {
-      console.error('🔴 deserializeUser error:', error);
+      console.error('Deserialize user error:', error);
       done(error);
     }
   });
@@ -142,15 +133,11 @@ export function setupAuth(app: Express) {
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     const user = req.user as SelectUser;
     
-    // Explicitly save session before sending response
     req.session.save((err) => {
       if (err) {
         console.error('Session save error:', err);
         return res.status(500).json({ error: 'Failed to save session' });
       }
-      
-      console.log('Session saved successfully. Session ID:', req.sessionID);
-      console.log('Session data after save:', req.session);
       
       res.status(200).json({
         id: user.id,
@@ -173,13 +160,7 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    console.log('GET /api/user - Session ID:', req.sessionID);
-    console.log('GET /api/user - Session data:', req.session);
-    console.log('GET /api/user - Is authenticated:', req.isAuthenticated());
-    console.log('GET /api/user - User:', req.user);
-    
     if (!req.isAuthenticated()) {
-      console.log('Not authenticated - returning 401');
       return res.sendStatus(401);
     }
     const user = req.user as SelectUser;
