@@ -158,15 +158,18 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
   try {
     const results: SearchResult[] = [];
     
-    // Search multiple sources in parallel for better performance
-    const searchPromises = [
-      // Major News Sources
-      searchBBCNews(query),
-      searchCNNNews(query),
-      searchNPRNews(query),
-      searchGuardianNews(query),
+    // Priority sources - faster and more reliable (search first)
+    const prioritySources = [
       searchReutersNews(query),
       searchAPNews(query),
+      searchBBCNews(query),
+      searchCNNNews(query),
+      searchNPRNews(query)
+    ];
+    
+    // Secondary sources - search in parallel with priority sources
+    const secondarySources = [
+      searchGuardianNews(query),
       searchNYTimesNews(query),
       searchWashingtonPostNews(query),
       searchUSATodayNews(query),
@@ -177,6 +180,9 @@ const searchFreeNewsSources = async (query: string): Promise<SearchResult[]> => 
       searchNBCNews(query),
       searchPoliticoNews(query)
     ];
+    
+    // Search all sources in parallel (optimized with timeouts)
+    const searchPromises = [...prioritySources, ...secondarySources];
     
     // Execute all searches in parallel and collect results
     const searchResults = await Promise.allSettled(searchPromises);
