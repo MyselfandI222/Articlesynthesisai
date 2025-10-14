@@ -126,62 +126,62 @@ Perfect for content creators, journalists, and businesses!`;
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Referrals</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalReferrals || 0}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Referrals</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.totalReferrals || 0}</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600" />
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
+              <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Link Clicks</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.clickCount || 0}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Link Clicks</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.clickCount || 0}</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Link className="h-6 w-6 text-green-600" />
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg">
+              <Link className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{conversionRate}%</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Conversion Rate</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{conversionRate}%</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-purple-600" />
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pending Rewards</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.rewards?.filter(r => r.status === 'pending').length || 0}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Rewards</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.rewards?.filter(r => r.status === 'pending').length || 0}</p>
             </div>
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <Gift className="h-6 w-6 text-orange-600" />
+            <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg">
+              <Gift className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Affiliate Links */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Affiliate Links</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Your Affiliate Links</h2>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Full Referral Link
             </label>
             <div className="flex items-center space-x-2">
@@ -189,7 +189,7 @@ Perfect for content creators, journalists, and businesses!`;
                 type="text"
                 value={affiliateLink?.affiliateLink || ''}
                 readOnly
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-200 text-sm"
               />
               <button
                 onClick={() => copyToClipboard(affiliateLink?.affiliateLink || '', 'Full link')}
@@ -202,7 +202,7 @@ Perfect for content creators, journalists, and businesses!`;
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Short Link
             </label>
             <div className="flex items-center space-x-2">
@@ -210,7 +210,7 @@ Perfect for content creators, journalists, and businesses!`;
                 type="text"
                 value={affiliateLink?.shortLink || ''}
                 readOnly
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-200 text-sm"
               />
               <button
                 onClick={() => copyToClipboard(affiliateLink?.shortLink || '', 'Short link')}
@@ -223,7 +223,7 @@ Perfect for content creators, journalists, and businesses!`;
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Affiliate Code
             </label>
             <div className="flex items-center space-x-2">
@@ -231,7 +231,7 @@ Perfect for content creators, journalists, and businesses!`;
                 type="text"
                 value={affiliateLink?.affiliateCode || ''}
                 readOnly
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm font-mono"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-200 text-sm font-mono"
               />
               <button
                 onClick={() => copyToClipboard(affiliateLink?.affiliateCode || '', 'Affiliate code')}
@@ -246,9 +246,9 @@ Perfect for content creators, journalists, and businesses!`;
       </div>
 
       {/* Share Options */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Share & Earn</h2>
-        <p className="text-gray-600 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Share & Earn</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
           Share your referral link on social media, email, or directly with friends to start earning rewards!
         </p>
         
@@ -281,20 +281,20 @@ Perfect for content creators, journalists, and businesses!`;
 
       {/* Rewards */}
       {stats?.rewards && stats.rewards.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Rewards</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Your Rewards</h2>
           <div className="space-y-3">
             {stats.rewards.map((reward, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Gift className="h-4 w-4 text-green-600" />
+                  <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+                    <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       {reward.rewardAmount}% discount reward
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {new Date(reward.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -302,8 +302,8 @@ Perfect for content creators, journalists, and businesses!`;
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     reward.status === 'applied' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' 
+                      : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300'
                   }`}>
                     {reward.status}
                   </span>
@@ -316,24 +316,24 @@ Perfect for content creators, journalists, and businesses!`;
 
       {/* Recent Referrals */}
       {stats?.referrals && stats.referrals.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Referrals</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Recent Referrals</h2>
           <div className="space-y-3">
             {stats.referrals.map((referral, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <Users className="h-4 w-4 text-blue-600" />
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{referral.username}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{referral.username}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Joined {new Date(referral.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <div className="bg-green-100 p-1 rounded-full">
-                  <Star className="h-4 w-4 text-green-600" />
+                <div className="bg-green-100 dark:bg-green-900/30 p-1 rounded-full">
+                  <Star className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             ))}
@@ -342,35 +342,35 @@ Perfect for content creators, journalists, and businesses!`;
       )}
 
       {/* How It Works */}
-      <div className="bg-blue-50 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-blue-900 mb-4">How Affiliate Marketing Works</h2>
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6">
+        <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-300 mb-4">How Affiliate Marketing Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">1</span>
+            <div className="bg-blue-100 dark:bg-blue-900/40 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-blue-600 dark:text-blue-400 font-bold">1</span>
             </div>
-            <h3 className="font-semibold text-blue-900 mb-2">Share Your Link</h3>
-            <p className="text-sm text-blue-800">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Share Your Link</h3>
+            <p className="text-sm text-blue-800 dark:text-blue-400">
               Share your unique referral link with friends, on social media, or through email.
             </p>
           </div>
           
           <div className="text-center">
-            <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">2</span>
+            <div className="bg-blue-100 dark:bg-blue-900/40 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-blue-600 dark:text-blue-400 font-bold">2</span>
             </div>
-            <h3 className="font-semibold text-blue-900 mb-2">Friend Signs Up</h3>
-            <p className="text-sm text-blue-800">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Friend Signs Up</h3>
+            <p className="text-sm text-blue-800 dark:text-blue-400">
               When someone clicks your link and creates an account, they become your referral.
             </p>
           </div>
           
           <div className="text-center">
-            <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-blue-600 font-bold">3</span>
+            <div className="bg-blue-100 dark:bg-blue-900/40 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-blue-600 dark:text-blue-400 font-bold">3</span>
             </div>
-            <h3 className="font-semibold text-blue-900 mb-2">Earn Rewards</h3>
-            <p className="text-sm text-blue-800">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">Earn Rewards</h3>
+            <p className="text-sm text-blue-800 dark:text-blue-400">
               You get 20% off your premium subscription for each successful referral!
             </p>
           </div>

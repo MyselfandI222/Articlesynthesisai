@@ -57,33 +57,33 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
           <div className="flex items-center space-x-3">
             {/* Daily Breaking News Indicator */}
             {breakingNewsCount > 0 && (
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-full px-3 py-1.5 shadow-sm">
-                <TrendingUp className="w-4 h-4 text-red-600 animate-pulse" />
-                <span className="text-xs font-bold text-red-800">
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-full px-3 py-1.5 shadow-sm">
+                <TrendingUp className="w-4 h-4 text-red-600 dark:text-red-400 animate-pulse" />
+                <span className="text-xs font-bold text-red-800 dark:text-red-300">
                   {breakingNewsCount} Breaking News Today
                 </span>
                 {lastUpdated && (
-                  <span className="text-xs text-red-600 hidden sm:inline">
+                  <span className="text-xs text-red-600 dark:text-red-400 hidden sm:inline">
                     Updated {lastUpdated.toLocaleTimeString()}
                   </span>
                 )}
               </div>
             )}
-            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-full px-3 py-1.5 shadow-sm">
-              <span className="text-xs font-medium text-purple-800">
+            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border border-purple-200 dark:border-purple-700 rounded-full px-3 py-1.5 shadow-sm">
+              <span className="text-xs font-medium text-purple-800 dark:text-purple-300">
                 📊 150K+ Engagement = Breaking News
               </span>
             </div>
-            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-full px-3 py-1.5 shadow-sm">
-              <Bot className="h-4 w-4 text-purple-600" />
-              <span className="text-xs font-medium text-purple-800">ChatGPT Enhanced</span>
+            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border border-purple-200 dark:border-purple-700 rounded-full px-3 py-1.5 shadow-sm">
+              <Bot className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span className="text-xs font-medium text-purple-800 dark:text-purple-300">ChatGPT Enhanced</span>
             </div>
-            <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-full px-3 py-1.5 shadow-sm">
-              <Globe className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-800 hidden sm:inline">Live Google</span>
-              <span className="text-xs font-medium text-blue-800 sm:hidden">Google</span>
+            <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border border-blue-200 dark:border-blue-700 rounded-full px-3 py-1.5 shadow-sm">
+              <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-xs font-medium text-blue-800 dark:text-blue-300 hidden sm:inline">Live Google</span>
+              <span className="text-xs font-medium text-blue-800 dark:text-blue-300 sm:hidden">Google</span>
             </div>
-            <div className="flex items-center space-x-2 text-xs text-gray-600 hidden md:flex">
+            <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 hidden md:flex">
               <FileText className="h-4 w-4" />
               <span>Legal & Original</span>
             </div>
@@ -95,8 +95,8 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                   onClick={() => onNavigate('home')}
                   className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     currentPage === 'home' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   <Sparkles className="h-4 w-4" />
@@ -106,8 +106,8 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                   onClick={() => onNavigate('affiliate')}
                   className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     currentPage === 'affiliate' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   <Users className="h-4 w-4" />
@@ -118,8 +118,8 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                   onClick={() => onNavigate('subscribe')}
                   className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     currentPage === 'subscribe' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   <Crown className="h-4 w-4" />
