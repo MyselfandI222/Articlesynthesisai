@@ -1,5 +1,4 @@
 // Gemini Search Service
-import { GoogleGenAI } from "@google/genai";
 import { Article } from '../types';
 
 export interface GeminiSearchConfig {
@@ -72,13 +71,14 @@ export const saveGeminiSettings = (settings: GeminiSearchConfig): void => {
   }
 };
 
-// Initialize Gemini AI client
-const initializeGemini = () => {
+// Initialize Gemini AI client (dynamically imported to avoid bundling by default)
+const initializeGemini = async () => {
   // Note: VITE_GEMINI_API_KEY should be available in client environment
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('VITE_GEMINI_API_KEY is not configured');
   }
+  const { GoogleGenAI } = await import("@google/genai");
   return new GoogleGenAI({ apiKey });
 };
 
@@ -90,7 +90,7 @@ export const searchWithGemini = async (
   const startTime = Date.now();
   
   try {
-    const ai = initializeGemini();
+    const ai = await initializeGemini();
     
     // Create comprehensive search prompt
     const searchPrompt = `
