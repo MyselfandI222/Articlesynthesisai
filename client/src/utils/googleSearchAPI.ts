@@ -53,8 +53,8 @@ export class GoogleSearchAPI {
     query: string, 
     options: any
   ): Promise<SearchResult[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+    // Simulate fast API delay (reduced from 1500-2500ms to 200-400ms)
+    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 200));
 
     const queryLower = query.toLowerCase();
     const results: SearchResult[] = [];

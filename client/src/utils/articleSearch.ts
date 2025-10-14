@@ -152,6 +152,13 @@ export const searchArticles = async (
     return [];
   }
   
+  // Check cache first for instant results
+  const { searchCache } = await import('./searchCache');
+  const cachedResults = searchCache.get(query, filters);
+  if (cachedResults) {
+    return cachedResults;
+  }
+  
   try {
     console.log('Searching for real news articles:', query);
     
@@ -194,7 +201,13 @@ export const searchArticles = async (
     }
     
     // Sort by relevance and date
-    return sortArticlesByRelevance(articles, query);
+    const sortedArticles = sortArticlesByRelevance(articles, query);
+    
+    // Cache the results for 5 minutes
+    const { searchCache } = await import('./searchCache');
+    searchCache.set(query, sortedArticles, filters);
+    
+    return sortedArticles;
 
   } catch (error) {
     console.error('Error searching articles:', error);
