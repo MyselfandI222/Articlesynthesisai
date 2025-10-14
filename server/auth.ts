@@ -33,6 +33,7 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || 'your-secret-key-here',
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     store: storage.sessionStore,
     cookie: {
       secure: false,
