@@ -140,9 +140,12 @@ export function setupAuth(app: Express) {
         return res.status(500).json({ error: 'Failed to save session' });
       }
       
+      // Manually set the session cookie in response
+      const sessionCookie = `connect.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
+      res.setHeader('Set-Cookie', sessionCookie);
+      
       console.log('✅ Login successful - Session ID:', req.sessionID);
-      console.log('✅ Session data:', req.session);
-      console.log('✅ Response headers:', res.getHeaders());
+      console.log('✅ Set-Cookie header:', sessionCookie);
       
       res.status(200).json({
         id: user.id,
