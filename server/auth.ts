@@ -133,15 +133,27 @@ export function setupAuth(app: Express) {
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     const user = req.user as SelectUser;
-    res.status(200).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageUrl: user.profileImageUrl,
-      subscriptionStatus: user.subscriptionStatus,
-      affiliateCode: user.affiliateCode,
+    
+    // Explicitly save session before sending response
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Failed to save session' });
+      }
+      
+      console.log('Session saved successfully. Session ID:', req.sessionID);
+      console.log('Session data after save:', req.session);
+      
+      res.status(200).json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        subscriptionStatus: user.subscriptionStatus,
+        affiliateCode: user.affiliateCode,
+      });
     });
   });
 
@@ -153,7 +165,15 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log('GET /api/user - Session ID:', req.sessionID);
+    console.log('GET /api/user - Session data:', req.session);
+    console.log('GET /api/user - Is authenticated:', req.isAuthenticated());
+    console.log('GET /api/user - User:', req.user);
+    
+    if (!req.isAuthenticated()) {
+      console.log('Not authenticated - returning 401');
+      return res.sendStatus(401);
+    }
     const user = req.user as SelectUser;
     res.json({
       id: user.id,
