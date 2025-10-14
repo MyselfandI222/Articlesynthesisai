@@ -70,6 +70,7 @@ export async function synthesizeWithClaude(
   try {
     const response = await fetch('/api/claude/synthesize', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -104,6 +105,7 @@ export async function editWithClaude(
   try {
     const response = await fetch('/api/claude/edit', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -138,6 +140,7 @@ export async function generateTitleSuggestions(
   try {
     const response = await fetch('/api/claude/titles', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -176,6 +179,7 @@ export async function analyzeArticleQuality(
   try {
     const response = await fetch('/api/claude/quality', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
