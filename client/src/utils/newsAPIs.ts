@@ -2,6 +2,21 @@
 import { SearchResult } from '../types';
 import { getEnabledAPISources } from './apiFilters';
 
+// Fetch with timeout to prevent slow sources from blocking
+const fetchWithTimeout = async (url: string, timeoutMs: number = 3000): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
 // Calculate viral score based on article characteristics
 const calculateViralScore = (article: SearchResult): number => {
   let score = 25; // Start with a base score to make more articles viral
@@ -228,7 +243,7 @@ const searchBBCNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         const xmlText = await response.text();
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
@@ -288,7 +303,7 @@ const searchCNNNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         const xmlText = await response.text();
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
@@ -347,7 +362,7 @@ const searchNPRNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         const xmlText = await response.text();
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
@@ -407,7 +422,7 @@ const searchGuardianNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         const xmlText = await response.text();
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
@@ -588,7 +603,7 @@ const searchNYTimesNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -643,7 +658,7 @@ const searchWashingtonPostNews = async (query: string): Promise<SearchResult[]> 
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -698,7 +713,7 @@ const searchUSATodayNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -753,7 +768,7 @@ const searchFoxNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -807,7 +822,7 @@ const searchMSNBCNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -862,7 +877,7 @@ const searchCBSNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -917,7 +932,7 @@ const searchABCNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -972,7 +987,7 @@ const searchNBCNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
@@ -1027,7 +1042,7 @@ const searchPoliticoNews = async (query: string): Promise<SearchResult[]> => {
     
     for (const feedUrl of feeds) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`);
+        const response = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`, 2000);
         if (!response.ok) continue;
         
         const xmlText = await response.text();
