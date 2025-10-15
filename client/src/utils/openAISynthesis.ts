@@ -105,11 +105,14 @@ Key Themes Identified: ${topicAnalysis.keyThemes.join(', ')}
 Different Perspectives: ${topicAnalysis.perspectives.join(', ')}
 Conflicting Points: ${topicAnalysis.conflictingPoints.join(', ')}
 
-CRITICAL - TITLE RULES (MUST FOLLOW):
-- NEVER mention or reference the title "${topic}" anywhere in the article body
-- NEVER use phrases like "this article", "in this piece", "the ${topic} article", "as discussed in ${topic}"
-- DO NOT start sentences with "The ${topic}..." or "${topic} reveals..."
-- Write as if the title doesn't exist - focus on the subject matter directly
+🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):
+- FORBIDDEN: Do NOT mention "${topic}" ANYWHERE in the article body text
+- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"
+- FORBIDDEN: Do NOT start sentences with "The ${topic}...", "${topic} reveals...", "${topic} explores...", "${topic} examines..."
+- FORBIDDEN: Do NOT write "${topic} shows", "${topic} suggests", "${topic} indicates"
+- FORBIDDEN: Do NOT reference the title in ANY way - pretend it doesn't exist
+- REQUIRED: Dive straight into the subject matter without meta-references
+- REQUIRED: Write as a standalone piece of journalism about the SUBJECT, not about "an article"
 
 CONTENT GUIDELINES:
 - Write out DETAILED ideas and specific concepts from the sources - don't just mention them briefly
@@ -135,11 +138,14 @@ Please provide a well-structured comparative article with clear sections.`;
       // Standard synthesis prompt for different topics
       prompt = `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
 
-CRITICAL - TITLE RULES (MUST FOLLOW):
-- NEVER mention or reference the title "${topic}" anywhere in the article body
-- NEVER use phrases like "this article", "in this piece", "the ${topic} article", "as discussed in ${topic}"
-- DO NOT start sentences with "The ${topic}..." or "${topic} reveals..." or "${topic} explores..."
-- Write as if the title doesn't exist - focus on the subject matter directly
+🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):
+- FORBIDDEN: Do NOT mention "${topic}" ANYWHERE in the article body text
+- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"
+- FORBIDDEN: Do NOT start sentences with "The ${topic}...", "${topic} reveals...", "${topic} explores...", "${topic} examines..."
+- FORBIDDEN: Do NOT write "${topic} shows", "${topic} suggests", "${topic} indicates"
+- FORBIDDEN: Do NOT reference the title in ANY way - pretend it doesn't exist
+- REQUIRED: Dive straight into the subject matter without meta-references
+- REQUIRED: Write as a standalone piece of journalism about the SUBJECT, not about "an article"
 
 CONTENT GUIDELINES:
 1. Write out DETAILED ideas and specific concepts from the sources - don't just mention them briefly

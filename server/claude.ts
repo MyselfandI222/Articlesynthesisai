@@ -122,11 +122,14 @@ export async function synthesizeArticles(req: Request, res: Response) {
       "- If a claim is only in one source, present it cautiously (e.g., 'According to [3], ...').",
       "- Do not mention that you were asked to synthesize or that these are 'sources'.",
       "",
-      "CRITICAL - TITLE RULES (MUST FOLLOW):",
-      `- NEVER mention or reference the title "${topic}" anywhere in the article body`,
-      `- NEVER use phrases like "this article", "in this piece", "the ${topic} article", "as discussed in ${topic}"`,
-      `- DO NOT start sentences with "The ${topic}..." or "${topic} reveals..." or "${topic} explores..."`,
-      "- Write as if the title doesn't exist - focus on the subject matter directly",
+      "🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):",
+      `- FORBIDDEN: Do NOT mention "${topic}" ANYWHERE in the article body text`,
+      `- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"`,
+      `- FORBIDDEN: Do NOT start sentences with "The ${topic}...", "${topic} reveals...", "${topic} explores...", "${topic} examines..."`,
+      `- FORBIDDEN: Do NOT write "${topic} shows", "${topic} suggests", "${topic} indicates"`,
+      `- FORBIDDEN: Do NOT reference the title in ANY way - pretend it doesn't exist`,
+      `- REQUIRED: Dive straight into the subject matter without meta-references`,
+      `- REQUIRED: Write as a standalone piece of journalism about the SUBJECT, not about "an article"`,
       "",
       "CONTENT GUIDELINES:",
       "- Write out DETAILED ideas and specific concepts from the sources - don't just mention them briefly",
@@ -185,7 +188,11 @@ export async function editArticle(req: Request, res: Response) {
           role: "user",
           content:
             `Instruction: ${instruction}\n` +
-            "Edit the article accordingly. Maintain facts, keep citations like [n] aligned with source numbering, and do not add new claims.",
+            "Edit the article accordingly. Maintain facts, keep citations like [n] aligned with source numbering, and do not add new claims.\n\n" +
+            "🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):\n" +
+            '- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"\n' +
+            "- FORBIDDEN: Do NOT reference the article title in ANY way within the body text\n" +
+            "- REQUIRED: Focus on the subject matter directly without meta-references",
         },
         { role: "user", content: `ARTICLE:\n${content}` },
       ],
