@@ -5,11 +5,17 @@ import { useTheme } from './ThemeProvider';
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
+  const handleClick = () => {
+    console.log('Theme toggle clicked! Current theme:', theme);
+    toggleTheme();
+    console.log('Toggle function called');
+  };
+
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggleTheme}
+      onClick={handleClick}
       data-testid="button-theme-toggle"
       className="rounded-full"
     >
