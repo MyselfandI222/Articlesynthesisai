@@ -20,6 +20,7 @@ export interface SynthesizedArticle {
   content: string;
   summary: string;
   wordCount: number;
+  readingTime: number; // in minutes
   createdAt: Date;
   style: WritingStyle;
   seoMetadata?: {
