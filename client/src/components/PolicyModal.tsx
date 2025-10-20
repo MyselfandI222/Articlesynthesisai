@@ -19,7 +19,7 @@ export function PolicyModal({ isOpen, onAccept, onClose }: PolicyModalProps) {
 
   const handleSkip = () => {
     setShowingPolicy('none');
-    onAccept();
+    onClose();
   };
 
   if (showingPolicy === 'terms') {
