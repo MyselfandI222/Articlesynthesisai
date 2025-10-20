@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Sparkles, User, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { queryClient } from '../lib/queryClient';
+import { PolicyModal } from './PolicyModal';
 
 interface LoginData {
   username: string;
@@ -27,7 +28,8 @@ const AuthPage = () => {
     firstName: '', 
     lastName: '' 
   });
-  
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [pendingRegistration, setPendingRegistration] = useState<RegisterData | null>(null);
 
 
   const loginMutation = useMutation({
@@ -90,8 +92,23 @@ const AuthPage = () => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (registerData.username && registerData.password) {
-      registerMutation.mutate(registerData);
+      // Show policy modal before registration
+      setPendingRegistration(registerData);
+      setShowPolicyModal(true);
     }
+  };
+
+  const handlePolicyAccept = () => {
+    if (pendingRegistration) {
+      registerMutation.mutate(pendingRegistration);
+      setPendingRegistration(null);
+    }
+    setShowPolicyModal(false);
+  };
+
+  const handlePolicyClose = () => {
+    setShowPolicyModal(false);
+    setPendingRegistration(null);
   };
 
   return (
@@ -326,6 +343,13 @@ const AuthPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Policy Modal */}
+      <PolicyModal
+        isOpen={showPolicyModal}
+        onAccept={handlePolicyAccept}
+        onClose={handlePolicyClose}
+      />
     </div>
   );
 };
