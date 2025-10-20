@@ -1,5 +1,6 @@
 // ChatGPT/OpenAI Service Integration
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
+import { calculateWordCount, calculateReadingTime, getTargetWordCount, WORD_COUNT_RANGES } from './articleMetrics';
 
 // OpenAI API configuration
 const OPENAI_API_BASE_URL = 'https://api.openai.com/v1';
@@ -202,7 +203,7 @@ ${sourcesText}
 
 Requirements:
 - Write in ${style} style with ${tone} tone
-- Target length: ${length === 'short' ? '300-500' : length === 'medium' ? '600-1000' : '1200-2000'} words
+- Target length: EXACTLY ${getTargetWordCount(length)} words (acceptable range: ${WORD_COUNT_RANGES[length].min}-${WORD_COUNT_RANGES[length].max} words)
 - CREATE COMPARATIVE ANALYSIS, not separate paragraphs for each source
 - Highlight agreements, disagreements, and different approaches to the same topic
 - Include SEO-friendly keywords and fact-checking insights
@@ -236,7 +237,7 @@ ${sourcesText}
 Requirements:
 - Write in ${style} style
 - Use a ${tone} tone
-- Target length: ${length === 'short' ? '300-500' : length === 'medium' ? '600-1000' : '1200-2000'} words
+- Target length: EXACTLY ${getTargetWordCount(length)} words (acceptable range: ${WORD_COUNT_RANGES[length].min}-${WORD_COUNT_RANGES[length].max} words)
 - Write DETAILED content - elaborate on ideas, don't just list them
 - Include specific findings, data, examples, and arguments from sources
 - Create a compelling title (but NEVER reference this title in the article body)
@@ -275,13 +276,18 @@ Please provide a well-structured article with detailed content and clear section
     const lines = content.split('\n');
     const title = lines[0].replace(/^#\s*/, '') || `${topic}: A Comprehensive Analysis`;
     const articleContent = lines.slice(1).join('\n').trim();
+    
+    // Calculate word count and reading time
+    const wordCount = calculateWordCount(articleContent);
+    const readingTime = calculateReadingTime(wordCount);
 
     return {
       id: Date.now().toString(),
       title,
       content: articleContent,
       summary: articleContent.substring(0, 200) + '...',
-      wordCount: articleContent.split(/\s+/).length,
+      wordCount,
+      readingTime,
       createdAt: new Date(),
       style,
       seoMetadata: {
@@ -359,11 +365,16 @@ Please provide the edited article with the same structure but improved according
     const data = await response.json();
     const editedContent = data.choices[0].message.content;
     
+    // Calculate word count and reading time
+    const wordCount = calculateWordCount(editedContent);
+    const readingTime = calculateReadingTime(wordCount);
+    
     return {
       ...article,
       content: editedContent,
       summary: editedContent.substring(0, 200) + '...',
-      wordCount: editedContent.split(/\s+/).length,
+      wordCount,
+      readingTime,
       processingMetrics: {
         processingTimeMs: 2000,
         aiModelUsed: 'gpt-4o',
@@ -398,8 +409,9 @@ const simulateChatGPTResponse = (
   // Generate summary
   const summary = generateSummary(content);
   
-  // Calculate word count
-  const wordCount = content.split(/\s+/).length;
+  // Calculate word count and reading time
+  const wordCount = calculateWordCount(content);
+  const readingTime = calculateReadingTime(wordCount);
   
   return {
     id: `chatgpt-${Date.now()}`,
@@ -407,6 +419,7 @@ const simulateChatGPTResponse = (
     content,
     summary,
     wordCount,
+    readingTime,
     createdAt: new Date(),
     style,
     seoMetadata: {
@@ -452,11 +465,16 @@ const simulateChatGPTEdit = (
     });
   }
   
+  // Calculate word count and reading time
+  const wordCount = calculateWordCount(modifiedContent);
+  const readingTime = calculateReadingTime(wordCount);
+  
   return {
     ...article,
     content: modifiedContent,
     summary: modifiedContent.substring(0, 200) + '...',
-    wordCount: modifiedContent.split(/\s+/).length,
+    wordCount,
+    readingTime,
     processingMetrics: {
       processingTimeMs: Math.floor(Math.random() * 3000) + 1000,
       aiModelUsed: 'gpt-3.5-turbo',

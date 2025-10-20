@@ -1,5 +1,6 @@
 // OpenAI synthesis function
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
+import { calculateWordCount, calculateReadingTime, getTargetWordCount, WORD_COUNT_RANGES } from './articleMetrics';
 
 // Helper function to analyze topic similarity
 const analyzeTopicSimilarity = async (sources: Article[], topic: string): Promise<{
@@ -127,7 +128,7 @@ ${sourcesText}
 
 Requirements:
 - Write in ${style} style with ${tone} tone
-- Target length: ${length === 'short' ? '300-500' : length === 'medium' ? '600-1000' : '1200-2000'} words
+- Target length: EXACTLY ${getTargetWordCount(length)} words (acceptable range: ${WORD_COUNT_RANGES[length].min}-${WORD_COUNT_RANGES[length].max} words)
 - CREATE COMPARATIVE ANALYSIS, not separate paragraphs for each source
 - Highlight agreements, disagreements, and different approaches to the same topic
 - Maintain factual accuracy while presenting multiple viewpoints
@@ -160,7 +161,7 @@ ${sourcesText}
 Requirements:
 - Write in ${style} style
 - Use a ${tone} tone
-- Target length: ${length === 'short' ? '300-500' : length === 'medium' ? '600-1000' : '1200-2000'} words
+- Target length: EXACTLY ${getTargetWordCount(length)} words (acceptable range: ${WORD_COUNT_RANGES[length].min}-${WORD_COUNT_RANGES[length].max} words)
 - Write DETAILED content - elaborate on ideas, don't just list them
 - Include specific findings, data, examples, and arguments from sources
 - Create a compelling title (but NEVER reference this title in the article body)
@@ -198,12 +199,15 @@ Please provide a well-structured article with detailed content and clear section
     const title = lines[0].replace(/^#\s*/, '') || `${topic}: A Comprehensive Analysis`;
     const articleContent = lines.slice(1).join('\n').trim();
 
+    const wordCount = calculateWordCount(articleContent);
+    
     return {
       id: Date.now().toString(),
       title,
       content: articleContent,
       summary: articleContent.substring(0, 200) + '...',
-      wordCount: articleContent.split(/\s+/).length,
+      wordCount,
+      readingTime: calculateReadingTime(wordCount),
       createdAt: new Date(),
       style,
       processingMetrics: {

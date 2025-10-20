@@ -4,6 +4,30 @@ import { enrichArticles, type InputArticle } from "./contentFetcher";
 
 const DEFAULT_MODEL_STR = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
 
+// Word count ranges and utilities for article metrics
+const WORD_COUNT_RANGES = {
+  short: { min: 300, max: 600, target: 450 },
+  medium: { min: 700, max: 1200, target: 950 },
+  long: { min: 1500, max: 3000, target: 2250 },
+} as const;
+
+const AVERAGE_READING_SPEED = 200; // words per minute
+
+function calculateWordCount(text: string): number {
+  if (!text || typeof text !== 'string') return 0;
+  return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+}
+
+function calculateReadingTime(wordCount: number): number {
+  if (wordCount <= 0) return 0;
+  const readingTime = Math.ceil(wordCount / AVERAGE_READING_SPEED);
+  return Math.max(1, readingTime);
+}
+
+function getTargetWordCount(length: 'short' | 'medium' | 'long'): number {
+  return WORD_COUNT_RANGES[length].target;
+}
+
 if (!process.env.ANTHROPIC_API_KEY) {
   console.warn("ANTHROPIC_API_KEY not found. Claude features will be disabled.");
 }
@@ -103,17 +127,15 @@ export async function synthesizeArticles(req: Request, res: Response) {
       opinion: "analytical opinion tone acknowledging counterpoints",
     };
 
-    const lengthMap: Record<string, string> = {
-      short: "≈400 words",
-      medium: "≈800 words",
-      long: "≈1400 words",
-    };
+    const targetLength = length || "medium";
+    const targetWords = getTargetWordCount(targetLength);
+    const wordRange = WORD_COUNT_RANGES[targetLength];
 
     const userPrompt = [
       `Topic: ${topic}`,
       `Style: ${styleMap[style || "journalistic"] || styleMap.journalistic}`,
       `Tone: ${tone || "neutral"}`,
-      `Target length: ${lengthMap[length || "medium"]}`,
+      `Target length: EXACTLY ${targetWords} words (acceptable range: ${wordRange.min}-${wordRange.max} words)`,
       "",
       "Write an ORIGINAL article that synthesizes facts across sources. Requirements:",
       "- Paraphrase; do NOT copy sentences verbatim.",
@@ -161,8 +183,10 @@ export async function synthesizeArticles(req: Request, res: Response) {
     const { article, used } = extractArticleAndUsed(text);
 
     const citations = compact.map((s) => ({ index: s.idx, url: s.url, title: s.title }));
+    const wordCount = calculateWordCount(article);
+    const readingTime = calculateReadingTime(wordCount);
 
-    res.json({ content: article, citations, usedSources: used });
+    res.json({ content: article, citations, usedSources: used, wordCount, readingTime });
   } catch (error) {
     console.error("Claude synthesis error:", error);
     res.status(500).json({ error: "Failed to synthesize articles with Claude" });

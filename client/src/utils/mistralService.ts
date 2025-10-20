@@ -1,5 +1,6 @@
 // Mistral AI Service for Article Synthesis
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
+import { calculateWordCount, calculateReadingTime, getTargetWordCount, WORD_COUNT_RANGES } from './articleMetrics';
 
 const MISTRAL_API_BASE_URL = '/api/mistral';
 
@@ -23,8 +24,8 @@ export const synthesizeWithMistral = async (
     // Map WritingStyle to Mistral style format
     const mistralStyle = mapToMistralStyle(style);
     
-    // Calculate max words based on length
-    const maxWords = length === 'short' ? 500 : length === 'medium' ? 1000 : 1500;
+    // Calculate max words based on length using exact ranges
+    const maxWords = WORD_COUNT_RANGES[length].max;
     
     const response = await fetch(`${MISTRAL_API_BASE_URL}/synthesize`, {
       method: 'POST',
@@ -48,12 +49,15 @@ export const synthesizeWithMistral = async (
     const data = await response.json();
     
     // Transform Mistral response to SynthesizedArticle format
+    const wordCount = calculateWordCount(data.article);
+    
     const synthesizedArticle: SynthesizedArticle = {
       id: `mistral-${Date.now()}`,
       title: extractTitleFromArticle(data.article) || `${topic}: Comprehensive Analysis`,
       content: data.article,
       summary: data.outline.slice(0, 3).join(' ') || data.article.substring(0, 200) + '...',
-      wordCount: data.article.split(/\s+/).length,
+      wordCount,
+      readingTime: calculateReadingTime(wordCount),
       createdAt: new Date(),
       style,
       processingMetrics: {
@@ -80,12 +84,16 @@ export const synthesizeWithMistral = async (
     console.error('Mistral synthesis failed:', error);
     
     // Return fallback response
+    const fallbackContent = `Analysis of "${topic}" using Mistral AI is currently unavailable. Please check your API configuration or try again later.`;
+    const fallbackWordCount = calculateWordCount(fallbackContent);
+    
     return {
       id: `mistral-fallback-${Date.now()}`,
       title: `${topic}: Analysis`,
-      content: `Analysis of "${topic}" using Mistral AI is currently unavailable. Please check your API configuration or try again later.`,
+      content: fallbackContent,
       summary: 'Mistral synthesis temporarily unavailable',
-      wordCount: 0,
+      wordCount: fallbackWordCount,
+      readingTime: calculateReadingTime(fallbackWordCount),
       createdAt: new Date(),
       style,
       processingMetrics: {
@@ -159,13 +167,15 @@ export const editWithMistral = async (
     }
 
     const data = await response.json();
+    const wordCount = calculateWordCount(data.editedContent);
     
     return {
       ...article,
       content: data.editedContent,
       title: data.editedTitle || article.title,
       summary: data.editedContent.substring(0, 200) + '...',
-      wordCount: data.editedContent.split(/\s+/).length,
+      wordCount,
+      readingTime: calculateReadingTime(wordCount),
       processingMetrics: {
         ...article.processingMetrics,
         processingTimeMs: 3000,
