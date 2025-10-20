@@ -260,6 +260,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Article view tracking endpoints
+  app.post("/api/article/view", async (req, res) => {
+    try {
+      const { articleId, articleTitle, articleSource, articleUrl } = req.body;
+      const userId = req.user?.id || null;
+      
+      if (!articleId || !articleTitle) {
+        return res.status(400).json({ error: 'Article ID and title are required' });
+      }
+      
+      await storage.trackArticleView({
+        articleId,
+        articleTitle,
+        articleSource: articleSource || null,
+        articleUrl: articleUrl || null,
+        userId,
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking article view:', error);
+      res.status(500).json({ error: 'Failed to track article view' });
+    }
+  });
+
+  app.get("/api/article/most-viewed", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const mostViewed = await storage.getMostViewedArticles(limit);
+      res.json(mostViewed);
+    } catch (error) {
+      console.error('Error fetching most viewed articles:', error);
+      res.status(500).json({ error: 'Failed to fetch most viewed articles' });
+    }
+  });
+
   // Claude API routes
   app.post("/api/claude/synthesize", isAuthenticated, async (req, res) => {
     await synthesizeArticles(req, res);

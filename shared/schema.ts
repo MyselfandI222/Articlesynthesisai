@@ -82,12 +82,37 @@ export const insertAffiliateLinkSchema = createInsertSchema(affiliateLinks).omit
   totalEarnings: true,
 });
 
+// Article views tracking table
+export const articleViews = pgTable(
+  "article_views",
+  {
+    id: serial("id").primaryKey(),
+    articleId: varchar("article_id").notNull(),
+    articleTitle: text("article_title").notNull(),
+    articleSource: varchar("article_source"),
+    articleUrl: text("article_url"),
+    userId: integer("user_id"),
+    viewedAt: timestamp("viewed_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("IDX_article_views_viewed_at").on(table.viewedAt),
+    index("IDX_article_views_article_id").on(table.articleId),
+  ]
+);
+
 export const insertReferralRewardSchema = createInsertSchema(referralRewards).omit({
   createdAt: true,
   appliedAt: true,
+});
+
+export const insertArticleViewSchema = createInsertSchema(articleViews).omit({
+  id: true,
+  viewedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type AffiliateLink = typeof affiliateLinks.$inferSelect;
 export type ReferralReward = typeof referralRewards.$inferSelect;
+export type ArticleView = typeof articleViews.$inferSelect;
+export type InsertArticleView = z.infer<typeof insertArticleViewSchema>;

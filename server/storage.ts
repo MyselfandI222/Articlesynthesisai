@@ -2,10 +2,13 @@ import {
   users,
   affiliateLinks,
   referralRewards,
+  articleViews,
   type User,
   type InsertUser,
   type AffiliateLink,
   type ReferralReward,
+  type ArticleView,
+  type InsertArticleView,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -32,6 +35,10 @@ export interface IStorage {
   
   // Subscription management
   updateUserSubscription(userId: number, tier: string, paymentDetails: any): Promise<void>;
+  
+  // Article view tracking
+  trackArticleView(articleView: InsertArticleView): Promise<void>;
+  getMostViewedArticles(limit?: number): Promise<Array<{articleId: string, articleTitle: string, articleSource: string | null, articleUrl: string | null, viewCount: number}>>;
   
   sessionStore: session.Store;
 }
@@ -179,6 +186,34 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
+  }
+  
+  async trackArticleView(articleView: InsertArticleView): Promise<void> {
+    await db.insert(articleViews).values({
+      ...articleView,
+    });
+  }
+  
+  async getMostViewedArticles(limit: number = 10): Promise<Array<{articleId: string, articleTitle: string, articleSource: string | null, articleUrl: string | null, viewCount: number}>> {
+    // Get articles viewed in the last month, grouped by articleId with count
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    const results = await db
+      .select({
+        articleId: articleViews.articleId,
+        articleTitle: articleViews.articleTitle,
+        articleSource: articleViews.articleSource,
+        articleUrl: articleViews.articleUrl,
+        viewCount: sql<number>`count(*)::int`,
+      })
+      .from(articleViews)
+      .where(sql`${articleViews.viewedAt} >= ${oneMonthAgo}`)
+      .groupBy(articleViews.articleId, articleViews.articleTitle, articleViews.articleSource, articleViews.articleUrl)
+      .orderBy(sql`count(*) DESC`)
+      .limit(limit);
+    
+    return results;
   }
 }
 
