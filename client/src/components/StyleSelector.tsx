@@ -220,26 +220,29 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
               { 
                 value: 'short' as const, 
                 label: 'Short', 
-                description: '300-500 words',
+                description: '300-600 words',
                 icon: <FileText className="h-4 w-4" />,
-                wordRange: '300-500',
-                bestFor: 'Quick reads, summaries'
+                wordRange: '300-600',
+                readingTime: '1-3 min',
+                bestFor: 'News briefs, quick updates'
               },
               { 
                 value: 'medium' as const, 
                 label: 'Medium', 
-                description: '500-800 words',
+                description: '700-1,200 words',
                 icon: <FileText className="h-4 w-4" />,
-                wordRange: '500-800',
-                bestFor: 'Balanced coverage'
+                wordRange: '700-1,200',
+                readingTime: '3-6 min',
+                bestFor: 'Standard blog posts, features'
               },
               { 
                 value: 'long' as const, 
                 label: 'Long', 
-                description: '800+ words',
+                description: '1,500-3,000+ words',
                 icon: <FileText className="h-4 w-4" />,
-                wordRange: '800+',
-                bestFor: 'Comprehensive analysis'
+                wordRange: '1,500-3,000+',
+                readingTime: '7-15 min',
+                bestFor: 'Deep dives, investigations'
               }
             ].map((lengthOption) => (
               <button
@@ -258,6 +261,7 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({
                   <div>
                     <div className="font-medium text-gray-900">{lengthOption.label}</div>
                     <div className="text-xs text-gray-500">{lengthOption.wordRange} words</div>
+                    <div className="text-xs text-blue-600 font-medium">{lengthOption.readingTime} read</div>
                     <div className="text-xs text-gray-400 mt-1">{lengthOption.bestFor}</div>
                     {lengthOption.value === lengthRecommendation.recommended && (
                       <div className="text-xs text-green-600 font-medium mt-1">✓ AI Recommended</div>

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { SynthesizedArticle, ChatMessage, AIImage } from '../types';
-import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, RefreshCw, X } from 'lucide-react';
+import { Eye, Edit, Share, Download, MessageSquare, Send, Image, Trash2, RefreshCw, X, Clock } from 'lucide-react';
 import { ChatGPTMetrics } from './ChatGPTMetrics';
 import { ImageGenerator } from './ImageGenerator';
 import { ArticleExport } from './ArticleExport';
 import { editAIImage, ImageGenerationOptions } from '../utils/imageGeneration';
 import { sendMessageToChatGPT } from '../utils/chatGptService';
+import { formatReadingTime } from '../utils/articleMetrics';
 
 interface ArticlePreviewProps {
   article: SynthesizedArticle;
@@ -183,6 +184,10 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, onEdit,
             <h2 className="text-xl font-bold text-gray-900 mb-2">{article.title}</h2>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <span>{article.wordCount} words</span>
+              <span className="flex items-center space-x-1">
+                <Clock className="h-3.5 w-3.5" />
+                <span>{formatReadingTime(article.readingTime)} read</span>
+              </span>
               <span>Style: {article.style}</span>
               <span>{article.createdAt.toLocaleDateString()}</span>
             </div>
