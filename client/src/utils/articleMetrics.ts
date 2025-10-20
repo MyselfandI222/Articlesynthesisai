@@ -6,7 +6,7 @@
 export const WORD_COUNT_RANGES = {
   short: { min: 300, max: 600, target: 450 },
   medium: { min: 700, max: 1200, target: 950 },
-  long: { min: 1500, max: 3000, target: 2250 },
+  long: { min: 1500, max: Infinity, target: 2250 },
 } as const;
 
 // Reading time calculations (assuming average reading speed of 200 words per minute)
@@ -47,6 +47,12 @@ export function formatReadingTime(minutes: number): string {
  */
 export function getWordCountRangeDescription(length: 'short' | 'medium' | 'long'): string {
   const range = WORD_COUNT_RANGES[length];
+  
+  // Handle infinite max (for long articles)
+  if (range.max === Infinity) {
+    return `${range.min}+ words`;
+  }
+  
   return `${range.min}–${range.max} words`;
 }
 
@@ -56,8 +62,13 @@ export function getWordCountRangeDescription(length: 'short' | 'medium' | 'long'
 export function getReadingTimeRangeDescription(length: 'short' | 'medium' | 'long'): string {
   const range = WORD_COUNT_RANGES[length];
   const minTime = calculateReadingTime(range.min);
-  const maxTime = calculateReadingTime(range.max);
   
+  // Handle infinite max (for long articles)
+  if (range.max === Infinity) {
+    return `${minTime}+ min`;
+  }
+  
+  const maxTime = calculateReadingTime(range.max);
   if (minTime === maxTime) return `${minTime} min`;
   return `${minTime}–${maxTime} min`;
 }
