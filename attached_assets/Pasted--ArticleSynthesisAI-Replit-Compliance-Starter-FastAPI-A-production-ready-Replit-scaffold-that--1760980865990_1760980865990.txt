@@ -1,0 +1,445 @@
+# ArticleSynthesisAI — Replit Compliance Starter (FastAPI)
+
+A production‑ready Replit scaffold that bakes in legal/operational safeguards for your Article Synthesis project: clear folder structure, env handling, logging, rate‑limiting, healthcheck, DMCA & policy routes, source‑citation enforcement, and test stubs.
+
+> ⚠️ Not legal advice. This is a dev template to help you operate more safely and transparently.
+
+---
+
+## 📁 Folder Structure
+
+```
+.
+├─ .replit
+├─ replit.nix
+├─ requirements.txt
+├─ README.md
+├─ LICENSE
+├─ app/
+│  ├─ __init__.py
+│  ├─ main.py
+│  ├─ config.py
+│  ├─ middleware.py
+│  ├─ models.py
+│  ├─ routers/
+│  │  ├─ __init__.py
+│  │  ├─ synthesize.py
+│  │  ├─ policies.py
+│  │  ├─ dmca.py
+│  ├─ services/
+│  │  ├─ fetcher.py
+│  │  ├─ summarizer.py
+│  │  ├─ bias_checker.py
+│  ├─ utils/
+│  │  ├─ logging.py
+│  │  ├─ citations.py
+│  │  ├─ validation.py
+│  ├─ legal/
+│  │  ├─ TOS.md
+│  │  ├─ PrivacyPolicy.md
+│  │  ├─ DMCA.md
+│  ├─ static/
+│  │  └─ styles.css
+│  └─ templates/
+│     ├─ index.html
+│     ├─ legal.html
+│     └─ dmca.html
+└─ tests/
+   ├─ __init__.py
+   └─ test_health.py
+```
+
+---
+
+## 🔧 Replit Config
+
+### `.replit`
+
+```ini
+run = "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+```
+
+### `replit.nix`
+
+```nix
+{ pkgs }: {
+  deps = [
+    pkgs.python311
+    pkgs.python311Packages.pip
+  ];
+}
+```
+
+### `requirements.txt`
+
+```txt
+fastapi==0.115.0
+uvicorn==0.30.6
+jinja2==3.1.4
+python-dotenv==1.0.1
+httpx==0.27.2
+pydantic==2.9.2
+loguru==0.7.2
+slowapi==0.1.9
+beautifulsoup4==4.12.3
+pytest==8.3.3
+```
+
+---
+
+## 🧠 Core App
+
+### `app/main.py`
+
+```python
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.requests import Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from app.middleware import add_cors, add_headers
+from app.routers import synthesize, policies, dmca
+from app.utils.logging import setup_logging
+
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI(title="ArticleSynthesisAI", version="0.1.0")
+setup_logging()
+
+# Middleware
+add_cors(app)
+add_headers(app)
+
+# Rate limiting
+app.state.limiter = limiter
+
+# Routers
+app.include_router(synthesize.router, prefix="/api")
+app.include_router(policies.router)
+app.include_router(dmca.router)
+
+# Static & templates
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+templates = Jinja2Templates(directory="app/templates")
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+```
+
+### `app/middleware.py`
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request
+
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "X-AI-Generated": "true",  # Transparency signal
+}
+
+def add_cors(app):
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+def add_headers(app):
+    @app.middleware("http")
+    async def set_headers(request: Request, call_next):
+        response = await call_next(request)
+        for k, v in SECURITY_HEADERS.items():
+            response.headers[k] = v
+        return response
+```
+
+### `app/config.py`
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings:
+    ENV = os.getenv("ENV", "development")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2048"))
+    ALLOW_NET_FETCH = os.getenv("ALLOW_NET_FETCH", "false").lower() == "true"
+    FAIR_USE_ONLY = os.getenv("FAIR_USE_ONLY", "true").lower() == "true"
+
+settings = Settings()
+```
+
+### `app/models.py`
+
+```python
+from pydantic import BaseModel, HttpUrl, Field
+from typing import List, Optional
+
+class Source(BaseModel):
+    url: HttpUrl
+    title: Optional[str] = None
+    license: Optional[str] = Field(default=None, description="e.g., CC-BY, Public Domain, or 'unknown'")
+
+class SynthesisRequest(BaseModel):
+    prompt: str
+    sources: List[Source]
+    target_length: int = Field(ge=100, le=5000)
+    tone: str = Field(default="neutral")
+    require_citations: bool = Field(default=True)
+
+class SynthesisResponse(BaseModel):
+    summary: str
+    citations: List[Source]
+    disclaimer: str
+```
+
+---
+
+## 🧩 Routers
+
+### `app/routers/policies.py`
+
+```python
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
+
+templates = Jinja2Templates(directory="app/templates")
+router = APIRouter()
+
+LEGAL_DIR = Path("app/legal")
+
+@router.get("/tos", response_class=HTMLResponse)
+async def tos(request: Request):
+    text = (LEGAL_DIR / "TOS.md").read_text(encoding="utf-8")
+    return templates.TemplateResponse("legal.html", {"request": request, "title": "Terms of Service", "content": text})
+
+@router.get("/privacy", response_class=HTMLResponse)
+async def privacy(request: Request):
+    text = (LEGAL_DIR / "PrivacyPolicy.md").read_text(encoding="utf-8")
+    return templates.TemplateResponse("legal.html", {"request": request, "title": "Privacy Policy", "content": text})
+```
+
+### `app/routers/dmca.py`
+
+```python
+from fastapi import APIRouter, Request, Form
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+
+router = APIRouter(prefix="/dmca")
+templates = Jinja2Templates(directory="app/templates")
+
+@router.get("/notice", response_class=HTMLResponse)
+async def dmca_form(request: Request):
+    return templates.TemplateResponse("dmca.html", {"request": request})
+
+@router.post("/notice", response_class=HTMLResponse)
+async def dmca_submit(request: Request, claimant: str = Form(...), contact: str = Form(...), infringing_url: str = Form(...), signature: str = Form(...)):
+    # TODO: store in database or email handler
+    msg = f"Thanks, {claimant}. We received your notice for {infringing_url}."
+    return templates.TemplateResponse("dmca.html", {"request": request, "message": msg})
+```
+
+### `app/routers/synthesize.py`
+
+```python
+from fastapi import APIRouter, HTTPException
+from slowapi.util import get_remote_address
+from slowapi.decorators import limit
+from app.models import SynthesisRequest, SynthesisResponse
+from app.services.fetcher import fetch_sources
+from app.services.summarizer import synthesize_with_citations
+from app.utils.validation import validate_sources
+
+router = APIRouter()
+
+@router.post("/synthesize", response_model=SynthesisResponse)
+@limit("10/minute")
+async def synthesize(req: SynthesisRequest):
+    problems = validate_sources(req.sources)
+    if problems:
+        raise HTTPException(status_code=400, detail={"source_errors": problems})
+
+    # Only fetch minimal content/metadata, no full-text redistribution
+    docs = await fetch_sources(req.sources)
+
+    summary, citations = await synthesize_with_citations(
+        prompt=req.prompt,
+        docs=docs,
+        target_length=req.target_length,
+        tone=req.tone,
+        require_citations=req.require_citations,
+    )
+
+    disclaimer = (
+        "AI‑assisted synthesis. Verify critical facts before publication. "
+        "We provide summaries and links only; no full‑text redistribution."
+    )
+    return SynthesisResponse(summary=summary, citations=citations, disclaimer=disclaimer)
+```
+
+---
+
+## 🛠️ Services
+
+### `app/services/fetcher.py`
+
+```python
+from typing import List
+from app.models import Source
+from app.config import settings
+
+# Minimal placeholder that avoids full‑text copying.
+# Extend to use a licensed API; respect robots.txt & site ToS.
+
+class Doc:
+    def __init__(self, url: str, title: str | None):
+        self.url = url
+        self.title = title or "Untitled"
+        self.excerpt = "(content excerpt intentionally minimized for fair‑use summary only)"
+
+async def fetch_sources(sources: List[Source]) -> List[Doc]:
+    docs = []
+    for s in sources:
+        if not settings.ALLOW_NET_FETCH:
+            # Offline/dev mode: we don't fetch at all.
+            docs.append(Doc(url=str(s.url), title=s.title))
+        else:
+            # TODO: implement respectful fetching limited to title/metadata/excerpts
+            docs.append(Doc(url=str(s.url), title=s.title))
+    return docs
+```
+
+### `app/services/summarizer.py`
+
+```python
+from typing import List, Tuple
+from app.models import Source
+from app.services.fetcher import Doc
+
+async def synthesize_with_citations(prompt: str, docs: List[Doc], target_length: int, tone: str, require_citations: bool) -> Tuple[str, List[Source]]:
+    # Placeholder: stitch titles + URLs and a safe neutral summary shell.
+    # Swap this with your real LLM call while preserving the safety patterns below.
+    base = f"Tone: {tone}. Target length ≈ {target_length} chars. Prompt: {prompt[:200]}…\n\n"
+    bullets = "\n".join([f"- {d.title} — {d.url}" for d in docs])
+    summary = base + "Sources considered:\n" + bullets + "\n\nSynthesis:\nThis article compares multiple perspectives and highlights areas of consensus and disagreement. Key claims are attributed and hedged."
+    citations = [Source(url=d.url, title=d.title, license=None) for d in docs]
+    return summary, citations
+```
+
+### `app/services/bias_checker.py`
+
+```python
+# Placeholder: implement your real bias metrics here (sentiment, stance, framing, agenda setting, etc.)
+# Keep results explainable (feature contributions) and allow user to challenge.
+
+def compute_bias_markers(text: str) -> dict:
+    return {"sentiment": 0.0, "loaded_terms": [], "framing_score": 0.0}
+```
+
+---
+
+## 🧰 Utils
+
+### `app/utils/logging.py`
+
+```python
+from loguru import logger
+import sys
+
+def setup_logging():
+    logger.remove()
+    logger.add(sys.stdout, level="INFO", enqueue=True, backtrace=False, diagnose=False, format="{time} | {level} | {message}")
+```
+
+### `app/utils/citations.py`
+
+```python
+# Helpers for formatting/validating citations later if needed.
+```
+
+### `app/utils/validation.py`
+
+```python
+from typing import List
+from app.models import Source
+
+BLOCKED_DOMAINS = {"example.com"}  # add publishers that disallow scraping
+
+def validate_sources(sources: List[Source]) -> List[str]:
+    errors = []
+    if not sources:
+        errors.append("At least one source is required.")
+    urls = set()
+    for s in sources:
+        if s.url.host in BLOCKED_DOMAINS:
+            errors.append(f"Source domain not allowed: {s.url.host}")
+        key = str(s.url)
+        if key in urls:
+            errors.append(f"Duplicate source: {key}")
+        urls.add(key)
+    return errors
+```
+
+---
+
+## 🧾 Legal Pages (Markdown)
+
+### `app/legal/TOS.md`
+
+```md
+# Terms of Service
+
+**Not legal advice.**
+
+1. **AI‑Generated Content.** Outputs are AI‑assisted and may contain errors. You agree to independently verify critical facts before publishing.
+2. **User Responsibility.** You must have the right to use any content you upload or request we analyze. Do not submit unlawful, defamatory, or infringing content.
+3. **Copyright Respect.** We summarize and link to sources; we do not redistribute full texts. If you believe content is used improperly, see our DMCA policy.
+4. **Fair Use.** Where applicable, we rely on fair‑use summaries for commentary, criticism, and research. We minimize excerpts and attribute sources.
+5. **No Guarantees of Unbiased Output.** We aim to *reduce* bias but cannot eliminate it.
+6. **Rate Limits & Abuse.** Automated access, scraping of outputs at scale, or bypassing rate limits is prohibited.
+7. **Changes.** We may update these terms; continued use means acceptance.
+```
+
+### `app/legal/PrivacyPolicy.md`
+
+```md
+# Privacy Policy
+
+We collect minimal data necessary to operate (IP for rate limiting, request metadata). We do not sell personal data. If you submit personal data in prompts, you confirm you have a lawful basis. You can request deletion by contacting us. Cookies may be used for session security.
+```
+
+### `app/legal/DMCA.md`
+
+```md
+# DMCA Policy
+
+If you are a rights holder and believe our service uses your work improperly, submit a DMCA notice at **/dmca/notice** including: (1) identification of the work, (2) infringing URL, (3) your contact, (4) good‑faith statement, and (5) your signature. We will respond promptly and, if warranted, remove or disable access.
+```
+
+---
+
+## 🎨 Templates & Static
+
+### `app/templates/index.html`
+
+```html
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <met
+```
