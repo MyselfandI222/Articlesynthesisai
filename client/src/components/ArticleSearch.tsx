@@ -4,6 +4,7 @@ import { Article, Category } from '../types';
 import { searchArticles, getAllCategories, getTrendingTopics } from '../utils/articleSearch';
 import { classifyBreakingNews, getBreakingNewsBadge, formatEngagementNumber } from '../utils/breakingNewsDetector';
 import { searchWithGemini, convertSearchResultsToArticles, detectBreakingNews } from '../utils/geminiSearchService';
+import { trackArticleView } from '../utils/articleViewTracker';
 
 interface ArticleSearchProps {
   onAddArticle: (article: Article) => void;
@@ -373,6 +374,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                             href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => trackArticleView(article)}
                             className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 text-xs font-medium"
                           >
                             <ExternalLink className="h-3 w-3" />
@@ -385,7 +387,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                       </div>
                     </div>
                     <button
-                      onClick={() => onAddArticle(article)}
+                      onClick={() => {
+                        trackArticleView(article);
+                        onAddArticle(article);
+                      }}
                       className={`ml-4 p-3 rounded-full transition-all shadow-sm hover:shadow-md transform hover:scale-105 ${
                         isAdded
                           ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300'
@@ -463,6 +468,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                             href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => trackArticleView(article)}
                             className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
                           >
                             <ExternalLink className="h-3 w-3" />
@@ -477,7 +483,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                       </div>
                     </div>
                     <button
-                      onClick={() => onAddArticle(article)}
+                      onClick={() => {
+                        trackArticleView(article);
+                        onAddArticle(article);
+                      }}
                       className={`ml-4 p-2 rounded-lg transition-colors ${
                         isAdded 
                           ? 'bg-green-100 text-green-700 hover:bg-green-200' 
