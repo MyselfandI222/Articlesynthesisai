@@ -206,28 +206,28 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen">
       <Header 
         onNavigate={setCurrentPage} 
         currentPage={currentPage}
       />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Daily News Notification */}
         {dailyNewsNotification && currentPage === 'home' && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="glass-effect border-blue-300/50 dark:border-blue-700/50 rounded-2xl p-5 flex items-center justify-between card-shadow smooth-transition hover:shadow-lg">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 p-2 rounded-xl">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+              <div className="gradient-primary p-2.5 rounded-xl">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-medium text-blue-900">Daily News Update</p>
-                <p className="text-sm text-blue-800">{dailyNewsNotification}</p>
+                <p className="font-semibold text-blue-900 dark:text-blue-100">Daily News Update</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">{dailyNewsNotification}</p>
               </div>
             </div>
             <button
               onClick={() => setDailyNewsNotification(null)}
-              className="text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 smooth-transition"
             >
               <AlertCircle className="h-5 w-5" />
             </button>
@@ -254,18 +254,22 @@ function App() {
           <>
             {!synthesizedArticle ? (
           <div className="space-y-8">
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            <div className="text-center max-w-4xl mx-auto space-y-4">
+              <h1 className="text-5xl font-bold text-gradient mb-3 tracking-tight">
                 AI-Powered Article Synthesis
               </h1>
-              <p className="text-lg text-gray-600 leading-relaxed">
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
                 Transform multiple source articles into original, legally compliant content. 
                 Our AI analyzes different perspectives and creates unique, synthesized articles 
                 that combine the best insights from your sources.
               </p>
-              <p className="text-sm text-blue-600 mt-2 font-medium">
-                ✨ Breaking news updates automatically daily • 🌐 Live Google Search • 📊 150K+ engagement = Breaking News
-              </p>
+              <div className="flex items-center justify-center gap-3 text-sm text-blue-600 dark:text-blue-400 font-medium flex-wrap">
+                <span className="flex items-center gap-1">✨ Daily Updates</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">🌐 Live Search</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">📊 Breaking News</span>
+              </div>
             </div>
 
             <div className="max-w-4xl mx-auto space-y-6">
@@ -281,15 +285,15 @@ function App() {
                 <MoodMeter articles={sources} />
               )}
               
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="glass-effect rounded-2xl p-6 card-shadow hover:shadow-lg smooth-transition">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   Article Topic
                 </label>
                 <input
                   type="text"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white/50 dark:bg-gray-800/50 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 smooth-transition placeholder:text-gray-400 dark:text-gray-100"
                   placeholder="What is the main topic of your article?"
                 />
               </div>
@@ -347,17 +351,17 @@ function App() {
             </div>
             
             {error && (
-              <div className="max-w-4xl mx-auto bg-red-50 border border-red-200 rounded-xl p-4 flex items-center space-x-3 shadow-sm">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <p className="text-red-800">{error}</p>
+              <div className="max-w-4xl mx-auto glass-effect border-red-300 dark:border-red-700 rounded-2xl p-4 flex items-center space-x-3 card-shadow">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <p className="text-red-800 dark:text-red-300">{error}</p>
               </div>
             )}
 
             {/* Synthesize Button - Made more prominent */}
-            <div className="max-w-4xl mx-auto text-center bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to Synthesize?</h3>
-                <p className="text-sm text-gray-600">
+            <div className="max-w-4xl mx-auto text-center glass-effect rounded-2xl card-shadow-lg p-8 hover:shadow-xl smooth-transition border-2 border-blue-200/50 dark:border-blue-700/50">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Ready to Synthesize?</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {sources.length > 0 && topic.trim() 
                     ? `Synthesize ${sources.length} sources into your article about "${topic}"`
                     : 'Add sources and specify a topic to begin synthesis'
@@ -366,30 +370,30 @@ function App() {
                 
                 {/* AI Mode Indicator */}
                 {(isChatGPTEnabled || isClaudeEnabled || isMistralEnabled) && (
-                  <div className="mt-3 flex items-center justify-center">
+                  <div className="mt-4 flex items-center justify-center">
                     {isChatGPTEnabled && isClaudeEnabled ? (
-                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full">
+                      <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/40 dark:to-blue-900/40 border border-purple-300 dark:border-purple-700 rounded-xl smooth-transition">
                         <div className="flex items-center space-x-1">
-                          <div className="h-2 w-2 bg-purple-500 rounded-full"></div>
-                          <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                          <div className="h-2.5 w-2.5 bg-purple-500 rounded-full animate-pulse"></div>
+                          <div className="h-2.5 w-2.5 bg-blue-500 rounded-full animate-pulse"></div>
                         </div>
-                        <span className="text-xs font-medium text-purple-700">Hybrid AI Mode</span>
-                        <span className="text-xs text-purple-600">Claude + ChatGPT</span>
+                        <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">Hybrid AI Mode</span>
+                        <span className="text-xs text-purple-600 dark:text-purple-400">Claude + ChatGPT</span>
                       </div>
                     ) : isMistralEnabled ? (
-                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-orange-100 border border-orange-200 rounded-full">
-                        <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
-                        <span className="text-xs font-medium text-orange-700">Mistral AI Mode</span>
+                      <div className="flex items-center space-x-2 px-4 py-2 bg-orange-100 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700 rounded-xl">
+                        <div className="h-2.5 w-2.5 bg-orange-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-semibold text-orange-700 dark:text-orange-300">Mistral AI Mode</span>
                       </div>
                     ) : isChatGPTEnabled ? (
-                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-green-100 border border-green-200 rounded-full">
-                        <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                        <span className="text-xs font-medium text-green-700">ChatGPT Mode</span>
+                      <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-700 rounded-xl">
+                        <div className="h-2.5 w-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-semibold text-green-700 dark:text-green-300">ChatGPT Mode</span>
                       </div>
                     ) : isClaudeEnabled ? (
-                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full">
-                        <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs font-medium text-blue-700">Claude Mode</span>
+                      <div className="flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700 rounded-xl">
+                        <div className="h-2.5 w-2.5 bg-blue-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Claude Mode</span>
                       </div>
                     ) : null}
                   </div>
@@ -398,7 +402,7 @@ function App() {
               <button
                 onClick={handleSynthesize}
                 disabled={isLoading || sources.length === 0 || !topic.trim()}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-3 mx-auto text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="gradient-primary px-10 py-4 text-white rounded-2xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed smooth-transition flex items-center space-x-3 mx-auto text-lg font-bold shadow-lg hover:-translate-y-1 transform"
               >
                 {isLoading ? (
                   <>
