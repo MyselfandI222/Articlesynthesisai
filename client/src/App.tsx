@@ -421,10 +421,10 @@ function App() {
         ) : (
           <div className="space-y-8">
             <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Your Synthesized Article</h2>
+              <h2 className="text-4xl font-bold text-gradient">Your Synthesized Article</h2>
               <button
                 onClick={() => setSynthesizedArticle(null)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors hover:bg-gray-100 rounded-lg"
+                className="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 smooth-transition rounded-xl font-medium border border-gray-200 dark:border-gray-700"
               >
                 ← Back to Editor
               </button>
