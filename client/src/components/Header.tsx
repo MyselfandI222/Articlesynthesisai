@@ -42,50 +42,40 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
   }, []);
 
   return (
-    <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
+    <header className="glass-effect sticky top-0 z-50 shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
+        <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-xl shadow-sm">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="gradient-primary p-2.5 rounded-2xl shadow-md">
+              <Sparkles className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">ArticleSynth</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">AI-Powered Content Synthesis</p>
+              <h1 className="text-xl font-bold text-gradient">ArticleSynth</h1>
+              <p className="text-xs text-muted-foreground">AI-Powered Content Synthesis</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             {/* Daily Breaking News Indicator */}
             {breakingNewsCount > 0 && (
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-full px-3 py-1.5 shadow-sm">
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 border border-red-200 dark:border-red-700/50 rounded-xl px-3 py-1.5 smooth-transition hover:shadow-md">
                 <TrendingUp className="w-4 h-4 text-red-600 dark:text-red-400 animate-pulse" />
-                <span className="text-xs font-bold text-red-800 dark:text-red-300">
-                  {breakingNewsCount} Breaking News Today
+                <span className="text-xs font-semibold text-red-700 dark:text-red-300">
+                  {breakingNewsCount} Breaking
                 </span>
-                {lastUpdated && (
-                  <span className="text-xs text-red-600 dark:text-red-400 hidden sm:inline">
-                    Updated {lastUpdated.toLocaleTimeString()}
-                  </span>
-                )}
               </div>
             )}
-            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border border-purple-200 dark:border-purple-700 rounded-full px-3 py-1.5 shadow-sm">
-              <span className="text-xs font-medium text-purple-800 dark:text-purple-300">
-                📊 150K+ Engagement = Breaking News
+            <div className="hidden lg:flex items-center space-x-1 bg-purple-100/50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-xl px-3 py-1.5">
+              <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                📊 150K+ = Breaking
               </span>
             </div>
-            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border border-purple-200 dark:border-purple-700 rounded-full px-3 py-1.5 shadow-sm">
+            <div className="flex items-center space-x-1.5 bg-purple-100/50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-xl px-3 py-1.5">
               <Bot className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              <span className="text-xs font-medium text-purple-800 dark:text-purple-300">ChatGPT Enhanced</span>
+              <span className="text-xs font-medium text-purple-700 dark:text-purple-300">AI Enhanced</span>
             </div>
-            <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border border-blue-200 dark:border-blue-700 rounded-full px-3 py-1.5 shadow-sm">
+            <div className="flex items-center space-x-1.5 bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-xl px-3 py-1.5">
               <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-medium text-blue-800 dark:text-blue-300 hidden sm:inline">Live Google</span>
-              <span className="text-xs font-medium text-blue-800 dark:text-blue-300 sm:hidden">Google</span>
-            </div>
-            <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 hidden md:flex">
-              <FileText className="h-4 w-4" />
-              <span>Legal & Original</span>
+              <span className="text-xs font-medium text-blue-700 dark:text-blue-300 hidden sm:inline">Live</span>
             </div>
             
             {/* Navigation Menu */}
@@ -93,10 +83,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => onNavigate('home')}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium smooth-transition ${
                     currentPage === 'home' 
-                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 shadow-sm' 
+                      : 'bg-gray-100/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   <Sparkles className="h-4 w-4" />
@@ -104,10 +94,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                 </button>
                 <button
                   onClick={() => onNavigate('affiliate')}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium smooth-transition ${
                     currentPage === 'affiliate' 
-                      ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 shadow-sm' 
+                      : 'bg-gray-100/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   <Users className="h-4 w-4" />
@@ -116,14 +106,14 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
 
                 <button
                   onClick={() => onNavigate('subscribe')}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium smooth-transition ${
                     currentPage === 'subscribe' 
-                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 shadow-sm' 
+                      : 'bg-gray-100/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   <Crown className="h-4 w-4" />
-                  <span className="hidden sm:inline">Subscribe</span>
+                  <span className="hidden sm:inline">Premium</span>
                 </button>
               </div>
             )}
@@ -133,14 +123,14 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
 
             {/* User Profile and Logout */}
             {user && (
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 shadow-sm">
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 bg-gray-100/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/50 rounded-xl px-3 py-1.5">
                   <img 
                     src={user.profileImageUrl || 'https://via.placeholder.com/24'} 
                     alt="Profile" 
-                    className="w-5 h-5 rounded-full object-cover"
+                    className="w-5 h-5 rounded-full object-cover ring-2 ring-blue-400 dark:ring-blue-500"
                   />
-                  <span className="text-xs font-medium text-gray-800 dark:text-gray-200 hidden sm:inline">
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">
                     {user.firstName || user.username}
                   </span>
                 </div>
@@ -149,10 +139,10 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home'
                     await fetch('/api/logout', { method: 'POST', credentials: 'include' });
                     window.location.reload();
                   }}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-full px-3 py-1.5 shadow-sm hover:from-red-100 hover:to-red-200 dark:hover:from-red-900/50 dark:hover:to-red-800/50 transition-all"
+                  className="flex items-center space-x-1.5 bg-red-100/80 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 rounded-xl px-3 py-1.5 hover:bg-red-200 dark:hover:bg-red-900/50 smooth-transition"
                 >
                   <LogOut className="h-4 w-4 text-red-600 dark:text-red-400" />
-                  <span className="text-xs font-medium text-red-800 dark:text-red-300 hidden sm:inline">Logout</span>
+                  <span className="text-xs font-medium text-red-700 dark:text-red-300 hidden sm:inline">Logout</span>
                 </button>
               </div>
             )}
