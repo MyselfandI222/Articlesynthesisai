@@ -1,5 +1,6 @@
 // AI Article Generator Service
 import { Article, SearchResult } from '../types';
+import { apiRequest } from '../lib/queryClient';
 
 interface ViralArticle {
   id: string;
@@ -17,134 +18,24 @@ interface ViralArticle {
   isGenerating?: boolean;
 }
 
-// Get OpenAI API key
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-
-// Check if API key is available
-const isApiKeyAvailable = (): boolean => {
-  return !!OPENAI_API_KEY && OPENAI_API_KEY !== 'your-openai-api-key-here';
-};
-
-// Generate viral articles using ChatGPT
+// Generate viral articles using ChatGPT (via secure backend)
 export const generateViralArticles = async (
   searchTerm: string,
   count: number = 8
 ): Promise<Article[]> => {
   console.log(`Generating viral articles for: ${searchTerm}`);
   
-  if (!isApiKeyAvailable()) {
-    console.log('No OpenAI API key found, using fallback viral articles');
-    return generateFallbackViralArticles(searchTerm, count);
-  }
-
   try {
-    // Create prompts for different types of viral content
-    const viralPrompts = [
-      `Create a viral news article about ${searchTerm} that would trending on social media. Focus on breaking news or shocking discoveries.`,
-      `Write a viral analysis piece about ${searchTerm} that experts are talking about. Include surprising statistics or insights.`,
-      `Generate a viral story about ${searchTerm} that people are sharing everywhere. Focus on human interest or emotional impact.`,
-      `Create a viral investigation about ${searchTerm} that reveals something unexpected. Include exclusive details.`,
-      `Write a viral opinion piece about ${searchTerm} that's causing debate. Include controversial but well-reasoned arguments.`,
-      `Generate a viral how-to or explainer about ${searchTerm} that's getting millions of views. Make it actionable and valuable.`,
-      `Create a viral celebrity or influencer story involving ${searchTerm}. Focus on entertainment value.`,
-      `Write a viral technology breakthrough story about ${searchTerm}. Include future implications and expert quotes.`
-    ];
+    const response = await apiRequest('POST', '/api/openai/generate-viral', {
+      searchTerm,
+      count
+    });
 
-    // Generate articles in batches to avoid rate limits
-    const articles: Article[] = [];
-    const batchSize = 2;
-    
-    for (let i = 0; i < Math.min(count, viralPrompts.length); i += batchSize) {
-      const batch = viralPrompts.slice(i, i + batchSize);
-      const batchPromises = batch.map(prompt => generateSingleViralArticle(prompt, searchTerm, i));
-      const batchResults = await Promise.allSettled(batchPromises);
-      
-      batchResults.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value) {
-          articles.push(result.value);
-        }
-      });
-    }
-
-    return articles.length > 0 ? articles : generateFallbackViralArticles(searchTerm, count);
+    const data = await response.json();
+    return data.articles || [];
   } catch (error) {
     console.error('Error generating viral articles:', error);
     return generateFallbackViralArticles(searchTerm, count);
-  }
-};
-
-// Generate a single viral article using ChatGPT
-const generateSingleViralArticle = async (
-  prompt: string,
-  searchTerm: string,
-  index: number
-): Promise<Article | null> => {
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: 'system',
-            content: `You are a viral content creator. Create compelling, engaging articles that people want to share. 
-            
-            IMPORTANT: 
-            1. Do not reference or mention names/titles of other articles in your content
-            2. Do not reference or mention the title of your own article within the article content
-            3. Use generic phrases like "according to research", "studies show", "experts indicate", or "recent findings suggest"
-            4. Write the article content without self-referencing (avoid phrases like "this article", "in this piece", etc.)
-            5. Return your response in JSON format with exactly this structure:
-            {
-              "title": "Compelling headline that hooks readers",
-              "content": "Full article content (500-800 words)",
-              "description": "Brief description (100-150 words)",
-              "category": "news/technology/entertainment/business/health/sports/politics",
-              "keywords": ["keyword1", "keyword2", "keyword3"],
-              "viralScore": 85
-            }
-            
-            Make it factual but exciting. Include current trends and what people are talking about.`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 1500,
-        response_format: { type: "json_object" }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const aiResponse = JSON.parse(data.choices[0].message.content);
-    
-    return {
-      id: `ai-viral-${Date.now()}-${index}`,
-      title: aiResponse.title,
-      content: aiResponse.content,
-      source: 'AI News Network',
-      url: `https://ai-news.com/viral/${searchTerm.toLowerCase().replace(/\s+/g, '-')}-${index}`,
-      publishedAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
-      category: aiResponse.category || 'general',
-      description: aiResponse.description,
-      keywords: aiResponse.keywords || [searchTerm],
-      viralScore: aiResponse.viralScore || 75,
-      trending: true,
-      estimatedReads: Math.floor(Math.random() * 500000) + 50000
-    };
-  } catch (error) {
-    console.error('Error generating single viral article:', error);
-    return null;
   }
 };
 
@@ -188,7 +79,7 @@ const generateFallbackViralArticles = (searchTerm: string, count: number): Artic
 
 // Generate viral content for fallback articles
 const generateViralContent = (searchTerm: string, type: string): string => {
-  const templates = {
+  const templates: { [key: string]: string } = {
     'Breaking News': `🚨 BREAKING: ${searchTerm} has just been reported with stunning developments that are sending shockwaves through the industry. Sources close to the matter reveal unprecedented details that nobody saw coming.
 
 This story is developing rapidly, with new information emerging every hour. Social media is exploding with reactions as people share their thoughts and experiences related to ${searchTerm}.
@@ -277,8 +168,8 @@ export const generateStreamingViralArticles = async (
   const placeholderArticles = generatePlaceholderArticles(searchTerm, count);
   placeholderArticles.forEach(article => onArticleGenerated(article));
   
-  // Then generate real content in the background
-  if (isApiKeyAvailable()) {
+  // Then generate real content in the background (backend will handle API key check)
+  if (true) {
     try {
       const realArticles = await generateViralArticles(searchTerm, count);
       
@@ -321,11 +212,10 @@ const generatePlaceholderArticles = (searchTerm: string, count: number): Article
   return articles;
 };
 
-// Check if Google Search API is available
+// Check if Google Search API is available (now handled server-side)
 export const isGoogleSearchAvailable = (): boolean => {
-  const googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-  const searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID;
-  return !!(googleApiKey && searchEngineId);
+  // Google Search availability is now determined by backend configuration
+  return true; // Backend will handle API key validation
 };
 
 // Convert viral article to regular article format

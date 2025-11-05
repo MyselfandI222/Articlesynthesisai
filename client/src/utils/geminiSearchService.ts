@@ -1,5 +1,6 @@
 // Gemini Search Service
 import { Article } from '../types';
+import { apiRequest } from '../lib/queryClient';
 
 export interface GeminiSearchConfig {
   model: string;
@@ -71,97 +72,21 @@ export const saveGeminiSettings = (settings: GeminiSearchConfig): void => {
   }
 };
 
-// Initialize Gemini AI client (dynamically imported to avoid bundling by default)
-const initializeGemini = async () => {
-  // Note: VITE_GEMINI_API_KEY should be available in client environment
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('VITE_GEMINI_API_KEY is not configured');
-  }
-  const { GoogleGenAI } = await import("@google/genai");
-  return new GoogleGenAI({ apiKey });
-};
-
-// Intelligent search with Gemini
+// Intelligent search with Gemini (via secure backend)
 export const searchWithGemini = async (
   query: string,
   config: GeminiSearchConfig = getGeminiSettings()
 ): Promise<GeminiSearchResponse> => {
-  const startTime = Date.now();
-  
   try {
-    const ai = await initializeGemini();
-    
-    // Create comprehensive search prompt
-    const searchPrompt = `
-You are an expert research assistant. Search for comprehensive information about: "${query}"
-
-Search Requirements:
-- Find ${config.maxResults} most relevant and recent results
-- Include news articles, authoritative sources, and expert analysis
-- Depth level: ${config.searchDepth}
-- Filter for relevance: ${config.filterRelevance}
-- Include analysis: ${config.includeAnalysis}
-
-For each result, provide:
-1. Title (clear and descriptive)
-2. URL (if available)
-3. Snippet (2-3 sentences summary)
-4. Relevance score (0-100)
-5. Source credibility (news outlet, organization, etc.)
-6. Published date (if available)
-7. Category (news, analysis, opinion, etc.)
-
-Also provide:
-- Overall summary of findings
-- 3-5 related search queries
-- Confidence level in search results (0-100)
-
-Format response as JSON with this structure:
-{
-  "results": [
-    {
-      "title": "string",
-      "url": "string",
-      "snippet": "string",
-      "relevanceScore": number,
-      "source": "string",
-      "publishedDate": "string",
-      "category": "string"
-    }
-  ],
-  "summary": "string",
-  "relatedQueries": ["string"],
-  "totalResults": number,
-  "confidence": number
-}`;
-
-    const response = await ai.models.generateContent({
-      model: config.model,
-      contents: searchPrompt,
-      config: {
-        temperature: config.settings.temperature,
-        maxOutputTokens: config.settings.maxTokens,
-        topP: config.settings.topP,
-        topK: config.settings.topK,
-        responseMimeType: "application/json"
-      }
+    const response = await apiRequest('POST', '/api/gemini/search', {
+      query,
+      config
     });
 
-    const searchTime = Date.now() - startTime;
+    const data = await response.json();
+    return data;
     
-    if (!response.text) {
-      throw new Error('Empty response from Gemini');
-    }
-
-    const searchResults = JSON.parse(response.text);
-    
-    return {
-      ...searchResults,
-      searchTime
-    };
-    
-  } catch (error) {
+  } catch (error: any) {
     console.error('Gemini search error:', error);
     throw new Error(`Search failed: ${error.message}`);
   }
@@ -231,11 +156,17 @@ export const searchWithTrendAnalysis = async (
   ]);
   
   // Analyze trends from search results
-  const trendAnalysis = {
+  const trendAnalysis: {
+    trending: boolean;
+    momentum: 'rising' | 'stable' | 'declining';
+    keywords: string[];
+    sentiment: 'positive' | 'negative' | 'neutral';
+    urgency: number;
+  } = {
     trending: searchResults.confidence > 70,
-    momentum: searchResults.results.length > 5 ? 'rising' : 'stable' as const,
+    momentum: searchResults.results.length > 5 ? 'rising' : 'stable',
     keywords: searchResults.relatedQueries,
-    sentiment: 'neutral' as const,
+    sentiment: 'neutral',
     urgency: Math.min(searchResults.confidence, 100)
   };
   
@@ -277,8 +208,8 @@ Search for stories about: politics, world events, technology, health, economy, d
     // Mark high-relevance articles as breaking
     return articles.map(article => ({
       ...article,
-      isBreaking: article.relevanceScore > 75,
-      engagement: article.relevanceScore * 1000 // Simulate engagement based on relevance
+      isBreaking: (article.relevanceScore || 0) > 75,
+      engagement: (article.relevanceScore || 0) * 1000 // Simulate engagement based on relevance
     }));
     
   } catch (error) {

@@ -4,6 +4,18 @@ export interface Article {
   content: string;
   source?: string;
   url?: string;
+  publishedAt?: string;
+  category?: string;
+  description?: string;
+  keywords?: string[];
+  viralScore?: number;
+  trending?: boolean;
+  estimatedReads?: number;
+  isGenerating?: boolean;
+  relevanceScore?: number;
+  credibilityScore?: number;
+  engagement?: number;
+  isBreaking?: boolean;
 }
 
 export interface SynthesisRequest {

@@ -371,7 +371,7 @@ Please provide the edited article with improved content according to the instruc
       const editedContent = response.choices[0].message.content;
       
       // Extract title if present
-      const lines = editedContent.split('\n');
+      const lines = typeof editedContent === 'string' ? editedContent.split('\n') : [];
       const firstLine = lines[0].trim();
       let editedTitle = title;
       let content = editedContent;
@@ -389,6 +389,349 @@ Please provide the edited article with improved content according to the instruc
     } catch (error: any) {
       console.error("Mistral edit error:", error);
       res.status(500).json({ error: "Failed to edit article with Mistral" });
+    }
+  });
+
+  // OpenAI/ChatGPT API routes
+  app.post("/api/openai/synthesize", isAuthenticated, async (req, res) => {
+    try {
+      const { sources, topic, style, tone, length } = req.body;
+      
+      if (!sources || !topic) {
+        return res.status(400).json({ error: "Sources and topic are required" });
+      }
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ error: "OpenAI API key not configured" });
+      }
+      
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      // Analyze topic similarity first
+      const sourcesText = sources.map((source: any, index: number) => 
+        `Source ${index + 1}: ${source.content.substring(0, 300)}...\nFrom: ${source.source}\n`
+      ).join('\n---\n');
+      
+      const topicAnalysis = sources.length >= 2 ? await (async () => {
+        try {
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: 'You are an expert content analyst. Always respond with valid JSON.' },
+              { role: 'user', content: `Analyze these sources to determine if they cover the same topic and identify key themes, perspectives, and conflicting points.\n\nSources:\n${sourcesText}\n\nReturn a JSON object with:\n- isCommonTopic: boolean (true if 2+ sources cover the same main topic)\n- keyThemes: array of main themes/subjects covered\n- perspectives: array of different viewpoints or approaches\n- conflictingPoints: array of contradictory facts or opinions between sources\n\nFocus on factual analysis, not just surface-level similarities.` }
+            ],
+            temperature: 0.3,
+            max_tokens: 500
+          });
+          
+          return JSON.parse(response.choices[0].message.content || '{}');
+        } catch {
+          return { isCommonTopic: false, keyThemes: [], perspectives: [], conflictingPoints: [] };
+        }
+      })() : { isCommonTopic: false, keyThemes: [], perspectives: [], conflictingPoints: [] };
+      
+      // Build synthesis prompt
+      const fullSourcesText = sources.map((source: any, index: number) => 
+        `Source ${index + 1}: ${source.content.substring(0, 800)}...\nFrom: ${source.source}\n`
+      ).join('\n---\n');
+      
+      const wordCountRanges: any = {
+        short: { min: 300, max: 600, target: 450 },
+        medium: { min: 700, max: 1200, target: 950 },
+        long: { min: 1500, max: Infinity, target: 2000 }
+      };
+      const targetWordCount = wordCountRanges[length || 'medium']?.target || 950;
+      
+      let prompt = topicAnalysis.isCommonTopic && sources.length >= 2 ?
+        `You are an expert article writer specializing in comparative analysis. Multiple sources cover the same topic "${topic}". Create a comprehensive ${length} article that COMPARES AND CONTRASTS these sources rather than simply combining them.
+
+SYNTHESIS APPROACH:
+1. IDENTIFY COMMON GROUND: What facts, findings, or viewpoints do multiple sources agree on?
+2. HIGHLIGHT DIFFERENCES: Where do sources disagree, offer different perspectives, or present conflicting information?
+3. ANALYZE CONTRADICTIONS: When sources conflict, present both sides fairly and note the disagreement
+4. SYNTHESIZE INSIGHTS: Draw connections between different sources' approaches to the same topic
+5. PROVIDE BALANCED PERSPECTIVE: Don't favor one source over another - integrate all viewpoints
+6. WRITE DETAILED IDEAS: Include specific concepts, findings, data points, and arguments from the sources - don't just summarize, elaborate on the ideas
+
+Key Themes Identified: ${topicAnalysis.keyThemes.join(', ')}
+Different Perspectives: ${topicAnalysis.perspectives.join(', ')}
+Conflicting Points: ${topicAnalysis.conflictingPoints.join(', ')}
+
+🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):
+- FORBIDDEN: Do NOT mention "${topic}" ANYWHERE in the article body text
+- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"
+- FORBIDDEN: Do NOT start sentences with "The ${topic}...", "${topic} reveals...", "${topic} explores...", "${topic} examines..."
+- FORBIDDEN: Do NOT write "${topic} shows", "${topic} suggests", "${topic} indicates"
+- FORBIDDEN: Do NOT reference the title in ANY way - pretend it doesn't exist
+- REQUIRED: Dive straight into the subject matter without meta-references
+- REQUIRED: Write as a standalone piece of journalism about the SUBJECT, not about "an article"
+
+Sources:
+${fullSourcesText}
+
+Requirements:
+- Write in ${style} style with ${tone} tone
+- Target length: EXACTLY ${targetWordCount} words
+- CREATE COMPARATIVE ANALYSIS, not separate paragraphs for each source
+- Include SEO-friendly keywords and fact-checking insights` :
+        `You are an expert article writer. Synthesize the following sources into a cohesive ${length} article about "${topic}" in ${style} style with a ${tone} tone.
+
+🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):
+- FORBIDDEN: Do NOT mention "${topic}" ANYWHERE in the article body text
+- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"
+- FORBIDDEN: Do NOT start sentences with "The ${topic}...", "${topic} reveals...", "${topic} explores...", "${topic} examines..."
+- FORBIDDEN: Do NOT write "${topic} shows", "${topic} suggests", "${topic} indicates"
+- FORBIDDEN: Do NOT reference the title in ANY way - pretend it doesn't exist
+- REQUIRED: Dive straight into the subject matter without meta-references
+- REQUIRED: Write as a standalone piece of journalism about the SUBJECT, not about "an article"
+
+Sources:
+${fullSourcesText}
+
+Requirements:
+- Write in ${style} style with ${tone} tone
+- Target length: EXACTLY ${targetWordCount} words
+- Write DETAILED content - elaborate on ideas, don't just list them`;
+      
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: 'You are an expert article writer and synthesizer.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: length === 'short' ? 800 : length === 'medium' ? 1500 : 2500
+      });
+      
+      const content = response.choices[0].message.content || '';
+      const lines = content.split('\n');
+      const title = lines[0].replace(/^#\s*/, '') || `${topic}: A Comprehensive Analysis`;
+      const articleContent = lines.slice(1).join('\n').trim();
+      
+      res.json({
+        id: Date.now().toString(),
+        title,
+        content: articleContent,
+        summary: articleContent.substring(0, 200) + '...',
+        wordCount: articleContent.split(/\s+/).length,
+        readingTime: Math.ceil(articleContent.split(/\s+/).length / 200),
+        style
+      });
+    } catch (error: any) {
+      console.error("OpenAI synthesis error:", error);
+      res.status(500).json({ error: "Failed to synthesize articles with OpenAI" });
+    }
+  });
+
+  app.post("/api/openai/edit", isAuthenticated, async (req, res) => {
+    try {
+      const { article, instructions } = req.body;
+      
+      if (!article || !instructions) {
+        return res.status(400).json({ error: "Article and instructions are required" });
+      }
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ error: "OpenAI API key not configured" });
+      }
+      
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      const prompt = `You are an expert article editor. Please edit the following article according to the user's instructions.
+
+Original Article:
+Title: ${article.title}
+Content: ${article.content}
+
+User Instructions: ${instructions}
+
+🚫 CRITICAL - TITLE RULES (ABSOLUTE REQUIREMENT):
+- FORBIDDEN: Do NOT mention "${article.title}" ANYWHERE in the edited article body
+- FORBIDDEN: Do NOT use "this article", "in this piece", "this story", "the article", "here we"
+- FORBIDDEN: Do NOT start sentences with "The ${article.title}...", "${article.title} reveals...", etc.
+- FORBIDDEN: Do NOT reference the title in ANY way - pretend it doesn't exist
+- REQUIRED: Focus on the subject matter directly without meta-references
+
+Please provide the edited article with the same structure but improved according to the instructions.`;
+      
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: 'You are an expert article editor and writer.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      });
+      
+      const editedContent = response.choices[0].message.content || '';
+      
+      res.json({
+        content: editedContent,
+        wordCount: editedContent.split(/\s+/).length,
+        readingTime: Math.ceil(editedContent.split(/\s+/).length / 200)
+      });
+    } catch (error: any) {
+      console.error("OpenAI edit error:", error);
+      res.status(500).json({ error: "Failed to edit article with OpenAI" });
+    }
+  });
+
+  app.post("/api/openai/generate-viral", isAuthenticated, async (req, res) => {
+    try {
+      const { searchTerm, count = 5 } = req.body;
+      
+      if (!searchTerm) {
+        return res.status(400).json({ error: "Search term is required" });
+      }
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ error: "OpenAI API key not configured" });
+      }
+      
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      const viralPrompts = [
+        `Create a viral news article about ${searchTerm} that would trending on social media. Focus on breaking news or shocking discoveries.`,
+        `Write a viral analysis piece about ${searchTerm} that experts are talking about. Include surprising statistics or insights.`,
+        `Generate a viral story about ${searchTerm} that people are sharing everywhere. Focus on human interest or emotional impact.`,
+        `Create a viral investigation about ${searchTerm} that reveals something unexpected. Include exclusive details.`,
+        `Write a viral opinion piece about ${searchTerm} that's causing debate. Include controversial but well-reasoned arguments.`
+      ];
+      
+      const articles = [];
+      
+      for (let i = 0; i < Math.min(count, viralPrompts.length); i++) {
+        try {
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: `You are a viral content creator. Create compelling, engaging articles that people want to share. Return your response in JSON format with exactly this structure:
+{
+  "title": "Compelling headline that hooks readers",
+  "content": "Full article content (500-800 words)",
+  "description": "Brief description (100-150 words)",
+  "category": "news/technology/entertainment/business/health/sports/politics",
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "viralScore": 85
+}`
+              },
+              { role: 'user', content: viralPrompts[i] }
+            ],
+            temperature: 0.8,
+            max_tokens: 1500,
+            response_format: { type: "json_object" }
+          });
+          
+          const aiResponse = JSON.parse(response.choices[0].message.content || '{}');
+          
+          articles.push({
+            id: `ai-viral-${Date.now()}-${i}`,
+            title: aiResponse.title,
+            content: aiResponse.content,
+            source: 'AI News Network',
+            url: `https://ai-news.com/viral/${searchTerm.toLowerCase().replace(/\s+/g, '-')}-${i}`,
+            publishedAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+            category: aiResponse.category || 'general',
+            description: aiResponse.description,
+            keywords: aiResponse.keywords || [searchTerm],
+            viralScore: aiResponse.viralScore || 75,
+            trending: true,
+            estimatedReads: Math.floor(Math.random() * 500000) + 50000
+          });
+        } catch (error) {
+          console.error(`Error generating viral article ${i}:`, error);
+        }
+      }
+      
+      res.json({ articles });
+    } catch (error: any) {
+      console.error("OpenAI viral generation error:", error);
+      res.status(500).json({ error: "Failed to generate viral articles with OpenAI" });
+    }
+  });
+
+  // Gemini Search API route
+  app.post("/api/gemini/search", isAuthenticated, async (req, res) => {
+    try {
+      const { query, config } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ error: "Query is required" });
+      }
+      
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(400).json({ error: "Gemini API key not configured" });
+      }
+      
+      const { GoogleGenAI } = await import("@google/genai");
+      const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      
+      const model = genAI.getGenerativeModel({ 
+        model: config?.model || "gemini-2.0-flash-exp"
+      });
+      
+      const searchPrompt = `You are an expert research assistant. Search for comprehensive information about: "${query}"
+
+Search Requirements:
+- Find ${config?.maxResults || 10} most relevant and recent results
+- Include news articles, authoritative sources, and expert analysis
+- Depth level: ${config?.searchDepth || 'comprehensive'}
+- Filter for relevance: ${config?.filterRelevance !== false}
+- Include analysis: ${config?.includeAnalysis !== false}
+
+For each result, provide:
+1. Title (clear and descriptive)
+2. URL (if available)
+3. Snippet (2-3 sentences summary)
+4. Relevance score (0-100)
+5. Source credibility (news outlet, organization, etc.)
+6. Published date (if available)
+7. Category (news, analysis, opinion, etc.)
+
+Also provide:
+- Overall summary of findings
+- 3-5 related search queries
+- Confidence level in search results (0-100)
+
+Format response as JSON with this structure:
+{
+  "results": [
+    {
+      "title": "string",
+      "url": "string",
+      "snippet": "string",
+      "relevanceScore": number,
+      "source": "string",
+      "publishedDate": "string",
+      "category": "string"
+    }
+  ],
+  "summary": "string",
+  "relatedQueries": ["string"],
+  "totalResults": number,
+  "confidence": number
+}`;
+      
+      const startTime = Date.now();
+      const result = await model.generateContent(searchPrompt);
+      const response = result.response;
+      const searchTime = Date.now() - startTime;
+      
+      const searchResults = JSON.parse(response.text());
+      
+      res.json({
+        ...searchResults,
+        searchTime
+      });
+    } catch (error: any) {
+      console.error("Gemini search error:", error);
+      res.status(500).json({ error: "Failed to search with Gemini" });
     }
   });
 
