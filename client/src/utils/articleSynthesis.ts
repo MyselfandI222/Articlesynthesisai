@@ -1,8 +1,7 @@
 // Article Synthesis Service
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
-import { synthesizeWithChatGPT, editWithChatGPT } from './chatGptService';
+import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
-import { synthesizeWithOpenAI } from './openAISynthesis';
 import { synthesizeWithClaude, editWithClaude } from './claudeService';
 import { synthesizeWithMistral, editWithMistral } from './mistralService';
 
@@ -117,8 +116,8 @@ export const synthesizeArticles = async (
     // Use Mistral for synthesis
     return await synthesizeWithMistral(sources, topic, style, tone, length);
   } else {
-    // Use OpenAI for default synthesis
-    return await synthesizeWithOpenAI(sources, topic, style, tone, length);
+    // Use ChatGPT for default synthesis
+    return await synthesizeWithChatGPT(sources, topic, style, tone, length);
   }
 };
 
