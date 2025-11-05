@@ -600,21 +600,6 @@ const ArticleResultItem: React.FC<ArticleResultItemProps> = ({ result, isAdded, 
           <h4 className="font-medium text-gray-900 mb-2">{result.title}</h4>
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">{result.description}</p>
           
-          {/* Engagement Metrics */}
-          {breakingNews.engagementMetrics && (
-            <div className="flex items-center space-x-3 text-xs text-gray-500 mb-3">
-              <span title="Views">
-                👁️ {formatEngagementNumber(breakingNews.engagementMetrics.views)}
-              </span>
-              <span title="Shares">
-                🔄 {formatEngagementNumber(breakingNews.engagementMetrics.shares)}
-              </span>
-              <span title="Comments">
-                💬 {formatEngagementNumber(breakingNews.engagementMetrics.comments)}
-              </span>
-            </div>
-          )}
-          
           <div className="flex items-center space-x-3">
             {result.url && (
               <a

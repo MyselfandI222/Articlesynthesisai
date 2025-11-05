@@ -106,11 +106,6 @@ export const synthesizeWithChatGPT = async (
         description: data.summary,
         readabilityScore: 85
       },
-      factCheckResults: {
-        verifiedFacts: Math.floor(Math.random() * 15) + 10,
-        uncertainFacts: Math.floor(Math.random() * 5),
-        correctedFacts: Math.floor(Math.random() * 3)
-      },
       processingMetrics: {
         processingTimeMs: 3000,
         aiModelUsed: 'gpt-4o',
@@ -196,15 +191,10 @@ const simulateChatGPTResponse = (
       description: summary,
       readabilityScore: 85
     },
-    factCheckResults: {
-      verifiedFacts: Math.floor(Math.random() * 15) + 10,
-      uncertainFacts: Math.floor(Math.random() * 5),
-      correctedFacts: Math.floor(Math.random() * 3)
-    },
     processingMetrics: {
-      processingTimeMs: Math.floor(Math.random() * 5000) + 2000,
+      processingTimeMs: 3000,
       aiModelUsed: 'gpt-3.5-turbo',
-      contentQualityScore: Math.floor(Math.random() * 15) + 85
+      contentQualityScore: 88
     }
   };
 };

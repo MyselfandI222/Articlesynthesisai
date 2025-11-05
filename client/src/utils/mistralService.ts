@@ -65,11 +65,6 @@ export const synthesizeWithMistral = async (
         aiModelUsed: 'mistral-small-latest',
         contentQualityScore: calculateQualityScore(data)
       },
-      factCheckResults: {
-        verifiedFacts: Math.floor(Math.random() * 15) + 10,
-        uncertainFacts: Math.floor(Math.random() * 5),
-        correctedFacts: Math.floor(Math.random() * 3)
-      },
       seoMetadata: {
         keywords: extractKeywords(data.article, topic),
         description: data.outline.slice(0, 2).join(' ') || data.article.substring(0, 160) + '...',
