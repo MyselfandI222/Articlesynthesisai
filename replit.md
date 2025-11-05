@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Real News Only (Nov 2025)**: CRITICAL FIX - Fixed NewsAPI key issue (removed leading space causing 401 errors) and completely removed AI-generated fake article fallback. The application now ONLY shows real news articles from actual sources (BBC, CNN, Reuters, AP, Guardian, NYT, etc.). No more AI-generated fake content - if real news isn't available, the search returns empty results instead of generating misleading fake articles.
 - **Removed Fake Metrics (Jan 2025)**: Eliminated all misleading Math.random() generated metrics that were displaying fake data to users. Removed fake fact-check results (verified/uncertain/corrected facts) from ChatGPT and Mistral synthesis services, and removed fake engagement metrics (views, shares, comments) from article search results. These fabricated numbers were misleading users into believing articles had been fact-checked or had real engagement data.
 - **Code Quality Refactoring (Jan 2025)**: Completed comprehensive refactoring including:
   - Security hardening: Moved all AI API keys server-side

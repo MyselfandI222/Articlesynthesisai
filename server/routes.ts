@@ -198,13 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/news/search', validateRequest(newsSearchSchema, 'query'), async (req, res) => {
     try {
       const query = req.query.q as string;
-      const apiKey = process.env.VITE_NEWS_API_KEY || process.env.NEWS_API_KEY;
-      
-      console.log('Environment check:', {
-        VITE_NEWS_API_KEY: process.env.VITE_NEWS_API_KEY ? `${process.env.VITE_NEWS_API_KEY.substring(0, 8)}...` : 'NOT SET',
-        NEWS_API_KEY: process.env.NEWS_API_KEY ? `${process.env.NEWS_API_KEY.substring(0, 8)}...` : 'NOT SET'
-      });
-      console.log('Current API key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NOT SET');
+      const apiKey = (process.env.VITE_NEWS_API_KEY || process.env.NEWS_API_KEY)?.trim();
       
       if (!query) {
         return res.status(400).json({ error: 'Query parameter is required' });

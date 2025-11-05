@@ -175,29 +175,10 @@ export const searchArticles = async (
       url: result.url
     }));
     
-    // If no real articles found, generate AI viral articles or fallback content
+    // Return empty if no real articles found - NO FAKE AI ARTICLES
     if (articles.length === 0) {
-      console.log('No real articles found, generating AI content for:', query);
-      
-      // Check if we should use Google API when available
-      if (isGoogleSearchAvailable()) {
-        console.log('Google API available, reverting to original search behavior');
-        return [];
-      }
-      
-      // Generate viral AI articles
-      try {
-        const aiArticles = await generateViralArticles(query, 8);
-        if (aiArticles.length > 0) {
-          console.log(`Generated ${aiArticles.length} AI viral articles for: ${query}`);
-          return aiArticles;
-        }
-      } catch (error) {
-        console.error('AI article generation failed:', error);
-      }
-      
-      // Fallback to original fallback content
-      return generateFallbackResults(query, filters);
+      console.log('No real articles found for:', query);
+      return [];
     }
     
     // Sort by relevance and date
@@ -211,28 +192,7 @@ export const searchArticles = async (
 
   } catch (error) {
     console.error('Error searching articles:', error);
-    
-    // Check if we should use Google API when available
-    if (isGoogleSearchAvailable()) {
-      console.log('Google API available, reverting to original search behavior');
-      return [];
-    }
-    
-    // Generate AI viral articles when APIs fail
-    try {
-      console.log('Generating AI viral articles due to API failure for:', query);
-      const aiArticles = await generateViralArticles(query, 8);
-      if (aiArticles.length > 0) {
-        console.log(`Generated ${aiArticles.length} AI viral articles for: ${query}`);
-        return aiArticles;
-      }
-    } catch (aiError) {
-      console.error('AI article generation failed:', aiError);
-    }
-    
-    // Return fallback content when real articles aren't available
-    console.log('Returning fallback articles for:', query);
-    return generateFallbackResults(query, filters);
+    return [];
   }
 };
 
