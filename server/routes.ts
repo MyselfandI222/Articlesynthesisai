@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
@@ -7,11 +7,195 @@ import { synthesizeArticles, editArticle, generateTitles, analyzeQuality } from 
 import { generateArticleImage } from "./imageGeneration";
 import { z } from "zod";
 
+// Validation Schemas
+const newsSearchSchema = z.object({
+  q: z.string().min(1).max(500).trim(),
+  language: z.string().optional(),
+  sortBy: z.enum(['relevancy', 'popularity', 'publishedAt']).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional()
+});
+
+const userCreateSchema = z.object({
+  username: z.string().min(3).max(50).trim().regex(/^[a-zA-Z0-9_-]+$/),
+  password: z.string().min(8).max(100),
+  email: z.string().email().optional()
+});
+
+const articleViewSchema = z.object({
+  id: z.string().min(1).max(200).trim()
+});
+
+const synthesizeSchema = z.object({
+  sources: z.array(z.object({
+    id: z.string(),
+    title: z.string().max(500),
+    content: z.string().max(50000),
+    source: z.string().optional(),
+    url: z.string().url().optional()
+  })).min(1).max(20),
+  topic: z.string().min(1).max(500).trim(),
+  style: z.enum(['academic', 'journalistic', 'blog', 'technical', 'creative', 'business', 'opinion']),
+  tone: z.string().max(100).trim(),
+  length: z.enum(['short', 'medium', 'long']),
+  wordCountRange: z.object({
+    min: z.number().int().min(100).max(10000),
+    max: z.number().int().min(100).max(100000)
+  }).optional()
+});
+
+const editArticleSchema = z.object({
+  content: z.string().max(100000),
+  instruction: z.string().min(1).max(1000).trim()
+});
+
+const viralGenerateSchema = z.object({
+  searchTerm: z.string().min(1).max(500).trim(),
+  count: z.number().int().min(1).max(10).optional()
+});
+
+const geminiSearchSchema = z.object({
+  query: z.string().min(1).max(500).trim(),
+  config: z.object({
+    model: z.string().optional(),
+    maxResults: z.number().int().min(1).max(50).optional(),
+    searchDepth: z.enum(['basic', 'comprehensive', 'deep']).optional(),
+    filterRelevance: z.boolean().optional(),
+    includeAnalysis: z.boolean().optional(),
+    settings: z.object({
+      temperature: z.number().min(0).max(2).optional(),
+      maxTokens: z.number().int().min(100).max(10000).optional(),
+      topP: z.number().min(0).max(1).optional(),
+      topK: z.number().int().min(1).max(100).optional()
+    }).optional()
+  }).optional()
+});
+
+const trackClickSchema = z.object({
+  affiliateCode: z.string().min(1).max(50).trim(),
+  clickedUrl: z.string().url().max(1000).optional(),
+  metadata: z.record(z.any()).optional()
+});
+
+const trackPurchaseSchema = z.object({
+  affiliateCode: z.string().min(1).max(50).trim(),
+  purchaseAmount: z.number().min(0).max(1000000),
+  orderId: z.string().max(100).optional()
+});
+
+const imageGenerationSchema = z.object({
+  prompt: z.string().min(1).max(1000).trim(),
+  style: z.string().max(100).optional(),
+  size: z.enum(['1024x1024', '1792x1024', '1024x1792']).optional()
+});
+
+const articleViewTrackingSchema = z.object({
+  articleId: z.string().min(1).max(200).trim(),
+  articleTitle: z.string().min(1).max(500).trim(),
+  articleSource: z.string().max(200).optional(),
+  articleUrl: z.string().url().max(1000).optional()
+});
+
+const imageGenSchema = z.object({
+  articleTitle: z.string().max(500),
+  articleContent: z.string().max(50000),
+  style: z.enum(['realistic', 'digital-art', 'vivid', 'natural']).optional()
+});
+
+const mistralSynthesizeSchema = z.object({
+  topic: z.string().min(1).max(500).trim(),
+  style: z.enum(['academic', 'journalistic', 'blog', 'technical', 'creative', 'business', 'opinion']),
+  urls: z.array(z.string().url()).min(1).max(10),
+  maxWords: z.number().int().min(100).max(10000).optional(),
+  model: z.string().optional()
+});
+
+const mistralEditSchema = z.object({
+  article: z.string().max(100000),
+  title: z.string().max(500),
+  instructions: z.string().min(1).max(1000).trim(),
+  model: z.string().optional()
+});
+
+const claudeTitlesSchema = z.object({
+  article: z.object({
+    title: z.string().max(500).optional(),
+    content: z.string().max(50000)
+  }),
+  count: z.number().int().min(1).max(10).optional()
+});
+
+const claudeQualitySchema = z.object({
+  article: z.object({
+    title: z.string().max(500),
+    content: z.string().max(50000)
+  })
+});
+
+const paypalOrderSchema = z.object({
+  intent: z.enum(['CAPTURE', 'AUTHORIZE']).optional(),
+  amount: z.string().regex(/^\$?\d+(\.\d{1,2})?$/).transform(val => val.replace('$', '')).or(z.number().positive()),
+  currency: z.string().length(3).optional()
+});
+
+const subscribeSchema = z.object({
+  tier: z.enum(['pro-monthly', 'pro-lifetime', 'free']),
+  paymentDetails: z.object({
+    orderId: z.string().optional(),
+    payerId: z.string().optional(),
+    paymentMethod: z.string().optional()
+  }).optional()
+});
+
+const affiliateClickSchema = z.object({
+  code: z.string().min(1).max(50).trim()
+});
+
+const affiliateSignupSchema = z.object({
+  code: z.string().min(1).max(50).trim(),
+  userId: z.number().int().positive()
+});
+
+const mostViewedSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional()
+});
+
+const affiliateRefSchema = z.object({
+  code: z.string().min(1).max(50).trim()
+});
+
+// Validation middleware factory
+function validateRequest<T extends z.ZodType>(schema: T, source: 'body' | 'query' | 'params' = 'body') {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = source === 'body' ? req.body : source === 'query' ? req.query : req.params;
+      const validated = await schema.parseAsync(data);
+      
+      // Replace the original data with sanitized version
+      if (source === 'body') req.body = validated;
+      else if (source === 'query') req.query = validated as any;
+      else req.params = validated as any;
+      
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: 'Invalid request data',
+          details: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        });
+      }
+      next(error);
+    }
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
   // NewsAPI proxy endpoint to bypass CORS restrictions
-  app.get('/api/news/search', async (req, res) => {
+  app.get('/api/news/search', validateRequest(newsSearchSchema, 'query'), async (req, res) => {
     try {
       const query = req.query.q as string;
       const apiKey = process.env.VITE_NEWS_API_KEY || process.env.NEWS_API_KEY;
@@ -60,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes are now handled in auth.ts
   
   // Debug endpoint to create a test user
-  app.post('/api/debug/create-user', async (req, res) => {
+  app.post('/api/debug/create-user', validateRequest(userCreateSchema), async (req, res) => {
     try {
       const { username, password } = req.body;
       
@@ -160,10 +344,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Track affiliate click
-  app.post("/api/affiliate/click", async (req, res) => {
+  app.post("/api/affiliate/click", validateRequest(affiliateClickSchema), async (req, res) => {
     try {
       const { code } = req.body;
-      if (!code) return res.status(400).json({ error: "Affiliate code required" });
       
       await storage.trackAffiliateClick(code);
       res.json({ success: true });
@@ -174,10 +357,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Handle affiliate signup
-  app.post("/api/affiliate/signup", async (req, res) => {
+  app.post("/api/affiliate/signup", validateRequest(affiliateSignupSchema), async (req, res) => {
     try {
       const { code, userId } = req.body;
-      if (!code || !userId) return res.status(400).json({ error: "Code and user ID required" });
       
       await storage.trackAffiliateConversion(code, userId);
       res.json({ success: true });
@@ -188,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Short link redirect
-  app.get("/ref/:code", async (req, res) => {
+  app.get("/ref/:code", validateRequest(affiliateRefSchema, 'params'), async (req, res) => {
     try {
       const { code } = req.params;
       const affiliate = await storage.getAffiliateByCode(code);
@@ -213,17 +395,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await loadPaypalDefault(req, res);
   });
 
-  app.post("/api/paypal/order", async (req, res) => {
+  app.post("/api/paypal/order", validateRequest(paypalOrderSchema), async (req, res) => {
     // Request body should contain: { intent, amount, currency }
     await createPaypalOrder(req, res);
   });
 
-  app.post("/api/paypal/order/:orderID/capture", async (req, res) => {
+  app.post("/api/paypal/order/:orderID/capture", validateRequest(z.object({
+    orderID: z.string().min(1).max(100).trim()
+  }), 'params'), async (req, res) => {
     await capturePaypalOrder(req, res);
   });
 
   // Pro subscription endpoints
-  app.post("/api/subscribe", isAuthenticated, async (req, res) => {
+  app.post("/api/subscribe", isAuthenticated, validateRequest(subscribeSchema), async (req, res) => {
     try {
       const { tier, paymentDetails } = req.body;
       const userId = (req.user as any).id;
@@ -249,7 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/cancel-subscription", isAuthenticated, async (req, res) => {
+  app.post("/api/cancel-subscription", isAuthenticated, validateRequest(z.object({})), async (req, res) => {
     try {
       const userId = (req.user as any).id;
       await storage.updateUserSubscription(userId, 'free', null);
@@ -261,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Article view tracking endpoints
-  app.post("/api/article/view", async (req, res) => {
+  app.post("/api/article/view", validateRequest(articleViewTrackingSchema), async (req, res) => {
     try {
       const { articleId, articleTitle, articleSource, articleUrl } = req.body;
       const userId = req.user?.id || null;
@@ -285,9 +469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/article/most-viewed", async (req, res) => {
+  app.get("/api/article/most-viewed", validateRequest(mostViewedSchema, 'query'), async (req, res) => {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = (req.query.limit as number) || 10;
       const mostViewed = await storage.getMostViewedArticles(limit);
       res.json(mostViewed);
     } catch (error) {
@@ -297,24 +481,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Claude API routes
-  app.post("/api/claude/synthesize", isAuthenticated, async (req, res) => {
+  app.post("/api/claude/synthesize", isAuthenticated, validateRequest(synthesizeSchema), async (req, res) => {
     await synthesizeArticles(req, res);
   });
 
-  app.post("/api/claude/edit", isAuthenticated, async (req, res) => {
+  app.post("/api/claude/edit", isAuthenticated, validateRequest(editArticleSchema), async (req, res) => {
     await editArticle(req, res);
   });
 
-  app.post("/api/claude/titles", isAuthenticated, async (req, res) => {
+  app.post("/api/claude/titles", isAuthenticated, validateRequest(claudeTitlesSchema), async (req, res) => {
     await generateTitles(req, res);
   });
 
-  app.post("/api/claude/quality", isAuthenticated, async (req, res) => {
+  app.post("/api/claude/quality", isAuthenticated, validateRequest(claudeQualitySchema), async (req, res) => {
     await analyzeQuality(req, res);
   });
 
   // Mistral API routes
-  app.post("/api/mistral/synthesize", isAuthenticated, async (req, res) => {
+  app.post("/api/mistral/synthesize", isAuthenticated, validateRequest(mistralSynthesizeSchema), async (req, res) => {
     try {
       const { topic, style, urls, maxWords, model } = req.body;
       
@@ -338,7 +522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/mistral/edit", isAuthenticated, async (req, res) => {
+  app.post("/api/mistral/edit", isAuthenticated, validateRequest(mistralEditSchema), async (req, res) => {
     try {
       const { article, title, instructions, model } = req.body;
       
@@ -393,7 +577,7 @@ Please provide the edited article with improved content according to the instruc
   });
 
   // OpenAI/ChatGPT API routes
-  app.post("/api/openai/synthesize", isAuthenticated, async (req, res) => {
+  app.post("/api/openai/synthesize", isAuthenticated, validateRequest(synthesizeSchema), async (req, res) => {
     try {
       const { sources, topic, style, tone, length } = req.body;
       
@@ -524,13 +708,15 @@ Requirements:
     }
   });
 
-  app.post("/api/openai/edit", isAuthenticated, async (req, res) => {
+  app.post("/api/openai/edit", isAuthenticated, validateRequest(z.object({
+    article: z.object({
+      title: z.string().max(500),
+      content: z.string().max(100000)
+    }),
+    instructions: z.string().min(1).max(1000).trim()
+  })), async (req, res) => {
     try {
       const { article, instructions } = req.body;
-      
-      if (!article || !instructions) {
-        return res.status(400).json({ error: "Article and instructions are required" });
-      }
       
       if (!process.env.OPENAI_API_KEY) {
         return res.status(400).json({ error: "OpenAI API key not configured" });
@@ -579,13 +765,9 @@ Please provide the edited article with the same structure but improved according
     }
   });
 
-  app.post("/api/openai/generate-viral", isAuthenticated, async (req, res) => {
+  app.post("/api/openai/generate-viral", isAuthenticated, validateRequest(viralGenerateSchema), async (req, res) => {
     try {
       const { searchTerm, count = 5 } = req.body;
-      
-      if (!searchTerm) {
-        return res.status(400).json({ error: "Search term is required" });
-      }
       
       if (!process.env.OPENAI_API_KEY) {
         return res.status(400).json({ error: "OpenAI API key not configured" });
@@ -657,7 +839,7 @@ Please provide the edited article with the same structure but improved according
   });
 
   // Gemini Search API route
-  app.post("/api/gemini/search", isAuthenticated, async (req, res) => {
+  app.post("/api/gemini/search", isAuthenticated, validateRequest(geminiSearchSchema), async (req, res) => {
     try {
       const { query, config } = req.body;
       
@@ -736,7 +918,7 @@ Format response as JSON with this structure:
   });
 
   // AI Image Generation endpoint
-  app.post("/api/generate-image", isAuthenticated, async (req, res) => {
+  app.post("/api/generate-image", isAuthenticated, validateRequest(imageGenSchema), async (req, res) => {
     try {
       const { articleTitle, articleContent, style } = req.body;
       
