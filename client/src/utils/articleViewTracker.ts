@@ -1,4 +1,5 @@
 import { Article } from '../types';
+import { queryClient } from '../lib/queryClient';
 
 export async function trackArticleView(article: Article): Promise<void> {
   try {
@@ -14,9 +15,10 @@ export async function trackArticleView(article: Article): Promise<void> {
         articleUrl: article.url || null,
       }),
     });
+    
+    queryClient.invalidateQueries({ queryKey: ['/api/article/most-viewed'] });
   } catch (error) {
     console.error('Failed to track article view:', error);
-    // Silent fail - don't block user experience
   }
 }
 

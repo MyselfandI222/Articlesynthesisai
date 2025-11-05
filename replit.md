@@ -11,7 +11,12 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 - **Removed Fake Metrics (Jan 2025)**: Eliminated all misleading Math.random() generated metrics that were displaying fake data to users. Removed fake fact-check results (verified/uncertain/corrected facts) from ChatGPT and Mistral synthesis services, and removed fake engagement metrics (views, shares, comments) from article search results. These fabricated numbers were misleading users into believing articles had been fact-checked or had real engagement data.
-- **Code Quality Refactoring (Jan 2025)**: Completed security hardening and consolidation tasks including moving all AI API keys server-side, implementing comprehensive Zod validation for 20+ routes, and consolidating duplicate ChatGPT services to eliminate 455 lines of redundant code.
+- **Code Quality Refactoring (Jan 2025)**: Completed comprehensive refactoring including:
+  - Security hardening: Moved all AI API keys server-side
+  - Input validation: Added Zod validation to 20+ routes
+  - Code consolidation: Eliminated 455 lines of duplicate ChatGPT service code
+  - Hybrid AI mode: Implemented true parallel AI synthesis calling both ChatGPT and Claude simultaneously with intelligent content merging
+  - Cache invalidation: Added proper React Query cache invalidation to article view tracking and subscription mutations to ensure UI updates reflect data changes
 - **Mistral AI Integration (Jan 2025)**: Added comprehensive Mistral AI support with advanced content processing pipeline. Features include intelligent source deduplication, multi-URL content extraction, comparative analysis synthesis, inline citation management, and plagiarism detection. Users can now select Mistral as a primary AI service alongside ChatGPT, Claude, and hybrid modes.
 - **Hybrid AI Synthesis System (Jan 2025)**: Implemented intelligent dual-AI system allowing ChatGPT and Claude to work together simultaneously. Each AI handles what it excels at - Claude for analysis, structure, and research; ChatGPT for engagement, creativity, and polish. System automatically routes tasks based on strengths and provides seamless collaboration between both AI services.
 - **Google Gemini Search Integration (Jan 2025)**: Added Google Gemini API specifically for enhanced search functionality. Created comprehensive search service with intelligent query processing, contextual results, and dedicated settings component. Users can toggle between standard search and Gemini-powered search for better article discovery.

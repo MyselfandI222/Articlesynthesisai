@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/badge";
 import { CheckCircle, Zap, Crown, Users, ArrowRight } from "lucide-react";
 import PayPalButton from "../components/PayPalButton";
-import { apiRequest } from "../lib/queryClient";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
 
 const SubscriptionPage = () => {
@@ -84,11 +84,13 @@ const SubscriptionPage = () => {
       });
       
       if (response.ok) {
+        await queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        
         toast({
           title: "Subscription Activated!",
           description: `Welcome to ${tier.charAt(0).toUpperCase() + tier.slice(1)} tier! Your features are now active.`,
         });
-        // Refresh the page to update user data
+        
         window.location.reload();
       } else {
         throw new Error("Failed to activate subscription");
