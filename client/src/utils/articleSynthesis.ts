@@ -2,7 +2,7 @@
 import { Article, SynthesizedArticle, WritingStyle } from '../types';
 import { synthesizeWithChatGPT, editWithChatGPT } from './chatGPTService';
 import { processAdvancedEditing } from './advancedEditing';
-import { synthesizeWithClaude, editWithClaude } from './claudeService';
+import { synthesizeWithClaude, editWithClaude, getClaudeSettings } from './claudeService';
 import { synthesizeWithMistral, editWithMistral } from './mistralService';
 
 // Get user's AI service preference
@@ -66,30 +66,112 @@ const synthesizeWithHybrid = async (
   length: 'short' | 'medium' | 'long'
 ): Promise<SynthesizedArticle> => {
   try {
-    console.log('Starting hybrid synthesis with ChatGPT and Claude...');
+    console.log('Starting hybrid synthesis - calling both ChatGPT and Claude in parallel...');
     
-    // For now, use Claude as the primary for hybrid mode and enhance later
-    // This ensures compatibility with existing function signatures
-    const result = await synthesizeWithClaude(sources, topic, style, tone, length);
+    const claudeSettings = getClaudeSettings().settings;
     
-    // Mark as hybrid result
+    const results = await Promise.allSettled([
+      synthesizeWithClaude(sources, topic, style, tone, length, claudeSettings),
+      synthesizeWithChatGPT(sources, topic, style, tone, length)
+    ]);
+    
+    const claudeContent = results[0].status === 'fulfilled' ? results[0].value : null;
+    const chatgptResult = results[1].status === 'fulfilled' ? results[1].value : null;
+    
+    if (!claudeContent && !chatgptResult) {
+      console.error('Both AIs failed in hybrid mode');
+      throw new Error('Hybrid synthesis failed - both AIs encountered errors');
+    }
+    
+    if (!claudeContent && chatgptResult) {
+      console.warn('Claude failed, using ChatGPT result only');
+      return {
+        ...chatgptResult,
+        id: `hybrid-chatgpt-${Date.now()}`,
+        processingMetrics: {
+          processingTimeMs: chatgptResult.processingMetrics?.processingTimeMs || 0,
+          contentQualityScore: chatgptResult.processingMetrics?.contentQualityScore || 85,
+          aiModelUsed: 'hybrid-chatgpt-only',
+        }
+      };
+    }
+    
+    if (!chatgptResult && claudeContent) {
+      console.warn('ChatGPT failed, using Claude result only');
+      const wordCount = claudeContent.split(/\s+/).length;
+      return {
+        id: `hybrid-claude-${Date.now()}`,
+        title: generateTitle(topic, style),
+        content: claudeContent,
+        summary: claudeContent.split('\n\n')[0]?.substring(0, 200) + '...' || '',
+        wordCount,
+        readingTime: Math.ceil(wordCount / 200),
+        style,
+        createdAt: new Date(),
+        processingMetrics: {
+          processingTimeMs: 0,
+          aiModelUsed: 'hybrid-claude-only',
+          contentQualityScore: 85,
+        }
+      };
+    }
+    
+    console.log('Both AIs succeeded - merging results intelligently...');
+    
+    const mergedContent = mergeHybridContent(claudeContent!, chatgptResult!.content);
+    const wordCount = mergedContent.split(/\s+/).length;
+    
     const hybridResult: SynthesizedArticle = {
-      ...result,
+      ...chatgptResult!,
       id: `hybrid-${Date.now()}`,
+      content: mergedContent,
+      wordCount,
+      readingTime: Math.ceil(wordCount / 200),
       processingMetrics: {
-        ...result.processingMetrics,
+        processingTimeMs: Math.max(
+          chatgptResult!.processingMetrics?.processingTimeMs || 0,
+          0
+        ),
         aiModelUsed: 'hybrid-claude-chatgpt',
-        contentQualityScore: Math.max(result.processingMetrics?.contentQualityScore || 85, 85),
+        contentQualityScore: Math.round(
+          (85 + (chatgptResult!.processingMetrics?.contentQualityScore || 85)) / 2
+        ),
       }
     };
     
-    console.log('Hybrid synthesis completed successfully');
+    console.log('Hybrid synthesis completed successfully with both AIs');
     return hybridResult;
     
   } catch (error) {
-    console.error('Hybrid synthesis failed, falling back to Claude:', error);
-    return await synthesizeWithClaude(sources, topic, style, tone, length);
+    console.error('Hybrid synthesis failed, falling back to ChatGPT:', error);
+    return await synthesizeWithChatGPT(sources, topic, style, tone, length);
   }
+};
+
+const mergeHybridContent = (claudeContent: string, chatgptContent: string): string => {
+  const claudeParagraphs = claudeContent.split('\n\n').filter(p => p.trim());
+  const chatgptParagraphs = chatgptContent.split('\n\n').filter(p => p.trim());
+  
+  if (claudeParagraphs.length < 3 || chatgptParagraphs.length < 3) {
+    return claudeContent.length > chatgptContent.length ? claudeContent : chatgptContent;
+  }
+  
+  const mergedParagraphs: string[] = [];
+  
+  mergedParagraphs.push(chatgptParagraphs[0]);
+  
+  const mainContentLength = Math.min(claudeParagraphs.length - 2, chatgptParagraphs.length - 2);
+  for (let i = 0; i < mainContentLength; i++) {
+    if (i % 2 === 0) {
+      mergedParagraphs.push(claudeParagraphs[i + 1]);
+    } else {
+      mergedParagraphs.push(chatgptParagraphs[i + 1]);
+    }
+  }
+  
+  mergedParagraphs.push(chatgptParagraphs[chatgptParagraphs.length - 1]);
+  
+  return mergedParagraphs.join('\n\n');
 };
 
 // Main synthesis function
@@ -110,8 +192,25 @@ export const synthesizeArticles = async (
     // Use ChatGPT for synthesis
     return await synthesizeWithChatGPT(sources, topic, style, tone, length);
   } else if (aiService === 'claude') {
-    // Use Claude for synthesis  
-    return await synthesizeWithClaude(sources, topic, style, tone, length);
+    // Use Claude for synthesis
+    const claudeSettings = getClaudeSettings().settings;
+    const content = await synthesizeWithClaude(sources, topic, style, tone, length, claudeSettings);
+    const wordCount = content.split(/\s+/).length;
+    return {
+      id: `claude-${Date.now()}`,
+      title: generateTitle(topic, style),
+      content,
+      summary: content.split('\n\n')[0]?.substring(0, 200) + '...' || '',
+      wordCount,
+      readingTime: Math.ceil(wordCount / 200),
+      style,
+      createdAt: new Date(),
+      processingMetrics: {
+        processingTimeMs: 0,
+        aiModelUsed: 'claude',
+        contentQualityScore: 85,
+      }
+    };
   } else if (aiService === 'mistral') {
     // Use Mistral for synthesis
     return await synthesizeWithMistral(sources, topic, style, tone, length);
@@ -127,28 +226,76 @@ const editWithHybrid = async (
   instructions: string
 ): Promise<SynthesizedArticle> => {
   try {
-    console.log('Using hybrid editing mode...');
+    console.log('Using hybrid editing mode - calling both ChatGPT and Claude...');
     
-    // For now, use Claude as the primary for hybrid mode editing
-    const result = await editWithClaude(article, instructions);
+    const claudeSettings = getClaudeSettings().settings;
     
-    // Mark as hybrid result
+    const results = await Promise.allSettled([
+      editWithClaude(article.content, instructions, claudeSettings),
+      editWithChatGPT(article, instructions)
+    ]);
+    
+    const claudeContent = results[0].status === 'fulfilled' ? results[0].value : null;
+    const chatgptResult = results[1].status === 'fulfilled' ? results[1].value : null;
+    
+    if (!claudeContent && !chatgptResult) {
+      console.error('Both AIs failed in hybrid editing mode');
+      throw new Error('Hybrid editing failed - both AIs encountered errors');
+    }
+    
+    if (!claudeContent && chatgptResult) {
+      console.warn('Claude failed, using ChatGPT edit only');
+      return {
+        ...chatgptResult,
+        id: `hybrid-edit-chatgpt-${Date.now()}`,
+        processingMetrics: {
+          processingTimeMs: chatgptResult.processingMetrics?.processingTimeMs || 0,
+          contentQualityScore: chatgptResult.processingMetrics?.contentQualityScore || 85,
+          aiModelUsed: 'hybrid-edit-chatgpt-only',
+        }
+      };
+    }
+    
+    if (!chatgptResult && claudeContent) {
+      console.warn('ChatGPT failed, using Claude edit only');
+      const wordCount = claudeContent.split(/\s+/).length;
+      return {
+        ...article,
+        id: `hybrid-edit-claude-${Date.now()}`,
+        content: claudeContent,
+        wordCount,
+        readingTime: Math.ceil(wordCount / 200),
+        processingMetrics: {
+          processingTimeMs: 0,
+          aiModelUsed: 'hybrid-edit-claude-only',
+          contentQualityScore: 85,
+        }
+      };
+    }
+    
+    console.log('Both AIs succeeded - using ChatGPT prose for final output...');
+    
     const hybridResult: SynthesizedArticle = {
-      ...result,
+      ...chatgptResult!,
       id: `hybrid-edit-${Date.now()}`,
       processingMetrics: {
-        ...result.processingMetrics,
-        aiModelUsed: 'hybrid-claude-chatgpt',
-        contentQualityScore: Math.max(result.processingMetrics?.contentQualityScore || 85, 85),
+        processingTimeMs: Math.max(
+          chatgptResult!.processingMetrics?.processingTimeMs || 0,
+          0
+        ),
+        aiModelUsed: 'hybrid-edit-claude-chatgpt',
+        contentQualityScore: Math.round(
+          (85 + (chatgptResult!.processingMetrics?.contentQualityScore || 85)) / 2
+        ),
       }
     };
     
-    console.log('Hybrid editing completed successfully');
+    console.log('Hybrid editing completed successfully with both AIs');
     return hybridResult;
     
   } catch (error) {
-    console.error('Hybrid editing failed, falling back to Claude:', error);
-    return await editWithClaude(article, instructions);
+    console.error('Hybrid editing failed, falling back to ChatGPT:', error);
+    return await editWithChatGPT(article, instructions);
   }
 };
 
@@ -168,7 +315,21 @@ export const editArticle = async (
     return await editWithChatGPT(article, instructions);
   } else if (aiService === 'claude') {
     // Use Claude for editing
-    return await editWithClaude(article, instructions);
+    const claudeSettings = getClaudeSettings().settings;
+    const content = await editWithClaude(article.content, instructions, claudeSettings);
+    const wordCount = content.split(/\s+/).length;
+    return {
+      ...article,
+      id: `claude-edit-${Date.now()}`,
+      content,
+      wordCount,
+      readingTime: Math.ceil(wordCount / 200),
+      processingMetrics: {
+        processingTimeMs: 0,
+        aiModelUsed: 'claude',
+        contentQualityScore: 85,
+      }
+    };
   } else if (aiService === 'mistral') {
     // Use Mistral for editing
     return await editWithMistral(article, instructions);
@@ -179,11 +340,13 @@ export const editArticle = async (
     // Use default editing
     try {
       const editedContent = await processAdvancedEditing(article.content, instructions, article);
+      const wordCount = editedContent.split(/\s+/).length;
       
       return {
         ...article,
         content: editedContent,
-        wordCount: editedContent.split(/\s+/).length
+        wordCount,
+        readingTime: Math.ceil(wordCount / 200)
       };
     } catch (error) {
       console.error('Error editing article:', error);
@@ -221,8 +384,14 @@ const simulateDefaultSynthesis = async (
     content,
     summary,
     wordCount,
+    readingTime: Math.ceil(wordCount / 200),
     createdAt: new Date(),
-    style
+    style,
+    processingMetrics: {
+      processingTimeMs: 2000,
+      aiModelUsed: 'simulated',
+      contentQualityScore: 75,
+    }
   };
 };
 

@@ -288,10 +288,10 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
             Browse by Category
           </h3>
           <div className="flex flex-wrap gap-3">
-            {categories.slice(0, 8).map((category) => (
+            {categories.slice(0, 8).filter(cat => cat.id).map((category) => (
               <button
                 key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
+                onClick={() => handleCategoryClick(category.id!)}
                 className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all transform hover:scale-105 shadow-sm ${
                   selectedCategory === category.id
                     ? category.color ? `${category.color} border-2 border-gray-300 shadow-md` : 'bg-blue-600 text-white shadow-lg'
@@ -308,7 +308,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
       {/* Subcategories */}
       {!isLoading && searchResults.length === 0 && (
         <div className="hidden md:block space-y-4">
-          {categories.map((category) => (
+          {categories.filter(cat => cat.id).map((category) => (
             <div key={category.id} className="mb-6">
               <div 
                 className={`flex items-center space-x-2 mb-2 ${
@@ -332,7 +332,7 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
                 {category.subcategories.slice(0, 8).map((subcategory, index) => (
                   <button
                     key={subcategory.name}
-                    onClick={() => handleCategoryClick(category.id, subcategory.name)}
+                    onClick={() => handleCategoryClick(category.id!, subcategory.name)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all transform hover:scale-105 shadow-sm ${
                       selectedCategory === category.id && selectedSubcategory === subcategory.name
                         ? 'bg-blue-500 text-white shadow-md'
@@ -566,62 +566,6 @@ export const ArticleSearch: React.FC<ArticleSearchProps> = ({ onAddArticle, adde
           </div>
         </div>
       )}
-    </div>
-  );
-};
-
-// Extracted ArticleResultItem component for cleaner code
-interface ArticleResultItemProps {
-  result: SearchResult;
-  isAdded: boolean;
-  onAddArticle: () => void;
-}
-
-const ArticleResultItem: React.FC<ArticleResultItemProps> = ({ result, isAdded, onAddArticle }) => {
-  const breakingNews = classifyBreakingNews(result);
-  const breakingBadge = getBreakingNewsBadge(breakingNews);
-  
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-1">
-            {result.publishedAt && (
-              <span className="text-xs text-gray-400">
-                {new Date(result.publishedAt).toLocaleDateString()} {new Date(result.publishedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </span>
-            )}
-            {breakingBadge.show && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${breakingBadge.className}`}>
-                {breakingBadge.icon} {breakingBadge.text}
-              </span>
-            )}
-          </div>
-          <h4 className="font-medium text-gray-900 mb-2">{result.title}</h4>
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{result.description}</p>
-          
-          <div className="flex items-center space-x-3">
-            {result.url && (
-              <a
-                href={result.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                <span>View Source</span>
-              </a>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={onAddArticle}
-          className={`ml-4 p-2 rounded-lg transition-colors ${isAdded ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-          title={isAdded ? 'Remove article' : 'Add article'}
-        >
-          {isAdded ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-        </button>
-      </div>
     </div>
   );
 };
