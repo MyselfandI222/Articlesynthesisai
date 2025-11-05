@@ -7,12 +7,12 @@ import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
-  onNavigate?: (page: 'home' | 'affiliate' | 'subscribe') => void;
-  currentPage?: 'home' | 'affiliate' | 'subscribe';
+  onNavigate?: (page: 'home' | 'affiliate' | 'premium' | 'subscribe') => void;
+  currentPage?: 'home' | 'affiliate' | 'premium' | 'subscribe';
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage = 'home' }) => {
-  const { user, logoutMutation } = useAuth();
+  const { user } = useAuth();
   const [breakingNewsCount, setBreakingNewsCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
