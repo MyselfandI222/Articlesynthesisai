@@ -1113,45 +1113,6 @@ const getRealNewsFromSources = async (query: string): Promise<SearchResult[]> =>
   return realResults;
 };
 
-// Guardian API (Free with registration)
-const searchGuardianAPI = async (query: string): Promise<SearchResult[]> => {
-  try {
-    // Guardian API endpoint (requires API key for production)
-    // For demo, we'll simulate Guardian-style content
-    const mockGuardianResults: SearchResult[] = [
-      {
-        id: 'guardian-1',
-        title: `${query}: A Guardian Investigation`,
-        description: `Investigative journalism exploring the complexities and implications of ${query}.`,
-        content: `The Guardian's investigation into ${query} reveals important insights and raises critical questions about current practices and future implications. Our reporters have examined multiple sources and expert opinions.`,
-        url: 'https://www.theguardian.com/',
-        source: 'The Guardian',
-        publishedAt: new Date().toISOString(),
-        author: 'Guardian Reporters',
-        viewpoint: 'investigative',
-        keywords: ['journalism', 'investigation', 'guardian', query.toLowerCase()]
-      },
-      {
-        id: 'guardian-2',
-        title: `Opinion: Why ${query} Matters for Society`,
-        description: `Editorial perspective on the societal implications of ${query}.`,
-        content: `This editorial examines why ${query} is crucial for understanding current societal trends and future challenges. The piece argues for greater awareness and informed public discourse on this important topic.`,
-        url: 'https://www.theguardian.com/',
-        source: 'The Guardian',
-        publishedAt: new Date().toISOString(),
-        author: 'Guardian Editorial',
-        viewpoint: 'opinion',
-        keywords: ['opinion', 'editorial', 'society', query.toLowerCase()]
-      }
-    ];
-
-    return mockGuardianResults;
-  } catch (error) {
-    console.error('Guardian API error:', error);
-    return [];
-  }
-};
-
 // Reddit API (Free)
 const searchRedditAPI = async (query: string): Promise<SearchResult[]> => {
   try {
@@ -1281,9 +1242,8 @@ const searchNewsAPIs = async (query: string): Promise<SearchResult[]> => {
     console.error('Free sources search failed:', error);
   }
   
-  // Add additional API sources
+  // Add additional API sources (REAL NEWS ONLY - no fake Guardian articles)
   const additionalSources = [
-    searchGuardianAPI,
     searchRedditAPI,
     searchHackerNews,
     searchWikipediaAPI
